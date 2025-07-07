@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   data-name="Layer 1"
+   id="Layer_1"
+   viewBox="0 0 243.52 243.52"
+   version="1.1"
+   sodipodi:docname="gauge.svg"
+   width="243.52"
+   height="243.52"
+   inkscape:version="1.4.2 (ebf0e940d0, 2025-05-08)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview18"
+     pagecolor="#ffffff"
+     bordercolor="#999999"
+     borderopacity="1"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     showgrid="false"
+     inkscape:zoom="1.6171875"
+     inkscape:cx="121.81643"
+     inkscape:cy="121.81643"
+     inkscape:window-width="2560"
+     inkscape:window-height="1440"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="Layer_1" />
+  <defs
+     id="defs1">
+    <style
+       id="style1">.cls-1{fill:none;stroke:#424242;stroke-linecap:round;stroke-linejoin:round;stroke-width:6px;}.cls-2{fill:#424242;}</style>
+  </defs>
+  <title
+     id="title1" />
+  <circle
+     class="cls-1"
+     cx="121.76"
+     cy="121.76"
+     r="118.76"
+     id="circle1" />
+  <line
+     class="cls-1"
+     x1="121.76"
+     x2="121.76"
+     y1="21.420002"
+     y2="38.830002"
+     id="line1" />
+  <line
+     class="cls-1"
+     x1="95.790001"
+     x2="100.3"
+     y1="24.840002"
+     y2="41.660004"
+     id="line2" />
+  <line
+     class="cls-1"
+     x1="71.590004"
+     x2="80.290001"
+     y1="34.860001"
+     y2="49.940002"
+     id="line3" />
+  <line
+     class="cls-1"
+     x1="50.810001"
+     x2="63.120003"
+     y1="50.810001"
+     y2="63.120003"
+     id="line4" />
+  <line
+     class="cls-1"
+     x1="34.860001"
+     x2="49.940002"
+     y1="71.590004"
+     y2="80.290001"
+     id="line5" />
+  <line
+     class="cls-1"
+     x1="208.66"
+     x2="193.58002"
+     y1="171.92999"
+     y2="163.23001"
+     id="line6" />
+  <line
+     class="cls-1"
+     x1="24.840002"
+     x2="41.660004"
+     y1="95.790001"
+     y2="100.3"
+     id="line7" />
+  <line
+     class="cls-1"
+     x1="218.67999"
+     x2="201.86002"
+     y1="147.73001"
+     y2="143.22"
+     id="line8" />
+  <line
+     class="cls-1"
+     x1="21.420002"
+     x2="38.830002"
+     y1="121.76"
+     y2="121.76"
+     id="line9" />
+  <line
+     class="cls-1"
+     x1="222.10001"
+     x2="204.69"
+     y1="121.76"
+     y2="121.76"
+     id="line10" />
+  <line
+     class="cls-1"
+     x1="24.840002"
+     x2="41.660004"
+     y1="147.73001"
+     y2="143.22"
+     id="line11" />
+  <line
+     class="cls-1"
+     x1="218.67999"
+     x2="201.86002"
+     y1="95.790001"
+     y2="100.3"
+     id="line12" />
+  <line
+     class="cls-1"
+     x1="34.860001"
+     x2="49.940002"
+     y1="171.92999"
+     y2="163.23001"
+     id="line13" />
+  <line
+     class="cls-1"
+     x1="208.66"
+     x2="193.58002"
+     y1="71.590004"
+     y2="80.290001"
+     id="line14" />
+  <line
+     class="cls-1"
+     x1="192.70999"
+     x2="180.39999"
+     y1="50.810001"
+     y2="63.120003"
+     id="line15" />
+  <line
+     class="cls-1"
+     x1="171.92999"
+     x2="163.23001"
+     y1="34.860001"
+     y2="49.940002"
+     id="line16" />
+  <line
+     class="cls-1"
+     x1="147.73001"
+     x2="143.22"
+     y1="24.840002"
+     y2="41.660004"
+     id="line17" />
+  <circle
+     class="cls-2"
+     cx="121.76"
+     cy="121.4"
+     r="8.6999998"
+     id="circle17" />
+  <line
+     class="cls-1"
+     x1="121.76"
+     x2="72.730003"
+     y1="121.4"
+     y2="148.89001"
+     id="line18" />
+</svg>

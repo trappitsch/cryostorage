@@ -1,0 +1,87 @@
+import { Const, TabButton } from "elements.slint";
+import { Palette } from "palette.slint";
+
+import { HomeScreen } from "screen_home.slint";
+import { CryoScreen } from "screen_cryo.slint";
+import { VacuumScreen } from "screen_vacuum.slint";
+import { SettingsScreen } from "screen_settings.slint";
+
+export component AppWindow inherits Rectangle {
+    in-out property <int> current_index: 0;
+    callback current_index_changed(int);
+
+    current_index_changed(new_index) => {
+        root.current_index = new_index;
+    }
+
+    background: Palette.bg;
+
+    x: 0px;
+    y: 0px;
+    width: Const.screen_width;
+    height: Const.screen_height;
+
+    TabButton {
+        index: 0;
+        current_index: root.current_index;
+        icon: @image-url("imgs/house.svg");
+
+        TouchArea {
+            clicked => {
+                root.current_index_changed(0);
+            }
+        }
+    }
+
+    TabButton {
+        index: 1;
+        current_index: root.current_index;
+        icon: @image-url("imgs/snowflake.svg");
+
+        TouchArea {
+            clicked => {
+                root.current_index_changed(1);
+            }
+        }
+    }
+
+    TabButton {
+        index: 2;
+        current_index: root.current_index;
+        icon: @image-url("imgs/gauge.svg");
+
+        TouchArea {
+            clicked => {
+                root.current_index_changed(2);
+            }
+        }
+    }
+
+    TabButton {
+        index: 3;
+        current_index: root.current_index;
+        icon: @image-url("imgs/gear.svg");
+
+        TouchArea {
+            clicked => {
+                root.current_index_changed(3);
+            }
+        }
+    }
+
+    HomeScreen {
+        current_index: root.current_index;
+    }
+
+    CryoScreen {
+        current_index: root.current_index;
+    }
+
+    VacuumScreen {
+        current_index: root.current_index;
+    }
+
+    SettingsScreen {
+        current_index: root.current_index;
+    }
+}

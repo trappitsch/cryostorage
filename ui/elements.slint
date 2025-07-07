@@ -1,0 +1,359 @@
+import { Palette } from "palette.slint";
+
+export global Const {
+    out property <length> big_switch_height: 160px;
+    out property <length> border_radius_large: 20px;
+    out property <length> border_radius_small: 10px;
+    out property <length> button_pictogram: 160px;
+    out property <length> button_height: 80px;
+    out property <length> edge_spacing: 50px;
+    out property <length> element_width_short: 300px;
+    out property <length> element_width_wide: 400px;
+    out property <length> info_height: 120px;
+    out property <length> light_dia: 160px;
+    out property <length> padding_large: 20px;
+    out property <length> padding_small: 10px;
+    out property <length> small_switch_height: 90px;
+    out property <length> screen_width: 1280px;
+    out property <length> screen_height: 800px;
+    out property <length> tab_button_width: 150px;
+}
+
+export component NormalText inherits Text {
+    font-size: 20px;
+    color: Palette.text;
+}
+
+export component H1Text inherits NormalText {
+    font-size: 40px;
+    font-weight: 800;
+}
+
+export component H2Text inherits NormalText {
+    font-size: 30px;
+    font-weight: 600;
+}
+
+export component H3Text inherits NormalText {
+    font-size: 25px;
+    font-weight: 400;
+}
+
+export component MyWindow inherits Rectangle {
+    in-out property <int> index;
+    in property <int> current_index;
+
+    background: Palette.bg;
+
+    visible: self.index == self.current_index ? true : false;
+
+    x: Const.tab_button_width;
+    y: 0px;
+    width: Const.screen_width - Const.tab_button_width;
+    height: Const.screen_height;
+}
+
+// Default tab button component that should be standing on the right side of the screen
+export component TabButton inherits Rectangle {
+    in-out property <int> index;
+    in property <int> current_index;
+    in property <image> icon;
+
+    x: 0px;
+    y: self.height * index;
+    width: Const.tab_button_width;
+    height: Const.screen_height / 4;
+
+    background: (root.current_index) == index ? Palette.bg_overlay : Palette.bg_inact;
+
+    border-top-right-radius: 30px;
+    border-bottom-right-radius: 30px;
+
+    Image {
+        width: 50%;
+        source: icon;
+        colorize: Palette.flamingo;
+    }
+}
+
+export component LightSwitch inherits Rectangle {
+    in-out property <bool> activated: false;
+    callback clicked(bool);
+
+    width: Const.light_dia;
+    height: Const.light_dia;
+
+    border-radius: Const.light_dia / 2;
+
+    background: activated ? Palette.button_on : Palette.button_off;
+
+    Image {
+        source: activated ? @image-url("imgs/light_on.svg") : @image-url("imgs/light_off.svg");
+        colorize: activated ? Palette.yellow : Palette.subtext1;
+        width: 75%;
+    }
+
+    TouchArea {
+        clicked => {
+            activated = !activated;
+            root.clicked(activated);
+        }
+    }
+}
+
+export component InfoArea inherits Rectangle {
+    in-out property <string> title: "Info area";
+    in-out property <string> text: " 150 K";
+    in-out property <color> text_color: Palette.text;
+
+    width: Const.element_width_wide;
+    height: Const.info_height;
+
+    background: Palette.bg_area;
+
+    border-radius: Const.border_radius_large;
+
+    VerticalLayout {
+        padding: Const.padding_large;
+
+        H3Text {
+            text: root.title;
+            horizontal-alignment: center;
+        }
+
+        H2Text {
+            text: root.text;
+            horizontal-alignment: center;
+            vertical-alignment: center;
+            color: root.text_color;
+        }
+    }
+}
+
+export component InfoAreaSmall inherits InfoArea {
+    width: Const.element_width_short;
+}
+
+export component StatusOkErr inherits Rectangle {
+    in property <string> title: "StatusOkErr Field";
+    in-out property <bool> ok: true;
+
+    width: Const.element_width_wide;
+    height: Const.button_height;
+
+    border-radius: Const.border_radius_large;
+
+    background: Palette.bg_area;
+
+    HorizontalLayout {
+        padding: Const.padding_large;
+        H3Text {
+            text: root.title;
+            horizontal-alignment: center;
+            vertical-alignment: center;
+            color: Palette.text;
+        }
+
+        Image {
+            source: root.ok ? @image-url("imgs/check.svg") : @image-url("imgs/cross.svg");
+            colorize: root.ok ? Palette.green : Palette.red;
+        }
+    }
+}
+
+export component LongButton inherits Rectangle {
+    in property <string> text: "Long Button";
+    callback clicked();
+
+    width: Const.element_width_wide;
+    height: Const.button_height;
+
+    border-radius: Const.border_radius_large;
+
+    ta := TouchArea {
+        clicked => {
+            root.clicked();
+        }
+    }
+
+    background: !ta.pressed ? Palette.button_off : Palette.button_on;
+
+    H3Text {
+        text: root.text;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+        color: Palette.text;
+    }
+}
+
+export component BigSwitch inherits Rectangle {
+    in-out property <bool> right_side: false;
+    in-out property <string> title: "Big Switch";
+    in-out property <string> left_text: "Left";
+    in-out property <string> right_text: "Right";
+    callback switched(bool);
+
+    width: Const.element_width_wide;
+    height: Const.big_switch_height;
+
+    background: Palette.bg_area;
+    border_radius: Const.border_radius_large;
+
+    VerticalLayout {
+        padding: Const.padding_large;
+        H2Text {
+            text: root.title;
+            horizontal-alignment: center;
+        }
+
+        HorizontalLayout {
+            alignment: center;
+            Rectangle {
+                width: 45%;
+                height: 30%;
+                background: root.right_side ? Palette.button_off : Palette.button_on;
+
+                border-top-left-radius: Const.border_radius_small;
+                border-bottom-left-radius: Const.border_radius_small;
+
+                TouchArea {
+                    clicked => {
+                        if (root.right_side) {
+                            root.right_side = false;
+                        }
+                    }
+                }
+
+                H3Text {
+                    text: root.left_text;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                    color: Palette.text;
+                }
+            }
+
+            Rectangle {
+                width: 45%;
+                height: 30%;
+                background: !root.right_side ? Palette.button_off : Palette.button_on;
+
+                border-top-right-radius: Const.border_radius_small;
+                border-bottom-right-radius: Const.border_radius_small;
+
+                TouchArea {
+                    clicked => {
+                        if (!root.right_side) {
+                            root.right_side = true;
+                        }
+                    }
+                }
+
+                H3Text {
+                    text: root.right_text;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                    color: Palette.text;
+                }
+            }
+        }
+    }
+}
+
+export component SmallSwitch inherits Rectangle {
+    property <bool> right_side: false;
+    in property <string> title: "Small Switch";
+    in property <string> left_text: "Left";
+    in property <string> right_text: "Right";
+    callback switched(bool);
+
+    width: Const.element_width_short;
+    height: Const.small_switch_height;
+
+    background: Palette.bg_area;
+    border_radius: Const.border_radius_large;
+
+    VerticalLayout {
+        padding: Const.padding_small;
+        H3Text {
+            text: root.title;
+            horizontal-alignment: center;
+        }
+
+        HorizontalLayout {
+            alignment: center;
+            Rectangle {
+                width: 45%;
+                height: 30px;
+                background: root.right_side ? Palette.button_off : Palette.button_on;
+
+                border-top-left-radius: Const.border_radius_small;
+                border-bottom-left-radius: Const.border_radius_small;
+
+                TouchArea {
+                    clicked => {
+                        if (root.right_side) {
+                            root.right_side = false;
+                        }
+                    }
+                }
+
+                NormalText {
+                    text: root.left_text;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                    color: Palette.text;
+                }
+            }
+
+            Rectangle {
+                width: 45%;
+                height: 30px;
+                background: !root.right_side ? Palette.button_off : Palette.button_on;
+
+                border-top-right-radius: Const.border_radius_small;
+                border-bottom-right-radius: Const.border_radius_small;
+
+                TouchArea {
+                    clicked => {
+                        if (!root.right_side) {
+                            root.right_side = true;
+                        }
+                    }
+                }
+
+                NormalText {
+                    text: root.right_text;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                    color: Palette.text;
+                }
+            }
+        }
+    }
+}
+
+export component PictogramButton inherits Rectangle {
+    in property <image> icon: @image-url("imgs/door.svg");
+    callback clicked();
+
+    width: Const.button_pictogram;
+    height: Const.button_pictogram;
+
+    border-radius: Const.border_radius_large;
+
+    ta := TouchArea {
+        clicked => {
+            root.clicked();
+        }
+    }
+
+    background: ta.pressed ? Palette.button_on : Palette.button_off;
+
+    Image {
+        source: root.icon;
+        colorize: Palette.text;
+        width: 50%;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+}

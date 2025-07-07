@@ -1,0 +1,70 @@
+import { MyWindow } from "elements.slint";
+
+import { BigSwitch, Const, NormalText, LongButton, LightSwitch, SmallSwitch, InfoArea, PictogramButton, StatusOkErr, InfoAreaSmall } from "elements.slint";
+import { Palette } from "palette.slint";
+
+export component HomeScreen inherits MyWindow {
+    callback light_switch(bool);
+    index: 0;
+
+    BigSwitch {
+        x: 20px;
+        y: 20px;
+    }
+
+    SmallSwitch {
+        x: 500px;
+        y: 20px;
+    }
+
+    InfoArea {
+        x: 20px;
+        y: 200px;
+        title: "Cold temperature";
+        text_color: Palette.blue;
+
+    }
+
+    LongButton {
+        x: 20px;
+        y: 350px;
+    }
+
+    PictogramButton {
+        x: 20px;
+        y: 500px;
+    }
+
+    SmallSwitch {
+        x: 500px;
+        y: 20px;
+    }
+
+    InfoAreaSmall {
+        x: 500px;
+        y: 20px;
+        title: "Warm temperature";
+        text_color: Palette.red;
+    }
+
+    LightSwitch {
+        x: 500px;
+        y: 250px;
+        clicked(val) => {
+            root.light_switch(val);
+        }
+    }
+
+    StatusOkErr {
+        title: "StatusOkErr: Err";
+        ok: false;
+        x: 500px;
+        y: 450px;
+    }
+
+    StatusOkErr {
+        title: "StatusOkErr: Ok";
+        x: 500px;
+        y: 550px;
+    }
+}
