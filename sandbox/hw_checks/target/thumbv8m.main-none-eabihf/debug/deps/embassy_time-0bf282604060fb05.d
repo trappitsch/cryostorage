@@ -1,0 +1,15 @@
+/home/reto/Documents/code/cryostorage/sandbox/hw_checks/target/thumbv8m.main-none-eabihf/debug/deps/embassy_time-0bf282604060fb05.d: /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embassy-time-0.4.0/src/lib.rs /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embassy-time-0.4.0/src/fmt.rs /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embassy-time-0.4.0/src/delay.rs /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embassy-time-0.4.0/src/duration.rs /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embassy-time-0.4.0/src/instant.rs /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embassy-time-0.4.0/src/timer.rs /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embassy-time-0.4.0/src/../README.md
+
+/home/reto/Documents/code/cryostorage/sandbox/hw_checks/target/thumbv8m.main-none-eabihf/debug/deps/libembassy_time-0bf282604060fb05.rlib: /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embassy-time-0.4.0/src/lib.rs /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embassy-time-0.4.0/src/fmt.rs /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embassy-time-0.4.0/src/delay.rs /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embassy-time-0.4.0/src/duration.rs /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embassy-time-0.4.0/src/instant.rs /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embassy-time-0.4.0/src/timer.rs /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embassy-time-0.4.0/src/../README.md
+
+/home/reto/Documents/code/cryostorage/sandbox/hw_checks/target/thumbv8m.main-none-eabihf/debug/deps/libembassy_time-0bf282604060fb05.rmeta: /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embassy-time-0.4.0/src/lib.rs /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embassy-time-0.4.0/src/fmt.rs /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embassy-time-0.4.0/src/delay.rs /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embassy-time-0.4.0/src/duration.rs /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embassy-time-0.4.0/src/instant.rs /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embassy-time-0.4.0/src/timer.rs /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embassy-time-0.4.0/src/../README.md
+
+/home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embassy-time-0.4.0/src/lib.rs:
+/home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embassy-time-0.4.0/src/fmt.rs:
+/home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embassy-time-0.4.0/src/delay.rs:
+/home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embassy-time-0.4.0/src/duration.rs:
+/home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embassy-time-0.4.0/src/instant.rs:
+/home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embassy-time-0.4.0/src/timer.rs:
+/home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embassy-time-0.4.0/src/../README.md:
+
+# env-dep:DEFMT_LOG=debug

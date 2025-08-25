@@ -1,0 +1,10 @@
+/home/reto/Documents/code/cryostorage/sandbox/icd/target/debug/deps/postcard_schema-f8483a0aadec87ef.d: /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postcard-schema-0.2.0/src/lib.rs /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postcard-schema-0.2.0/src/impls/mod.rs /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postcard-schema-0.2.0/src/impls/builtins_nostd.rs /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postcard-schema-0.2.0/src/schema/mod.rs
+
+/home/reto/Documents/code/cryostorage/sandbox/icd/target/debug/deps/libpostcard_schema-f8483a0aadec87ef.rlib: /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postcard-schema-0.2.0/src/lib.rs /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postcard-schema-0.2.0/src/impls/mod.rs /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postcard-schema-0.2.0/src/impls/builtins_nostd.rs /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postcard-schema-0.2.0/src/schema/mod.rs
+
+/home/reto/Documents/code/cryostorage/sandbox/icd/target/debug/deps/libpostcard_schema-f8483a0aadec87ef.rmeta: /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postcard-schema-0.2.0/src/lib.rs /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postcard-schema-0.2.0/src/impls/mod.rs /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postcard-schema-0.2.0/src/impls/builtins_nostd.rs /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postcard-schema-0.2.0/src/schema/mod.rs
+
+/home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postcard-schema-0.2.0/src/lib.rs:
+/home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postcard-schema-0.2.0/src/impls/mod.rs:
+/home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postcard-schema-0.2.0/src/impls/builtins_nostd.rs:
+/home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postcard-schema-0.2.0/src/schema/mod.rs:

@@ -1,0 +1,11 @@
+/home/reto/Documents/learning/poststation-util/templates/rp2350/target/thumbv8m.main-none-eabihf/debug/deps/half-62551795190f1658.d: /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/half-2.4.1/src/lib.rs /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/half-2.4.1/src/bfloat.rs /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/half-2.4.1/src/bfloat/convert.rs /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/half-2.4.1/src/binary16.rs /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/half-2.4.1/src/binary16/arch.rs /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/half-2.4.1/src/leading_zeros.rs /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/half-2.4.1/src/slice.rs
+
+/home/reto/Documents/learning/poststation-util/templates/rp2350/target/thumbv8m.main-none-eabihf/debug/deps/libhalf-62551795190f1658.rmeta: /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/half-2.4.1/src/lib.rs /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/half-2.4.1/src/bfloat.rs /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/half-2.4.1/src/bfloat/convert.rs /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/half-2.4.1/src/binary16.rs /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/half-2.4.1/src/binary16/arch.rs /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/half-2.4.1/src/leading_zeros.rs /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/half-2.4.1/src/slice.rs
+
+/home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/half-2.4.1/src/lib.rs:
+/home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/half-2.4.1/src/bfloat.rs:
+/home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/half-2.4.1/src/bfloat/convert.rs:
+/home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/half-2.4.1/src/binary16.rs:
+/home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/half-2.4.1/src/binary16/arch.rs:
+/home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/half-2.4.1/src/leading_zeros.rs:
+/home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/half-2.4.1/src/slice.rs:

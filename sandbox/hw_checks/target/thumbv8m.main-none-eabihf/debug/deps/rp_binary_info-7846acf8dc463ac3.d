@@ -1,0 +1,10 @@
+/home/reto/Documents/learning/poststation-util/templates/rp2350/target/thumbv8m.main-none-eabihf/debug/deps/rp_binary_info-7846acf8dc463ac3.d: /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rp-binary-info-0.1.0/src/lib.rs /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rp-binary-info-0.1.0/src/consts.rs /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rp-binary-info-0.1.0/src/types.rs /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rp-binary-info-0.1.0/src/macros.rs
+
+/home/reto/Documents/learning/poststation-util/templates/rp2350/target/thumbv8m.main-none-eabihf/debug/deps/librp_binary_info-7846acf8dc463ac3.rlib: /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rp-binary-info-0.1.0/src/lib.rs /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rp-binary-info-0.1.0/src/consts.rs /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rp-binary-info-0.1.0/src/types.rs /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rp-binary-info-0.1.0/src/macros.rs
+
+/home/reto/Documents/learning/poststation-util/templates/rp2350/target/thumbv8m.main-none-eabihf/debug/deps/librp_binary_info-7846acf8dc463ac3.rmeta: /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rp-binary-info-0.1.0/src/lib.rs /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rp-binary-info-0.1.0/src/consts.rs /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rp-binary-info-0.1.0/src/types.rs /home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rp-binary-info-0.1.0/src/macros.rs
+
+/home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rp-binary-info-0.1.0/src/lib.rs:
+/home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rp-binary-info-0.1.0/src/consts.rs:
+/home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rp-binary-info-0.1.0/src/types.rs:
+/home/reto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rp-binary-info-0.1.0/src/macros.rs:
