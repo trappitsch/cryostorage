@@ -58,7 +58,12 @@
           "width": 0.0
         }
       ],
-      "drc_exclusions": [],
+      "drc_exclusions": [
+        [
+          "unconnected_items|185000000|61850000|F.Cu|4|1ec480ad-6a4f-4e81-9164-8af400d05301|8e829d37-9044-434e-814b-44da91aa79b1",
+          "output voltage is connected to tab"
+        ]
+      ],
       "meta": {
         "version": 2
       },
@@ -454,6 +459,7 @@
       "single_global_label": "ignore",
       "unannotated": "error",
       "unconnected_wire_endpoint": "warning",
+      "undefined_netclass": "error",
       "unit_value_mismatch": "error",
       "unresolved_variable": "error",
       "wire_dangling": "error"

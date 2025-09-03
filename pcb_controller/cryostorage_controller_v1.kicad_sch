@@ -6,7 +6,7 @@
 	(paper "A4")
 	(title_block
 		(title "Cryostorage chamber microcontroller")
-		(rev "2025-08-26")
+		(rev "2025-09-01")
 		(company "EPFL, Reto Trappitsch")
 		(comment 1 "Note 1: Flowmeter interlocks cryocooler directly via I/O pin 5.")
 		(comment 2 "Note 2: Transfer arm and valve open position directly interlock 24V for closing valves")
@@ -1885,10 +1885,7 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "Regulator_Linear:LT1086-3.3"
-			(pin_names
-				(offset 0.254)
-			)
+		(symbol "Regulator_Linear:NCP1117-3.3_SOT223"
 			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
@@ -1900,7 +1897,7 @@
 					)
 				)
 			)
-			(property "Value" "LT1086-3.3"
+			(property "Value" "NCP1117-3.3_SOT223"
 				(at 0 3.175 0)
 				(effects
 					(font
@@ -1909,17 +1906,25 @@
 					(justify left)
 				)
 			)
-			(property "Footprint" ""
-				(at 0 6.35 0)
+			(property "Footprint" "Package_TO_SOT_SMD:SOT-223-3_TabPin2"
+				(at 0 5.08 0)
 				(effects
 					(font
 						(size 1.27 1.27)
-						(italic yes)
 					)
 					(hide yes)
 				)
 			)
-			(property "Datasheet" "https://www.analog.com/media/en/technical-documentation/data-sheets/1086ffs.pdf"
+			(property "Datasheet" "http://www.onsemi.com/pub_link/Collateral/NCP1117-D.PDF"
+				(at 2.54 -6.35 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "1A Low drop-out regulator, Fixed Output 3.3V, SOT-223"
 				(at 0 0 0)
 				(effects
 					(font
@@ -1928,7 +1933,7 @@
 					(hide yes)
 				)
 			)
-			(property "Description" "1.5A 20V LDO Linear Regulator, Fixed Output 3.3V, TO-220/TO-263"
+			(property "ki_keywords" "REGULATOR LDO 3.3V"
 				(at 0 0 0)
 				(effects
 					(font
@@ -1937,7 +1942,7 @@
 					(hide yes)
 				)
 			)
-			(property "ki_keywords" "Voltage Regulator Fixed 1.5A Positive LDO"
+			(property "ki_fp_filters" "SOT?223*TabPin2*"
 				(at 0 0 0)
 				(effects
 					(font
@@ -1946,19 +1951,10 @@
 					(hide yes)
 				)
 			)
-			(property "ki_fp_filters" "TO?220* TO?263*"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(symbol "LT1086-3.3_0_1"
+			(symbol "NCP1117-3.3_SOT223_0_1"
 				(rectangle
-					(start -5.08 1.905)
-					(end 5.08 -5.08)
+					(start -5.08 -5.08)
+					(end 5.08 1.905)
 					(stroke
 						(width 0.254)
 						(type default)
@@ -1968,7 +1964,7 @@
 					)
 				)
 			)
-			(symbol "LT1086-3.3_1_1"
+			(symbol "NCP1117-3.3_SOT223_1_1"
 				(pin power_in line
 					(at -7.62 0 0)
 					(length 2.54)
@@ -5473,10 +5469,22 @@
 		(uuid "1d50c63f-7588-44b7-a7c1-d191dc43609f")
 	)
 	(junction
+		(at 271.78 53.34)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "20725534-2682-4153-92a6-44fe880fa088")
+	)
+	(junction
 		(at 95.25 77.47)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "24430e64-c0b5-4645-bd48-4bed3574eed9")
+	)
+	(junction
+		(at 256.54 53.34)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "282e7c2d-a163-43aa-ae21-2bef9eb67ab9")
 	)
 	(junction
 		(at 146.05 144.78)
@@ -5557,12 +5565,6 @@
 		(uuid "8e36a669-6f28-4031-94e6-68baf743db29")
 	)
 	(junction
-		(at 271.78 53.34)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "9114bd68-1945-4606-a4fb-7df85bef6507")
-	)
-	(junction
 		(at 97.79 68.58)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -5585,12 +5587,6 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "b73a6395-fb6a-411b-8950-d36a5bd19564")
-	)
-	(junction
-		(at 256.54 53.34)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "bcd12fdf-6894-4c64-a0d7-aebd8cd1566f")
 	)
 	(junction
 		(at 264.16 60.96)
@@ -5866,7 +5862,7 @@
 	)
 	(wire
 		(pts
-			(xy 271.78 53.34) (xy 274.32 53.34)
+			(xy 271.78 53.34) (xy 278.13 53.34)
 		)
 		(stroke
 			(width 0)
@@ -6556,7 +6552,7 @@
 	)
 	(wire
 		(pts
-			(xy 254 53.34) (xy 256.54 53.34)
+			(xy 250.19 53.34) (xy 256.54 53.34)
 		)
 		(stroke
 			(width 0)
@@ -7977,211 +7973,6 @@
 			(project "cryostorage_controller_v1"
 				(path "/65dfcb21-5bed-4c8b-b45c-eae336c9e929"
 					(reference "#PWR03")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "PCM_JLCPCB-Capacitors:CASE-A-3216-18(mm),10uF")
-		(at 271.78 57.15 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "12f5f361-d28c-4605-9dd4-ef436ff48576")
-		(property "Reference" "C2"
-			(at 274.32 54.1654 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "10uF"
-			(at 274.32 56.7055 0)
-			(effects
-				(font
-					(size 0.8 0.8)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "PCM_JLCPCB:C_CASE-A-3216-18(mm)"
-			(at 270.002 57.15 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "https://www.lcsc.com/datasheet/lcsc_datasheet_2304140030_Kyocera-AVX-TAJA106K016RNJ_C7171.pdf"
-			(at 271.78 57.15 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "10uF 16V 3Ω@100kHz ±10% CASE-A-3216-18(mm) Tantalum Capacitors ROHS"
-			(at 271.78 57.15 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "LCSC" "C7171"
-			(at 271.78 57.15 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Stock" "622810"
-			(at 271.78 57.15 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Price" "0.151USD"
-			(at 271.78 57.15 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Process" "SMT"
-			(at 271.78 57.15 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Minimum Qty" "5"
-			(at 271.78 57.15 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Attrition Qty" "2"
-			(at 271.78 57.15 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Class" "Basic Component"
-			(at 271.78 57.15 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Category" "Capacitors,Tantalum Capacitors"
-			(at 271.78 57.15 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Manufacturer" "AVX"
-			(at 271.78 57.15 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Part" "TAJA106K016RNJ"
-			(at 271.78 57.15 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Operating Temperature" "-55°C~+125°C"
-			(at 271.78 57.15 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Equivalent Series Resistance(ESR)" "3Ω@100kHz"
-			(at 271.78 57.15 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Tolerance" "±10%"
-			(at 271.78 57.15 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Capacitance" "10uF"
-			(at 271.78 57.15 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Rated Voltage" "16V"
-			(at 274.32 59.2455 0)
-			(effects
-				(font
-					(size 0.8 0.8)
-				)
-				(justify left)
-			)
-		)
-		(pin "2"
-			(uuid "35bd0186-515e-4d97-99ed-969347352963")
-		)
-		(pin "1"
-			(uuid "4012b617-3d2b-4a34-adf6-3d2b352a10f9")
-		)
-		(instances
-			(project ""
-				(path "/65dfcb21-5bed-4c8b-b45c-eae336c9e929"
-					(reference "C2")
 					(unit 1)
 				)
 			)
@@ -9690,210 +9481,6 @@
 		)
 	)
 	(symbol
-		(lib_id "PCM_JLCPCB-Capacitors:CASE-A-3216-18(mm),10uF")
-		(at 256.54 57.15 180)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "4628c68d-9df5-4173-92ad-d95e08d30b46")
-		(property "Reference" "C1"
-			(at 251.46 54.6099 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(property "Value" "10uF"
-			(at 251.46 57.15 0)
-			(effects
-				(font
-					(size 0.8 0.8)
-				)
-				(justify right)
-			)
-		)
-		(property "Footprint" "PCM_JLCPCB:C_CASE-A-3216-18(mm)"
-			(at 258.318 57.15 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "https://www.lcsc.com/datasheet/lcsc_datasheet_2304140030_Kyocera-AVX-TAJA106K016RNJ_C7171.pdf"
-			(at 256.54 57.15 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "10uF 16V 3Ω@100kHz ±10% CASE-A-3216-18(mm) Tantalum Capacitors ROHS"
-			(at 256.54 57.15 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "LCSC" "C7171"
-			(at 256.54 57.15 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Stock" "622810"
-			(at 256.54 57.15 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Price" "0.151USD"
-			(at 256.54 57.15 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Process" "SMT"
-			(at 256.54 57.15 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Minimum Qty" "5"
-			(at 256.54 57.15 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Attrition Qty" "2"
-			(at 256.54 57.15 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Class" "Basic Component"
-			(at 256.54 57.15 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Category" "Capacitors,Tantalum Capacitors"
-			(at 256.54 57.15 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Manufacturer" "AVX"
-			(at 256.54 57.15 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Part" "TAJA106K016RNJ"
-			(at 256.54 57.15 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Operating Temperature" "-55°C~+125°C"
-			(at 256.54 57.15 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Equivalent Series Resistance(ESR)" "3Ω@100kHz"
-			(at 256.54 57.15 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Tolerance" "±10%"
-			(at 256.54 57.15 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Capacitance" "10uF"
-			(at 256.54 57.15 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Rated Voltage" "16V"
-			(at 251.46 59.69 0)
-			(effects
-				(font
-					(size 0.8 0.8)
-				)
-				(justify right)
-			)
-		)
-		(pin "2"
-			(uuid "30dac792-c563-4624-b3ba-c9e1221d6f8b")
-		)
-		(pin "1"
-			(uuid "303fc1a4-20e2-429e-83da-9fed7be3c3ed")
-		)
-		(instances
-			(project ""
-				(path "/65dfcb21-5bed-4c8b-b45c-eae336c9e929"
-					(reference "C1")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "power:+24V")
 		(at 182.88 120.65 0)
 		(unit 1)
@@ -10377,7 +9964,7 @@
 	)
 	(symbol
 		(lib_id "power:+5V")
-		(at 254 53.34 0)
+		(at 250.19 53.34 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -10386,7 +9973,7 @@
 		(fields_autoplaced yes)
 		(uuid "55ef24b7-f7ba-41d9-b5e2-695e74f4258d")
 		(property "Reference" "#PWR09"
-			(at 254 57.15 0)
+			(at 250.19 57.15 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10395,7 +9982,7 @@
 			)
 		)
 		(property "Value" "+5V"
-			(at 254 48.26 0)
+			(at 250.19 48.26 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10403,7 +9990,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 254 53.34 0)
+			(at 250.19 53.34 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10412,7 +9999,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 254 53.34 0)
+			(at 250.19 53.34 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10421,7 +10008,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"+5V\""
-			(at 254 53.34 0)
+			(at 250.19 53.34 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10780,6 +10367,211 @@
 		)
 	)
 	(symbol
+		(lib_id "PCM_JLCPCB-Capacitors:CASE-A-3216-18(mm),10uF")
+		(at 256.54 57.15 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "653a3a4f-455a-467d-beca-5628a51d8e52")
+		(property "Reference" "C1"
+			(at 251.206 57.1499 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "10uF"
+			(at 251.206 59.69 0)
+			(effects
+				(font
+					(size 0.8 0.8)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "PCM_JLCPCB:C_CASE-A-3216-18(mm)"
+			(at 254.762 57.15 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "https://www.lcsc.com/datasheet/lcsc_datasheet_2304140030_Kyocera-AVX-TAJA106K016RNJ_C7171.pdf"
+			(at 256.54 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "10uF 16V 3Ω@100kHz ±10% CASE-A-3216-18(mm) Tantalum Capacitors ROHS"
+			(at 256.54 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC" "C7171"
+			(at 256.54 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Stock" "622810"
+			(at 256.54 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Price" "0.151USD"
+			(at 256.54 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Process" "SMT"
+			(at 256.54 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Minimum Qty" "5"
+			(at 256.54 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Attrition Qty" "2"
+			(at 256.54 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Class" "Basic Component"
+			(at 256.54 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Category" "Capacitors,Tantalum Capacitors"
+			(at 256.54 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Manufacturer" "AVX"
+			(at 256.54 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Part" "TAJA106K016RNJ"
+			(at 256.54 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Operating Temperature" "-55°C~+125°C"
+			(at 256.54 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Equivalent Series Resistance(ESR)" "3Ω@100kHz"
+			(at 256.54 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Tolerance" "±10%"
+			(at 256.54 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Capacitance" "10uF"
+			(at 256.54 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Rated Voltage" "16V"
+			(at 251.206 62.23 0)
+			(effects
+				(font
+					(size 0.8 0.8)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(pin "2"
+			(uuid "0b6ee3a8-7779-4b90-8ff6-b1ffccf1b74e")
+		)
+		(pin "1"
+			(uuid "5dd7ed2c-aa41-46eb-b286-261781f839ab")
+		)
+		(instances
+			(project ""
+				(path "/65dfcb21-5bed-4c8b-b45c-eae336c9e929"
+					(reference "C1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "Transistor_FET:BSS138")
 		(at 29.21 26.67 180)
 		(unit 1)
@@ -10857,7 +10649,7 @@
 	)
 	(symbol
 		(lib_id "power:+3.3V")
-		(at 274.32 53.34 0)
+		(at 278.13 53.34 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -10866,7 +10658,7 @@
 		(fields_autoplaced yes)
 		(uuid "6fa95152-6a27-47e5-9e29-1595a1b7ea9f")
 		(property "Reference" "#PWR010"
-			(at 274.32 57.15 0)
+			(at 278.13 57.15 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10875,7 +10667,7 @@
 			)
 		)
 		(property "Value" "+3.3V"
-			(at 274.32 48.26 0)
+			(at 278.13 48.26 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10883,7 +10675,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 274.32 53.34 0)
+			(at 278.13 53.34 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10892,7 +10684,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 274.32 53.34 0)
+			(at 278.13 53.34 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10901,7 +10693,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"+3.3V\""
-			(at 274.32 53.34 0)
+			(at 278.13 53.34 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -12561,6 +12353,77 @@
 		)
 	)
 	(symbol
+		(lib_id "Regulator_Linear:NCP1117-3.3_SOT223")
+		(at 264.16 53.34 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "a9e3f6e5-1335-4fc1-ac12-8796c592d07d")
+		(property "Reference" "U1"
+			(at 264.16 46.99 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "NCP1117-3.3_SOT223"
+			(at 264.16 49.53 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Package_TO_SOT_SMD:SOT-223-3_TabPin2"
+			(at 264.16 48.26 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "http://www.onsemi.com/pub_link/Collateral/NCP1117-D.PDF"
+			(at 266.7 59.69 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "1A Low drop-out regulator, Fixed Output 3.3V, SOT-223"
+			(at 264.16 53.34 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "2"
+			(uuid "626424ea-13f7-4acf-b04c-ae523b29c4c4")
+		)
+		(pin "1"
+			(uuid "6cf337f0-2c16-40b7-adb2-7058d442ef7a")
+		)
+		(pin "3"
+			(uuid "97880c10-269d-4311-b492-133d8d7d78cb")
+		)
+		(instances
+			(project ""
+				(path "/65dfcb21-5bed-4c8b-b45c-eae336c9e929"
+					(reference "U1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "power:GND")
 		(at 226.06 48.26 90)
 		(unit 1)
@@ -12915,78 +12778,6 @@
 		)
 	)
 	(symbol
-		(lib_id "Regulator_Linear:LT1086-3.3")
-		(at 264.16 53.34 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "bac4c01f-4b76-4e81-b48f-a58e11fcc817")
-		(property "Reference" "U1"
-			(at 264.16 46.99 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "LT1086-3.3"
-			(at 264.16 49.53 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "Snapeda:TO220-3_T_LIT"
-			(at 264.16 46.99 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-					(italic yes)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "https://www.analog.com/media/en/technical-documentation/data-sheets/1086ffs.pdf"
-			(at 264.16 53.34 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "1.5A 20V LDO Linear Regulator, Fixed Output 3.3V, TO-220/TO-263"
-			(at 264.16 53.34 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "778d6de4-fc6f-4516-ab1d-ae090087d5fd")
-		)
-		(pin "2"
-			(uuid "f43c400e-1cc9-4a96-a23f-e107e71fab10")
-		)
-		(pin "3"
-			(uuid "92280ada-4a5e-4097-8c6a-1a74b3012553")
-		)
-		(instances
-			(project ""
-				(path "/65dfcb21-5bed-4c8b-b45c-eae336c9e929"
-					(reference "U1")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "power:GND")
 		(at 226.06 58.42 90)
 		(unit 1)
@@ -13120,6 +12911,211 @@
 			(project ""
 				(path "/65dfcb21-5bed-4c8b-b45c-eae336c9e929"
 					(reference "J12")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "PCM_JLCPCB-Capacitors:CASE-A-3216-18(mm),10uF")
+		(at 271.78 57.15 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "c038b66d-752a-42b0-a378-f84d6c864ae1")
+		(property "Reference" "C2"
+			(at 274.32 57.1499 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "10uF"
+			(at 274.32 59.69 0)
+			(effects
+				(font
+					(size 0.8 0.8)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "PCM_JLCPCB:C_CASE-A-3216-18(mm)"
+			(at 270.002 57.15 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "https://www.lcsc.com/datasheet/lcsc_datasheet_2304140030_Kyocera-AVX-TAJA106K016RNJ_C7171.pdf"
+			(at 271.78 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "10uF 16V 3Ω@100kHz ±10% CASE-A-3216-18(mm) Tantalum Capacitors ROHS"
+			(at 271.78 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC" "C7171"
+			(at 271.78 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Stock" "622810"
+			(at 271.78 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Price" "0.151USD"
+			(at 271.78 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Process" "SMT"
+			(at 271.78 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Minimum Qty" "5"
+			(at 271.78 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Attrition Qty" "2"
+			(at 271.78 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Class" "Basic Component"
+			(at 271.78 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Category" "Capacitors,Tantalum Capacitors"
+			(at 271.78 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Manufacturer" "AVX"
+			(at 271.78 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Part" "TAJA106K016RNJ"
+			(at 271.78 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Operating Temperature" "-55°C~+125°C"
+			(at 271.78 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Equivalent Series Resistance(ESR)" "3Ω@100kHz"
+			(at 271.78 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Tolerance" "±10%"
+			(at 271.78 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Capacitance" "10uF"
+			(at 271.78 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Rated Voltage" "16V"
+			(at 274.32 62.23 0)
+			(effects
+				(font
+					(size 0.8 0.8)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(pin "2"
+			(uuid "c70c8b1e-dda3-4ac6-9928-5120f2b21ad7")
+		)
+		(pin "1"
+			(uuid "c518924a-4867-43e6-b148-28c600b808c7")
+		)
+		(instances
+			(project "cryostorage_controller_v1"
+				(path "/65dfcb21-5bed-4c8b-b45c-eae336c9e929"
+					(reference "C2")
 					(unit 1)
 				)
 			)
