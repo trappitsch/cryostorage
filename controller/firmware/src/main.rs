@@ -93,11 +93,12 @@ async fn main(spawner: Spawner) {
     let config = usb_config(ser_buf);
 
     // PIN CONFIGURATION
-    // FIXME: Valve position v1 -> v2
-    let p_light = Output::new(p.PIN_0, Level::Low);
+    // FIXME: Light switch to PIN_0
+    let p_light = Output::new(p.PIN_25, Level::Low);
 
     let p_baking = Output::new(p.PIN_1, Level::Low);
 
+    // FIXME: Valve position v1 -> v2
     let p_valve_pump_open = Output::new(p.PIN_7, Level::Low);
     let p_valve_pump_close = Output::new(p.PIN_6, Level::Low);
     let p_valve_pump_status_open = Input::new(p.PIN_8, Pull::None);

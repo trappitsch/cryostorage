@@ -3,8 +3,11 @@ import { MyWindow } from "elements.slint";
 import { BigSwitch, Const, NormalText, LongButton, LightSwitch, SmallSwitch, InfoArea, PictogramButton, StatusOkErr, InfoAreaSmall } from "elements.slint";
 import { Palette } from "palette.slint";
 
+export global HomeLogic {
+    pure callback light_switch(bool);
+}
+
 export component HomeScreen inherits MyWindow {
-    callback light_switch(bool);
     index: 0;
 
     BigSwitch {
@@ -51,7 +54,7 @@ export component HomeScreen inherits MyWindow {
         x: 500px;
         y: 250px;
         clicked(val) => {
-            root.light_switch(val);
+            HomeLogic.light_switch(val);
         }
     }
 

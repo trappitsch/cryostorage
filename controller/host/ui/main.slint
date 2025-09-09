@@ -1,12 +1,14 @@
 import { Const, TabButton } from "elements.slint";
 import { Palette } from "palette.slint";
 
-import { HomeScreen } from "screen_home.slint";
+import { HomeScreen, HomeLogic } from "screen_home.slint";
 import { CryoScreen } from "screen_cryo.slint";
 import { VacuumScreen } from "screen_vacuum.slint";
 import { SettingsScreen } from "screen_settings.slint";
 
-export component AppWindow inherits Rectangle {
+export { HomeLogic }
+
+export component AppWindow inherits Window {
     in-out property <int> current_index: 0;
     callback current_index_changed(int);
 
