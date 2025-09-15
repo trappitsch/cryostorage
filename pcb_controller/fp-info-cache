@@ -1,4 +1,4 @@
-26339793420039741
+26352105276447910
 Audio_Module
 Reverb_BTDR-1H
 Digital Reverberation Unit, http://www.belton.co.kr/inc/downfile.php?seq=17&file=pdf (footprint from http://www.uk-electronic.de/PDF/BTDR-1.pdf)
@@ -59598,12 +59598,47 @@ One digit LED 7 segment SA39-11 SC39-11 SA39-12 SC39-12
 10
 10
 EasyEDA
+CAP-SMD_L3.2-W1.6-FD-1
+
+
+0
+2
+2
+EasyEDA
+CAP-SMD_L3.2-W1.6-RD
+
+
+0
+2
+2
+EasyEDA
+CASE-C_6032
+
+
+0
+2
+2
+EasyEDA
+CASE-D_7343
+
+
+0
+2
+2
+EasyEDA
 SOD-323_L1.8-W1.3-LS2.5-FD
 
 
 0
 2
 2
+EasyEDA
+SOT-23-3_L2.9-W1.3-P1.90-LS2.4-BR
+
+
+0
+3
+3
 Ferrite_THT
 LairdTech_28C0236-0JW-10
 Ferrite, vertical, LairdTech 28C0236-0JW-10, https://assets.lairdtech.com/home/brandworld/files/28C0236-0JW-10.pdf, JW Miller core https://www.bourns.com/products/magnetic-products/j.w.-miller-through-hole-ferrite-beads-emi-filters
@@ -96564,6 +96599,20 @@ CONN_A-6373-06A_MOL
 0
 6
 6
+Snapeda
+MODULE_DFR0299
+
+
+0
+16
+16
+Snapeda
+SAMTEC_TS-108-X-A-1
+
+
+0
+8
+8
 Snapeda
 SOIC8-N_MC_MCH-L
 
