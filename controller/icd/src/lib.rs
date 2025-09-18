@@ -71,9 +71,11 @@ pub struct VctStates {
 /// Overall status for the whole controller -> broadcasted topic
 #[derive(Debug, Default, Serialize, Deserialize, Schema)]
 pub struct CtrlStatus {
-    // pub baking: BakingState,
+    pub baking: BakingState,
+    pub flow_meter: FlowMeterState,
     pub pump_valve: ValveState,
     pub transfer_valve: ValveState,
+    pub vct: VctStates,
 }
 
 // ---

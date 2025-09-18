@@ -56,18 +56,18 @@ pub async fn status_broadcast(sender: Sender<AppTx>, mut flow_meter: FlowMeterCt
     loop {
         ticker.next().await;
 
-        // GET_BAKING_SIGNAL.signal(());
-        // ctrl_status.baking = baking_rec.get().await;
+        GET_BAKING_SIGNAL.signal(());
+        ctrl_status.baking = baking_rec.get().await;
 
-        // ctrl_status.flow_meter = flow_meter.status();
+        ctrl_status.flow_meter = flow_meter.status();
 
-        // GET_VALVE_PUMP_SIGNAL.signal(());
-        // ctrl_status.pump_valve = pump_valve_rec.get().await;
-        // GET_VALVE_TRANSFER_SIGNAL.signal(());
-        // ctrl_status.transfer_valve = transfer_valve_rec.get().await;
+        GET_VALVE_PUMP_SIGNAL.signal(());
+        ctrl_status.pump_valve = pump_valve_rec.get().await;
+        GET_VALVE_TRANSFER_SIGNAL.signal(());
+        ctrl_status.transfer_valve = transfer_valve_rec.get().await;
 
-        // GET_VCT_STATUS.signal(());
-        // ctrl_status.vct = vct_rec.get().await;
+        GET_VCT_STATUS.signal(());
+        ctrl_status.vct = vct_rec.get().await;
 
         match sender
             .publish::<BcCtrlStatus>(seq.into(), &ctrl_status)

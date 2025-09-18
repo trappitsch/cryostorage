@@ -169,8 +169,8 @@ async fn main(spawner: Spawner) {
     // embassy-usb
     spawner.must_spawn(usb_task(device));
     info!("USB task spawned");
-    spawner.must_spawn(logging_task(sender.clone()));
-    info!("Logging task spawned");
+    // spawner.must_spawn(logging_task(sender.clone()));
+    // info!("Logging task spawned");
     // Valves
     spawner.must_spawn(valve_transfer_task(valve_transfer));
     info!("Valve transfer task spawned");
