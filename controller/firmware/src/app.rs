@@ -1,15 +1,22 @@
 //! A basic postcard-rpc/poststation-compatible application
 
 use crate::{
-    baking::BakingCtrl,
     handlers::{
-        get_baking, get_light, get_valve_pump, get_valve_transfer, picoboot_reset, set_baking,
-        set_light, set_valve_pump, set_valve_transfer, sleep_handler, unique_id,
+        get_baking, get_light, get_valve_pump, get_valve_transfer, get_vct_handshake,
+        get_vct_status, picoboot_reset, set_baking, set_light, set_valve_pump, set_valve_transfer,
+        set_vct_handshake, sleep_handler, unique_id,
     },
-    valve::ValveStat,
+    vct::VctCtrl,
 };
 use embassy_rp::{gpio::Output, peripherals::USB, usb};
 use embassy_sync::blocking_mutex::raw::ThreadModeRawMutex;
+use icd::{ENDPOINT_LIST, TOPICS_IN_LIST, TOPICS_OUT_LIST};
+use icd::{
+    GetBakingEndpoint, GetLightEndpoint, GetUniqueIdEndpoint, GetValvePumpEndpoint,
+    GetValveTransferEndpoint, GetVctHandshake, GetVctStatus, RebootToPicoBoot, SetBakingEndpoint,
+    SetLightEndpoint, SetValvePumpEndpoint, SetValveTransferEndpoint, SetVctHandshake,
+    SleepEndpoint,
+};
 use postcard_rpc::server::impls::embassy_usb_v0_4::{
     PacketBuffers,
     dispatch_impl::{WireRxBuf, WireRxImpl, WireSpawnImpl, WireStorage, WireTxImpl, spawn_fn},
@@ -19,12 +26,6 @@ use postcard_rpc::{
     server::{Server, SpawnContext},
 };
 use static_cell::ConstStaticCell;
-use icd::{ENDPOINT_LIST, TOPICS_IN_LIST, TOPICS_OUT_LIST};
-use icd::{
-    GetBakingEndpoint, GetLightEndpoint, GetUniqueIdEndpoint, GetValvePumpEndpoint,
-    GetValveTransferEndpoint, RebootToPicoBoot, SetBakingEndpoint, SetLightEndpoint,
-    SetValvePumpEndpoint, SetValveTransferEndpoint, SleepEndpoint,
-};
 
 /// Context contains the data that we will pass (as a mutable reference)
 /// to each endpoint or topic handler
@@ -34,12 +35,8 @@ pub struct Context {
     pub unique_id: u64,
     /// Pin the light switch is connected to
     pub p_light: Output<'static>,
-    /// Baking controller
-    pub baking_ctrl: BakingCtrl,
-    /// Status struct for pump valve
-    pub valve_pump_status: ValveStat,
-    /// Status struct for transfer valve
-    pub valve_transfer_status: ValveStat,
+    /// VCT controller
+    pub vct_ctrl: VctCtrl,
 }
 
 impl SpawnContext for Context {
@@ -125,14 +122,17 @@ define_dispatch! {
         | GetUniqueIdEndpoint       | blocking  | unique_id                     |
         | RebootToPicoBoot          | blocking  | picoboot_reset                |
         | SleepEndpoint             | spawn     | sleep_handler                 |
-        | GetBakingEndpoint         | blocking  | get_baking                    |
+        | GetBakingEndpoint         | spawn     | get_baking                    |
         | SetBakingEndpoint         | blocking  | set_baking                    |
         | GetLightEndpoint          | blocking  | get_light                     |
         | SetLightEndpoint          | blocking  | set_light                     |
-        | GetValvePumpEndpoint      | blocking  | get_valve_pump                |
+        | GetValvePumpEndpoint      | spawn     | get_valve_pump                |
         | SetValvePumpEndpoint      | blocking  | set_valve_pump                |
-        | GetValveTransferEndpoint  | blocking  | get_valve_transfer            |
+        | GetValveTransferEndpoint  | spawn     | get_valve_transfer            |
         | SetValveTransferEndpoint  | blocking  | set_valve_transfer            |
+        | GetVctHandshake           | blocking  | get_vct_handshake             |
+        | SetVctHandshake           | blocking  | set_vct_handshake             |
+        | GetVctStatus              | spawn     | get_vct_status                |
     };
 
     // Topics IN are messages we receive from the client, but that we do not reply

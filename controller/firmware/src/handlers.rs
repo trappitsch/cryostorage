@@ -1,10 +1,20 @@
 use core::sync::atomic::{Ordering, compiler_fence};
 
+use defmt::error;
 use embassy_time::{Instant, Timer};
+use icd::{
+    BakingState, GetBakingEndpoint, GetValvePumpEndpoint, GetValveTransferEndpoint, GetVctStatus, LightState, SleepEndpoint, SleepMillis, SleptMillis, ValveState, VctHandshakeState
+};
 use postcard_rpc::{header::VarHeader, server::Sender};
-use icd::{BakingState, LightState, SleepEndpoint, SleepMillis, SleptMillis, ValveState};
 
-use crate::{app::{AppTx, Context, TaskContext}, valve::{VALVE_PUMP_SIGNAL, VALVE_TRANSFER_SIGNAL}};
+use crate::{
+    app::{AppTx, Context, TaskContext},
+    baking::{GET_BAKING_SIGNAL, SET_BAKING_SIGNAL, WATCH_BAKING},
+    valve::{
+        GET_VALVE_PUMP_SIGNAL, GET_VALVE_TRANSFER_SIGNAL, SET_VALVE_PUMP_SIGNAL,
+        SET_VALVE_TRANSFER_SIGNAL, WATCH_VALVE_PUMP, WATCH_VALVE_TRANSFER,
+    }, vct::{GET_VCT_STATUS, WATCH_VCT_STATUS},
+};
 
 /// This is an example of a BLOCKING handler.
 pub fn unique_id(context: &mut Context, _header: VarHeader, _arg: ()) -> u64 {
@@ -21,13 +31,22 @@ pub fn picoboot_reset(_context: &mut Context, _header: VarHeader, _arg: ()) {
 }
 
 /// Get the state of the baking
-pub fn get_baking(context: &mut Context, _header: VarHeader, _args: ()) -> BakingState {
-    context.baking_ctrl.get_status()
+///
+/// Pool size of one as we only have one watch receiver available for this!
+#[embassy_executor::task(pool_size = 1)]
+pub async fn get_baking(_ctx: TaskContext, header: VarHeader, _args: (), sender: Sender<AppTx>) {
+    if let Some(mut rec) = WATCH_BAKING.receiver() {
+        GET_BAKING_SIGNAL.signal(());
+        let res = rec.get().await;
+        let _ = sender.reply::<GetBakingEndpoint>(header.seq_no, &res).await;
+    } else {
+        error!("handler get baking status could not obtain a watch receiver");
+    }
 }
 
 /// Set the baking
-pub fn set_baking(context: &mut Context, _header: VarHeader, arg: BakingState) {
-    context.baking_ctrl.control(arg);
+pub fn set_baking(_ctx: &mut Context, _header: VarHeader, arg: BakingState) {
+    SET_BAKING_SIGNAL.signal(arg);
 }
 
 pub fn set_light(context: &mut Context, _header: VarHeader, arg: LightState) {
@@ -45,23 +64,77 @@ pub fn get_light(context: &mut Context, _header: VarHeader, _arg: ()) -> LightSt
 }
 
 /// Get the status of the pump valve
-pub fn get_valve_pump(context: &mut Context, _header: VarHeader, _arg: ()) -> ValveState {
-    context.valve_pump_status.status()
+///
+/// pool size limited to one, as we have only one watch receiver for this task reserved
+#[embassy_executor::task(pool_size = 1)]
+pub async fn get_valve_pump(_ctx: TaskContext, header: VarHeader, _arg: (), sender: Sender<AppTx>) {
+    if let Some(mut rec) = WATCH_VALVE_PUMP.receiver() {
+        GET_VALVE_PUMP_SIGNAL.signal(());
+        let res = rec.get().await;
+        let _ = sender
+            .reply::<GetValvePumpEndpoint>(header.seq_no, &res)
+            .await;
+    } else {
+        error!("handler get valve pump could not obtain a watch receiver");
+    }
 }
 
 /// Set the pump valve
 pub fn set_valve_pump(_context: &mut Context, _header: VarHeader, arg: ValveState) {
-    VALVE_PUMP_SIGNAL.signal(arg);
+    SET_VALVE_PUMP_SIGNAL.signal(arg);
 }
-///
+
 /// Get the status of the transfer valve
-pub fn get_valve_transfer(context: &mut Context, _header: VarHeader, _arg: ()) -> ValveState {
-    context.valve_transfer_status.status()
+#[embassy_executor::task(pool_size = 1)]
+pub async fn get_valve_transfer(
+    _ctx: TaskContext,
+    header: VarHeader,
+    _arg: (),
+    sender: Sender<AppTx>,
+) {
+    if let Some(mut rec) = WATCH_VALVE_TRANSFER.receiver() {
+        GET_VALVE_TRANSFER_SIGNAL.signal(());
+        let res = rec.get().await;
+        let _ = sender
+            .reply::<GetValveTransferEndpoint>(header.seq_no, &res)
+            .await;
+    } else {
+        error!("handler get valve pump could not obtain a watch receiver");
+    }
 }
 
 /// Set the transfer valve
 pub fn set_valve_transfer(_context: &mut Context, _header: VarHeader, arg: ValveState) {
-    VALVE_TRANSFER_SIGNAL.signal(arg)
+    SET_VALVE_TRANSFER_SIGNAL.signal(arg)
+}
+
+/// Get the status of the VCT handshake
+pub fn get_vct_handshake(context: &mut Context, _header: VarHeader, _arg: ()) -> VctHandshakeState {
+    context.vct_ctrl.get_handshake_state()
+}
+
+/// Set the status of the VCT handshake
+pub fn set_vct_handshake(context: &mut Context, _header: VarHeader, arg: VctHandshakeState) {
+    context.vct_ctrl.set_handshake_state(arg);
+}
+
+/// Get the VCT status
+#[embassy_executor::task(pool_size = 1)]
+pub async fn get_vct_status(
+    _ctx: TaskContext,
+    header: VarHeader,
+    _arg: (),
+    sender: Sender<AppTx>,
+) {
+    if let Some(mut rec) = WATCH_VCT_STATUS.receiver() {
+        GET_VCT_STATUS.signal(());
+        let res = rec.get().await;
+        let _ = sender
+            .reply::<GetVctStatus>(header.seq_no, &res)
+            .await;
+    } else {
+        error!("handler get vct could not obtain a watch receiver");
+    }
 }
 
 /// This is a SPAWN handler

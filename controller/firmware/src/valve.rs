@@ -1,55 +1,89 @@
 //! Module to provide valve control functionality.
 
+use embassy_futures::select::{Either, select};
 use embassy_rp::gpio::{Input, Output};
-use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, signal::Signal};
+use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, signal::Signal, watch::Watch};
 use embassy_time::{Duration, Timer};
 use icd::ValveState;
 
-pub static VALVE_PUMP_SIGNAL: Signal<CriticalSectionRawMutex, ValveState> = Signal::new();
-pub static VALVE_TRANSFER_SIGNAL: Signal<CriticalSectionRawMutex, ValveState> = Signal::new();
+pub static SET_VALVE_PUMP_SIGNAL: Signal<CriticalSectionRawMutex, ValveState> = Signal::new();
+pub static GET_VALVE_PUMP_SIGNAL: Signal<CriticalSectionRawMutex, ()> = Signal::new();
+pub static WATCH_VALVE_PUMP: Watch<CriticalSectionRawMutex, ValveState, 2> = Watch::new();
+
+pub static SET_VALVE_TRANSFER_SIGNAL: Signal<CriticalSectionRawMutex, ValveState> = Signal::new();
+pub static GET_VALVE_TRANSFER_SIGNAL: Signal<CriticalSectionRawMutex, ()> = Signal::new();
+pub static WATCH_VALVE_TRANSFER: Watch<CriticalSectionRawMutex, ValveState, 2> = Watch::new();
 
 pub struct ValveCtrl {
-    pin_open: Output<'static>,
-    pin_close: Output<'static>,
+    set_open: Output<'static>,
+    set_close: Output<'static>,
     pulse_duration_ms: u64,
+    get_open: Input<'static>,
+    get_close: Input<'static>,
 }
 
 impl ValveCtrl {
     /// Create a new valve controller.
     pub fn new(
-        pin_open: Output<'static>,
-        pin_close: Output<'static>,
+        set_open: Output<'static>,
+        set_close: Output<'static>,
         pulse_duration_ms: u64,
+        get_open: Input<'static>,
+        get_close: Input<'static>,
     ) -> Self {
         Self {
-            pin_open,
-            pin_close,
+            set_open,
+            set_close,
             pulse_duration_ms,
+            get_open,
+            get_close,
         }
     }
 
     /// Close the valve.
     pub async fn close(&mut self) {
-        self.pin_close.set_high();
+        self.set_close.set_high();
         Timer::after(Duration::from_millis(self.pulse_duration_ms)).await;
-        self.pin_close.set_low();
+        self.set_close.set_low();
     }
 
     /// Open the valve.
     pub async fn open(&mut self) {
-        self.pin_open.set_high();
+        self.set_open.set_high();
         Timer::after(Duration::from_millis(self.pulse_duration_ms)).await;
-        self.pin_open.set_low();
+        self.set_open.set_low();
+    }
+
+    fn is_closed(&self) -> bool {
+        self.get_close.is_low()
+    }
+
+    fn is_open(&self) -> bool {
+        self.get_open.is_low()
+    }
+    ///
+    /// Get the current status of the valve.
+    pub fn status(&self) -> ValveState {
+        let vlv_open = self.is_open();
+        let vlv_closed = self.is_closed();
+
+        if vlv_open && !vlv_closed {
+            ValveState::Open
+        } else if !vlv_open && vlv_closed {
+            ValveState::Close
+        } else {
+            ValveState::Undefined
+        }
     }
 }
 
 /// Inputs for the status valves structure.
-pub struct ValveStat {
+pub struct ValveStatus {
     open: Input<'static>,
     closed: Input<'static>,
 }
 
-impl ValveStat {
+impl ValveStatus {
     /// Get a new valve input status struct.
     pub fn new(open: Input<'static>, closed: Input<'static>) -> Self {
         Self { open, closed }
@@ -79,15 +113,24 @@ impl ValveStat {
 
 #[embassy_executor::task(pool_size = 1)]
 pub async fn valve_transfer_task(mut valve: ValveCtrl) {
+    let watch_sender = WATCH_VALVE_TRANSFER.sender();
     loop {
-        match VALVE_TRANSFER_SIGNAL.wait().await {
-            ValveState::Open => {
-                valve.open().await;
-            }
-            ValveState::Close => {
-                valve.close().await;
-            }
-            _ => {}
+        match select(
+            SET_VALVE_TRANSFER_SIGNAL.wait(),
+            GET_VALVE_TRANSFER_SIGNAL.wait(),
+        )
+        .await
+        {
+            Either::First(stat) => match stat {
+                ValveState::Open => {
+                    valve.open().await;
+                }
+                ValveState::Close => {
+                    valve.close().await;
+                }
+                _ => {}
+            },
+            Either::Second(_) => watch_sender.send(valve.status()),
         }
     }
 }
@@ -95,14 +138,23 @@ pub async fn valve_transfer_task(mut valve: ValveCtrl) {
 #[embassy_executor::task(pool_size = 1)]
 pub async fn valve_pump_task(mut valve: ValveCtrl) {
     loop {
-        match VALVE_PUMP_SIGNAL.wait().await {
-            ValveState::Open => {
-                valve.open().await;
-            }
-            ValveState::Close => {
-                valve.close().await;
-            }
-            _ => {}
+        let watch_sender = WATCH_VALVE_PUMP.sender();
+        match select(
+            SET_VALVE_PUMP_SIGNAL.wait(),
+            GET_VALVE_PUMP_SIGNAL.wait(),
+        )
+        .await
+        {
+            Either::First(stat) => match stat {
+                ValveState::Open => {
+                    valve.open().await;
+                }
+                ValveState::Close => {
+                    valve.close().await;
+                }
+                _ => {}
+            },
+            Either::Second(_) => watch_sender.send(valve.status()),
         }
     }
 }

@@ -1,19 +1,16 @@
 //! Module to provide support and potential cancellation for baking the instrument.
 
-use embassy_futures::select::select;
+use embassy_futures::select::{Either, select};
 use embassy_rp::gpio::Output;
-use embassy_sync::{
-    blocking_mutex::raw::{CriticalSectionRawMutex, ThreadModeRawMutex},
-    channel::{Channel, Receiver, Sender},
-    signal::Signal,
-};
+use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, signal::Signal, watch::Watch};
 use embassy_time::{Duration, Instant, Timer};
 use icd::BakingState;
 
-pub type BakingChannel = Channel<ThreadModeRawMutex, BakingState, 5>;
-pub type BakingSender = Sender<'static, ThreadModeRawMutex, BakingState, 5>;
-pub type BakingReceiver = Receiver<'static, ThreadModeRawMutex, BakingState, 5>;
+pub static SET_BAKING_SIGNAL: Signal<CriticalSectionRawMutex, BakingState> = Signal::new();
+pub static GET_BAKING_SIGNAL: Signal<CriticalSectionRawMutex, ()> = Signal::new();
+pub static WATCH_BAKING: Watch<CriticalSectionRawMutex, BakingState, 2> = Watch::new();
 
+// baking internal
 static START_BAKING_SIGNAL: Signal<CriticalSectionRawMutex, StartBaking> = Signal::new();
 static STOP_BAKING_SIGNAL: Signal<CriticalSectionRawMutex, ()> = Signal::new();
 
@@ -96,7 +93,22 @@ impl CurrBakingState {
 }
 
 #[embassy_executor::task(pool_size = 1)]
-pub async fn baking_task(mut p_baking: Output<'static>) {
+pub async fn baking_main_task(mut baking_ctrl: BakingCtrl) {
+    let watch_sender = WATCH_BAKING.sender();
+    loop {
+        match select(SET_BAKING_SIGNAL.wait(), GET_BAKING_SIGNAL.wait()).await {
+            Either::First(state) => {
+                baking_ctrl.control(state);
+            }
+            Either::Second(_) => {
+                watch_sender.send(baking_ctrl.get_status());
+            }
+        }
+    }
+}
+
+#[embassy_executor::task(pool_size = 1)]
+pub async fn baking_ctrl_task(mut p_baking: Output<'static>) {
     loop {
         let StartBaking::Start(dur) = START_BAKING_SIGNAL.wait().await;
 
