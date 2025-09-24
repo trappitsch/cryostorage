@@ -44,7 +44,8 @@ bind_interrupts!(pub struct Irqs {
     USBCTRL_IRQ => usb::InterruptHandler<USB>;
 });
 
-const VALVE_PULSE_DURATION_MS: u64 = 200;
+// FIXME: tune this value to 100ms
+const VALVE_PULSE_DURATION_MS: u64 = 2_000;
 
 #[unsafe(link_section = ".start_block")]
 #[used]
@@ -100,22 +101,21 @@ async fn main(spawner: Spawner) {
     let config = usb_config(ser_buf);
 
     // PIN CONFIGURATION
-    // FIXME: Light switch to PIN_0
-    let p_light = Output::new(p.PIN_25, Level::Low);
+    let p_light = Output::new(p.PIN_19, Level::Low);
 
     let p_baking = Output::new(p.PIN_20, Level::Low);
 
-    let p_valve_pump_open = Output::new(p.PIN_9, Level::Low);
-    let p_valve_pump_close = Output::new(p.PIN_8, Level::Low);
-    let p_valve_pump_status_open = Input::new(p.PIN_5, Pull::None);
-    let p_valve_pump_status_closed = Input::new(p.PIN_4, Pull::None);
+    let p_valve_pump_open = Output::new(p.PIN_2, Level::Low);
+    let p_valve_pump_close = Output::new(p.PIN_3, Level::Low);
+    let p_valve_pump_status_open = Input::new(p.PIN_6, Pull::None);
+    let p_valve_pump_status_closed = Input::new(p.PIN_7, Pull::None);
 
-    let p_valve_transfer_open = Output::new(p.PIN_7, Level::Low);
-    let p_valve_transfer_close = Output::new(p.PIN_6, Level::Low);
-    let p_valve_transfer_status_open = Input::new(p.PIN_3, Pull::None);
-    let p_valve_transfer_status_closed = Input::new(p.PIN_2, Pull::None);
+    let p_valve_transfer_open = Output::new(p.PIN_4, Level::Low);
+    let p_valve_transfer_close = Output::new(p.PIN_5, Level::Low);
+    let p_valve_transfer_status_open = Input::new(p.PIN_8, Pull::None);
+    let p_valve_transfer_status_closed = Input::new(p.PIN_9, Pull::None);
 
-    let p_vct_status_gate = Input::new(p.PIN_18, Pull::None);
+    let p_vct_status_gate = Input::new(p.PIN_14, Pull::None);
     let p_vct_status_attach = Input::new(p.PIN_16, Pull::None);
     let p_vct_handshake = Output::new(p.PIN_17, Level::Low);
 

@@ -15,8 +15,8 @@ impl FlowMeterCtrl {
 
     pub fn status(&mut self) -> FlowMeterState {
         match self.pin_nerr.is_high() {
-            true => FlowMeterState::Ok,
-            false => FlowMeterState::FlowError,
+            true => FlowMeterState::FlowError,
+            false => FlowMeterState::Ok,
         }
     }
 }

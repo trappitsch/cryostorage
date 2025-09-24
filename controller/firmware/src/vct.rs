@@ -56,15 +56,15 @@ impl VctStatus {
 
     fn get_attach_status(&mut self) -> VctState {
         match self.pin_attach_status.is_high() {
-            true => VctState::Connected,
-            false => VctState::Disconnected,
+            true => VctState::Disconnected,
+            false => VctState::Connected,
         }
     }
 
     fn get_gate_status(&mut self) -> VctState {
         match self.pin_gate_status.is_high() {
-            true => VctState::Connected,
-            false => VctState::Disconnected,
+            true => VctState::Disconnected,
+            false => VctState::Connected,
         }
     }
 }

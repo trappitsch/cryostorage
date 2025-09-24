@@ -99,7 +99,7 @@ endpoints! {
     | GetValveTransferEndpoint  | ()                | ValveState            | "hw/valve_transfer/get"       |
     | SetValveTransferEndpoint  | ValveState        | ()                    | "hw/valve_transfer/set"       |
     | GetVctHandshake           | ()                | VctHandshakeState     | "hw/vct_handshake/get"        |
-    | SetVctHandshake           | VctHandshakeState | ()                    | "hw/vct_handshake/get"        |
+    | SetVctHandshake           | VctHandshakeState | ()                    | "hw/vct_handshake/set"        |
     | GetVctStatus              | ()                | VctStates             | "hw/vct_status/get"           |
 }
 
