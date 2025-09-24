@@ -1,8 +1,12 @@
 //! This module handles communication with the controller firmware via poststation.
-use std::sync::{atomic::{AtomicU32, Ordering}, mpsc};
+use std::sync::{
+    atomic::{AtomicU32, Ordering},
+    mpsc,
+};
 
 use icd::{LightState, SetLightEndpoint};
 use poststation_sdk::PoststationClient;
+use serde::{Deserialize, Serialize};
 
 pub enum ControllerCommands {
     Light(LightState),
@@ -26,7 +30,11 @@ pub struct Controller {
 
 impl Controller {
     pub fn new(client: PoststationClient, serial: u64) -> Self {
-        Self { client, serial, ctr: AtomicU32::new(0) }
+        Self {
+            client,
+            serial,
+            ctr: AtomicU32::new(0),
+        }
     }
 
     #[inline(always)]
@@ -35,11 +43,19 @@ impl Controller {
     }
 
     pub async fn light(&self, light_state: LightState) {
-        let _ = self.client.proxy_endpoint::<SetLightEndpoint>(
-            self.serial,
-            self.ctr(),
-            &light_state,
-        ).await;  // FIXME: need error checking
+        let _ = self
+            .client
+            .proxy_endpoint::<SetLightEndpoint>(self.serial, self.ctr(), &light_state)
+            .await; // FIXME: need error checking
         println!("Set light: {:?}", light_state);
     }
+}
+
+/// A structure that holds the configuration for the controller.
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+pub struct ControllerConfig {
+    /// The serial number of the controller -> get form poststation.
+    pub serial: u64,
+    /// Address and port of the poststation serve.
+    pub address: String,
 }

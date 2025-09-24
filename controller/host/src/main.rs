@@ -2,20 +2,26 @@ use std::sync::mpsc;
 
 use poststation_sdk::connect;
 
-use crate::controller::{controller_task, Controller};
-
+use crate::controller::{Controller, controller_task};
 
 mod app;
 mod controller;
-
+mod samples;
+mod prg_config;
 
 #[tokio::main]
 async fn main() {
+    // config
+    let conf = prg_config::PrgConfig::try_new().unwrap();
+    println!("Loaded config: {:?}", conf);
+
     // comms
     let (tx, rx) = mpsc::channel();
-    let serial = 0xE6137B4C98CE7746;
-    let client = connect("localhost:51837").await.unwrap();
-    let cntrl = Controller::new(client, serial);
+
+    // controller
+    let controller_config = conf.get_controller_config();
+    let client = connect(controller_config.address).await.unwrap();
+    let cntrl = Controller::new(client, controller_config.serial);
 
     tokio::spawn(controller_task(cntrl, rx));
 
@@ -24,4 +30,3 @@ async fn main() {
         Err(e) => eprintln!("App exited with error: {}", e),
     }
 }
-
