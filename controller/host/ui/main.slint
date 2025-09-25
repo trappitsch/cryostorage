@@ -1,12 +1,15 @@
 import { Const, TabButton } from "elements.slint";
 import { Palette } from "palette.slint";
 
+import { HelpersLogic } from "helpers.slint";
 import { HomeScreen, HomeLogic } from "screen_home.slint";
 import { CryoScreen } from "screen_cryo.slint";
 import { VacuumScreen } from "screen_vacuum.slint";
 import { SettingsScreen } from "screen_settings.slint";
 
-export { HomeLogic }
+import { SampleLogic, SampleEditDialog } from "samples.slint";
+
+export { HelpersLogic, HomeLogic, SampleLogic, SampleEditDialog } 
 
 export component AppWindow inherits Window {
     in-out property <int> current_index: 0;
@@ -16,12 +19,12 @@ export component AppWindow inherits Window {
         root.current_index = new_index;
     }
 
-    background: Palette.bg;
 
     x: 0px;
     y: 0px;
     width: Const.screen_width;
     height: Const.screen_height;
+    background: Palette.bg;
 
     TabButton {
         index: 0;

@@ -1,5 +1,4 @@
 //! Module to handle sample names and locations.
-
 use anyhow::{Result, bail};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -21,26 +20,29 @@ impl Samples {
         Self { names }
     }
 
-    /// Get the name of the sample at the given position.
-    pub fn get_name(&self, position: &str) -> Result<String> {
-        match self.names.get(position) {
-            Some(entry) => Ok(entry.clone()),
-            None => bail!("Could not find sample name at position {}.", position),
+    /// Get a vector of tuples for the btreemap.
+    pub fn get_for_slint(&self) -> [(slint::SharedString, slint::SharedString); 8] {
+        let mut model: [(slint::SharedString, slint::SharedString); 8] = Default::default();
+        println!("BTreeMap contents: {:?}", self.names);
+        for (it, (key, value)) in self.names.iter().enumerate() {
+            println!("Key: {}, Value: {}", key, value);
+            model[it].1 = key.into();
+            model[it].0 = value.into();
         }
+        model
     }
 
-    /// Set the name of the sample at the given position.
-    pub fn set_name(&mut self, position: &str, name: &str) -> Result<()> {
-        match self.names.get_mut(position) {
-            Some(entry) => *entry = name.into(),
-            None => bail!("Could not find sample name at position {}.", position),
+    /// Update the sample name at the given position and return the index of the entry.
+    pub fn update_sample(&mut self, pos: &str, value: &str) -> Result<usize> {
+        if self.names.contains_key(pos) {
+            self.names.insert(pos.into(), value.into());
+            Ok(SMP_POSITIONS
+                .iter()
+                .position(|&p| p == pos)
+                .expect("Cannot fail"))
+        } else {
+            bail!("Position {} does not exist", pos);
         }
-        Ok(())
-    }
-
-    /// Get a clone of the entire names HashMap.
-    pub fn get_names(&self) -> BTreeMap<String, String> {
-        self.names.clone()
     }
 }
 
@@ -69,15 +71,5 @@ mod tests {
     fn test_default() {
         let smp = Samples::new();
         assert_eq!(smp.names.len(), 8);
-    }
-
-    #[test]
-    fn test_name() {
-        let mut smp = Samples::new();
-        smp.set_name("A1", "Sample A1").unwrap();
-        assert_eq!(smp.get_name("A1").unwrap(), "Sample A1");
-
-        assert!(smp.set_name("Invalid name", "still not valid").is_err());
-        assert!(smp.get_name("Invalid name").is_err());
     }
 }

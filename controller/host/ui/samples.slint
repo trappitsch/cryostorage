@@ -1,0 +1,173 @@
+import { Const, NormalText, H3Text, H2Text, RegularButton, MyWindow, MyVerticalLayout, MyLineEdit } from "elements.slint";
+import { Palette } from "palette.slint";
+
+import { StandardButton, Button } from "std-widgets.slint";
+
+export global SampleLogic {
+    pure callback edit_sample_name(string, string);
+    in-out property <[{pos: string, name: string}]> sample_model: [
+        { pos: "A1", name: "Sample 1" },
+        { pos: "A2", name: "Sample 2 has a very long name" },
+        { pos: "B1", name: "" },
+        { pos: "B2", name: "" },
+        { pos: "C1", name: "" },
+        { pos: "C2", name: "" },
+        { pos: "D1", name: "Sample D1" },
+        { pos: "D2", name: "" },
+    ];
+
+    out property <length> total_height: 400px;
+    out property <length> total_width: Const.useable_width - 2 * Const.border_spacing;
+    out property <color> border_color: Palette.overlay2;
+    out property <length> border_width: 2px;
+}
+
+export component SampleEditDialog inherits Window {
+    in-out property <string> sample_position: "N/A"; 
+    in-out property <string> sample_name;
+
+    callback cancel_clicked();
+    callback ok_clicked(string);
+
+    always-on-top: true;
+    y: 20px;
+    width: Const.screen_width / 2;
+    background: Palette.bg;
+
+    MyVerticalLayout {
+        padding: Const.border_spacing;
+
+        NormalText {
+            text: "Set sample name for position " + sample_position;
+        }
+
+        le := MyLineEdit {
+            text: sample_name;
+            placeholder-text: "Enter sample name";
+        }
+
+        HorizontalLayout {
+            padding-right: Const.border_spacing;
+            padding-bottom: Const.border_spacing;
+            spacing: Const.border_spacing;
+            alignment: end;
+
+            RegularButton {
+                text: "Clear";
+                clicked => {
+                    ok_clicked("");
+                }
+            }
+            RegularButton {
+                text: "Cancel";
+                clicked => {
+                    cancel_clicked();
+                }
+            }
+            RegularButton {
+                text: "Ok";
+                clicked => {
+                    ok_clicked(le.text);
+                }
+            }
+        }
+    }
+}
+
+component SampleButton inherits Rectangle {
+    in-out property <string> position;
+    in-out property <string> sample_name;
+
+    property <bool> is_empty: (sample_name == "") ? true : false;
+
+    property <length> smp_button_height: SampleLogic.total_height / 2;
+    property <length> smp_button_width: SampleLogic.total_width / 4;
+    property <length> holder_width: 90px;
+    property <length> holder_height: 90px;
+
+    height: smp_button_height;
+    width: smp_button_width;
+
+    TouchArea {
+        clicked => {
+            debug("x: {0}, y: {1}", root.x, root.y);
+            SampleLogic.edit_sample_name(position, sample_name);
+        }
+    }
+
+    HorizontalLayout {
+        alignment: center;
+
+        VerticalLayout {
+            alignment: start;
+            padding-top: 20px;
+
+            HorizontalLayout {
+                alignment: center;
+                main_rectangle := Rectangle {
+                    width: holder_width;
+                    height: holder_height;
+                    border-width: SampleLogic.border_width;
+                    border-radius: 5px;
+                    border-color: SampleLogic.border_color;
+                    background: is_empty ? Palette.sample_bg_empty : Palette.sample_bg_used;
+
+                    H2Text {
+                        text: position;
+                        color: Palette.sample_pos_text;
+                    }
+
+                // the little feet
+                property <length> ft_dim: 15px;
+                    property <length> ft_rad: 5px;
+                    property <length> ft_edge_spacing: 15px;
+                    property <[length]> ft_xoffset: [-ft_dim / 2, holder_width - ft_dim / 2];
+                    property <[length]> ft_yoffset: [ft_edge_spacing, holder_height - ft_dim - ft_edge_spacing];
+                    for xoffset in ft_xoffset: Rectangle {
+                        for yoffset in ft_yoffset: Rectangle {
+                            x: parent.x + xoffset;
+                            y: parent.y + yoffset;
+                            width: ft_dim;
+                            height: ft_dim;
+                            background: SampleLogic.border_color;
+                            border-radius: ft_rad;
+                        }
+                    }
+                }
+            }
+
+            Rectangle {
+                height: 20px;
+            }
+
+            NormalText {
+                max-width: 0.9 * smp_button_width;
+                text: is_empty ? "empty" : sample_name;
+                font-italic: is_empty;
+                horizontal-alignment: center;
+                wrap: no-wrap;
+            }
+        }
+    }
+}
+
+export component Samples inherits Rectangle {
+    // geometry
+    x: Const.border_spacing; // padding
+    width: SampleLogic.total_width;
+    height: SampleLogic.total_height;
+
+    // style
+    background: Palette.bg_area;
+    border-width: SampleLogic.border_width;
+    border-radius: 10px;
+    border-color: SampleLogic.border_color;
+
+    for smp[it] in SampleLogic.sample_model: SampleButton {
+        position: smp.pos;
+        sample_name: smp.name;
+
+        x: (it - mod(it, 2)) / 2 * (SampleLogic.total_width / 4);
+        y: mod(it, 2) * (SampleLogic.total_height / 2);
+    }
+}

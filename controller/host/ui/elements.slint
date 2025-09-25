@@ -1,11 +1,15 @@
 import { Palette } from "palette.slint";
+import { LineEdit } from "std-widgets.slint";
 
 export global Const {
     out property <length> big_switch_height: 160px;
     out property <length> border_radius_large: 20px;
     out property <length> border_radius_small: 10px;
+    out property <length> border_spacing: 20px;
     out property <length> button_pictogram: 160px;
     out property <length> button_height: 80px;
+    out property <length> button_width_regular: 160px;
+    out property <length> button_height_regular: 50px;
     out property <length> edge_spacing: 50px;
     out property <length> element_width_short: 300px;
     out property <length> element_width_wide: 400px;
@@ -17,6 +21,8 @@ export global Const {
     out property <length> screen_width: 1280px;
     out property <length> screen_height: 800px;
     out property <length> tab_button_width: 150px;
+    // calculated properties
+    out property <length> useable_width: screen_width - tab_button_width;
 }
 
 export component NormalText inherits Text {
@@ -51,6 +57,21 @@ export component MyWindow inherits Rectangle {
     y: 0px;
     width: Const.screen_width - Const.tab_button_width;
     height: Const.screen_height;
+}
+
+
+export component MyHorizontalLayout inherits HorizontalLayout {
+    alignment: space-between;
+    padding-left: Const.border_spacing;
+    padding-right: Const.border_spacing;
+    spacing: Const.border_spacing;
+}
+    
+export component MyVerticalLayout inherits VerticalLayout {
+    alignment: space-between;
+    padding-top: Const.border_spacing;
+    padding-bottom: Const.border_spacing;
+    spacing: Const.border_spacing;
 }
 
 // Default tab button component that should be standing on the right side of the screen
@@ -166,7 +187,32 @@ export component LongButton inherits Rectangle {
     callback clicked();
 
     width: Const.element_width_wide;
-    height: Const.button_height;
+    height: Const.button_height_regular;
+
+    border-radius: Const.border_radius_small;
+
+    ta := TouchArea {
+        clicked => {
+            root.clicked();
+        }
+    }
+
+    background: !ta.pressed ? Palette.button_off : Palette.button_on;
+
+    NormalText {
+        text: root.text;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+        color: Palette.text;
+    }
+}
+
+export component RegularButton inherits Rectangle {
+    in property <string> text: "Regular Button";
+    callback clicked();
+
+    width: Const.button_width_regular;
+    height: Const.button_height_regular;
 
     border-radius: Const.border_radius_large;
 
@@ -178,14 +224,13 @@ export component LongButton inherits Rectangle {
 
     background: !ta.pressed ? Palette.button_off : Palette.button_on;
 
-    H3Text {
+    NormalText {
         text: root.text;
         horizontal-alignment: center;
         vertical-alignment: center;
         color: Palette.text;
     }
 }
-
 export component BigSwitch inherits Rectangle {
     in-out property <bool> right_side: false;
     in-out property <string> title: "Big Switch";
@@ -221,6 +266,7 @@ export component BigSwitch inherits Rectangle {
                         if (root.right_side) {
                             root.right_side = false;
                         }
+                        root.switched(root.right_side);
                     }
                 }
 
@@ -245,6 +291,7 @@ export component BigSwitch inherits Rectangle {
                         if (!root.right_side) {
                             root.right_side = true;
                         }
+                        root.switched(root.right_side);
                     }
                 }
 
@@ -356,4 +403,8 @@ export component PictogramButton inherits Rectangle {
         horizontal-alignment: center;
         vertical-alignment: center;
     }
+}
+
+export component MyLineEdit inherits LineEdit {
+    font-size: 20px;
 }

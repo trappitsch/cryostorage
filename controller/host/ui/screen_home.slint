@@ -1,73 +1,80 @@
 import { MyWindow } from "elements.slint";
 
-import { BigSwitch, Const, NormalText, LongButton, LightSwitch, SmallSwitch, InfoArea, PictogramButton, StatusOkErr, InfoAreaSmall } from "elements.slint";
+import { BigSwitch, Const, NormalText, LongButton, LightSwitch, SmallSwitch, InfoArea, PictogramButton, StatusOkErr, InfoAreaSmall, MyVerticalLayout, MyHorizontalLayout } from "elements.slint";
 import { Palette } from "palette.slint";
+import { Samples } from "samples.slint";
 
 export global HomeLogic {
     pure callback light_switch(bool);
+    in-out property <int> sample_temp: 293;
+    in-out property <string> chamber_pressure;
+    in-out property <string> transfer_pressure;
+    pure callback cryocooler_set_on(bool);
+    in-out property <bool> cryocooler_is_on;
+    pure callback transfer_valve_set_open(bool);
+    in-out property <bool> transfer_valve_is_open;
 }
 
 export component HomeScreen inherits MyWindow {
     index: 0;
 
-    BigSwitch {
-        x: 20px;
-        y: 20px;
-    }
+    MyVerticalLayout {
 
-    SmallSwitch {
-        x: 500px;
-        y: 20px;
-    }
+        MyHorizontalLayout {
 
-    InfoArea {
-        x: 20px;
-        y: 200px;
-        title: "Cold temperature";
-        text_color: Palette.blue;
+            InfoAreaSmall {
+                title: "Sample temperature";
+                text_color: (HomeLogic.sample_temp < 120) ? Palette.blue : Palette.red;
+                text: HomeLogic.sample_temp + " K";
+            }
 
-    }
+            InfoAreaSmall {
+                title: "Chamber";
+                text: HomeLogic.chamber_pressure;
+            }
 
-    LongButton {
-        x: 20px;
-        y: 350px;
-    }
-
-    PictogramButton {
-        x: 20px;
-        y: 500px;
-    }
-
-    SmallSwitch {
-        x: 500px;
-        y: 700px;
-    }
-
-    InfoAreaSmall {
-        x: 500px;
-        y: 20px;
-        title: "Warm temperature";
-        text_color: Palette.red;
-    }
-
-    LightSwitch {
-        x: 500px;
-        y: 250px;
-        clicked(val) => {
-            HomeLogic.light_switch(val);
+            InfoAreaSmall {
+                title: "Transfer";
+                text: HomeLogic.transfer_pressure;
+            }
         }
-    }
 
-    StatusOkErr {
-        title: "StatusOkErr: Err";
-        ok: false;
-        x: 500px;
-        y: 450px;
-    }
+        MyHorizontalLayout {
 
-    StatusOkErr {
-        title: "StatusOkErr: Ok";
-        x: 500px;
-        y: 550px;
+            MyHorizontalLayout {
+                alignment: start;
+                padding-left: 0px;
+                padding-right: 0px;
+
+                BigSwitch {
+                    title: "Cryocooler";
+                    right_side: HomeLogic.cryocooler_is_on;
+                    left_text: "Off";
+                    right_text: "On";
+                    switched(right_side_active) => {
+                        HomeLogic.cryocooler_set_on(right_side_active);  // bool
+                }
+                }
+
+                BigSwitch {
+                    title: "Transfer valve";
+                    right_side: HomeLogic.transfer_valve_is_open;
+                    left_text: "Closed";
+                    right_text: "Open";
+                    switched(right_side_active) => {
+                        HomeLogic.transfer_valve_set_open(right_side_active);  // bool
+                }
+                }
+            }
+
+            LightSwitch {
+                clicked(val) => {
+                    HomeLogic.light_switch(val);
+                }
+            }
+        }
+
+        Samples {
+        }
     }
 }

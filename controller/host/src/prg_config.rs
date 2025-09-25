@@ -72,9 +72,10 @@ impl PrgConfig {
         self.samples.clone()
     }
 
-    /// Update the samples and save to file.
-    pub fn update_samples(&mut self, samples: Samples) -> Result<()> {
-        self.samples = samples;
-        self.save_to_file()
+    /// Update the samples, save to file, and return index of updated entry.
+    pub fn update_sample(&mut self, pos: &str, value: &str) -> Result<usize> {
+        let res = self.samples.update_sample(pos, value);
+        self.save_to_file()?;
+        res
     }
 }
