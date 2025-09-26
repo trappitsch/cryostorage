@@ -1,26 +1,8 @@
 import { Const, NormalText, H3Text, H2Text, RegularButton, MyWindow, MyVerticalLayout, MyLineEdit } from "elements.slint";
 import { Palette } from "palette.slint";
+import { Logic } from "logic.slint";
 
 import { StandardButton, Button } from "std-widgets.slint";
-
-export global SampleLogic {
-    pure callback edit_sample_name(string, string);
-    in-out property <[{pos: string, name: string}]> sample_model: [
-        { pos: "A1", name: "Sample 1" },
-        { pos: "A2", name: "Sample 2 has a very long name" },
-        { pos: "B1", name: "" },
-        { pos: "B2", name: "" },
-        { pos: "C1", name: "" },
-        { pos: "C2", name: "" },
-        { pos: "D1", name: "Sample D1" },
-        { pos: "D2", name: "" },
-    ];
-
-    out property <length> total_height: 400px;
-    out property <length> total_width: Const.useable_width - 2 * Const.border_spacing;
-    out property <color> border_color: Palette.overlay2;
-    out property <length> border_width: 2px;
-}
 
 export component SampleEditDialog inherits Window {
     in-out property <string> sample_position: "N/A"; 
@@ -80,8 +62,8 @@ component SampleButton inherits Rectangle {
 
     property <bool> is_empty: (sample_name == "") ? true : false;
 
-    property <length> smp_button_height: SampleLogic.total_height / 2;
-    property <length> smp_button_width: SampleLogic.total_width / 4;
+    property <length> smp_button_height: Logic.total_height / 2;
+    property <length> smp_button_width: Logic.total_width / 4;
     property <length> holder_width: 90px;
     property <length> holder_height: 90px;
 
@@ -91,7 +73,7 @@ component SampleButton inherits Rectangle {
     TouchArea {
         clicked => {
             debug("x: {0}, y: {1}", root.x, root.y);
-            SampleLogic.edit_sample_name(position, sample_name);
+            Logic.edit_sample_name(position, sample_name);
         }
     }
 
@@ -107,9 +89,9 @@ component SampleButton inherits Rectangle {
                 main_rectangle := Rectangle {
                     width: holder_width;
                     height: holder_height;
-                    border-width: SampleLogic.border_width;
+                    border-width: Logic.border_width;
                     border-radius: 5px;
-                    border-color: SampleLogic.border_color;
+                    border-color: Logic.border_color;
                     background: is_empty ? Palette.sample_bg_empty : Palette.sample_bg_used;
 
                     H2Text {
@@ -129,7 +111,7 @@ component SampleButton inherits Rectangle {
                             y: parent.y + yoffset;
                             width: ft_dim;
                             height: ft_dim;
-                            background: SampleLogic.border_color;
+                            background: Logic.border_color;
                             border-radius: ft_rad;
                         }
                     }
@@ -154,20 +136,20 @@ component SampleButton inherits Rectangle {
 export component Samples inherits Rectangle {
     // geometry
     x: Const.border_spacing; // padding
-    width: SampleLogic.total_width;
-    height: SampleLogic.total_height;
+    width: Logic.total_width;
+    height: Logic.total_height;
 
     // style
     background: Palette.bg_area;
-    border-width: SampleLogic.border_width;
+    border-width: Logic.border_width;
     border-radius: 10px;
-    border-color: SampleLogic.border_color;
+    border-color: Logic.border_color;
 
-    for smp[it] in SampleLogic.sample_model: SampleButton {
+    for smp[it] in Logic.sample_model: SampleButton {
         position: smp.pos;
         sample_name: smp.name;
 
-        x: (it - mod(it, 2)) / 2 * (SampleLogic.total_width / 4);
-        y: mod(it, 2) * (SampleLogic.total_height / 2);
+        x: (it - mod(it, 2)) / 2 * (Logic.total_width / 4);
+        y: mod(it, 2) * (Logic.total_height / 2);
     }
 }

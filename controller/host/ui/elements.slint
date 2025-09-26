@@ -59,14 +59,13 @@ export component MyWindow inherits Rectangle {
     height: Const.screen_height;
 }
 
-
 export component MyHorizontalLayout inherits HorizontalLayout {
     alignment: space-between;
     padding-left: Const.border_spacing;
     padding-right: Const.border_spacing;
     spacing: Const.border_spacing;
 }
-    
+
 export component MyVerticalLayout inherits VerticalLayout {
     alignment: space-between;
     padding-top: Const.border_spacing;
@@ -209,6 +208,7 @@ export component LongButton inherits Rectangle {
 
 export component RegularButton inherits Rectangle {
     in property <string> text: "Regular Button";
+    in property <bool> enabled: true;
     callback clicked();
 
     width: Const.button_width_regular;
@@ -218,19 +218,22 @@ export component RegularButton inherits Rectangle {
 
     ta := TouchArea {
         clicked => {
-            root.clicked();
+            if (root.enabled) {
+                root.clicked();
+            }
         }
     }
 
-    background: !ta.pressed ? Palette.button_off : Palette.button_on;
+    background: enabled ? (!ta.pressed ? Palette.button_off : Palette.button_on) : Palette.button_off;
 
     NormalText {
         text: root.text;
         horizontal-alignment: center;
         vertical-alignment: center;
-        color: Palette.text;
+        color: enabled ? Palette.text : Palette.surface2;
     }
 }
+
 export component BigSwitch inherits Rectangle {
     in-out property <bool> right_side: false;
     in-out property <string> title: "Big Switch";

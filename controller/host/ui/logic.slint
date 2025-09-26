@@ -1,0 +1,61 @@
+import { Const } from "elements.slint";
+import { Palette } from "palette.slint";
+
+
+// Structs
+export struct BakingTime {
+    hours: int,
+    minutes: int,
+    seconds: int,
+}
+
+// Logic
+export global Logic {
+    // Baking
+    in-out property <bool> baking_is_enabled;
+    in-out property <BakingTime> baking_time: {
+        hours: 0,
+        minutes: 0,
+        seconds: 0,
+    };
+    pure callback baking_enabled(bool);
+
+    // Cryocooler
+    pure callback cryocooler_set_on(bool);
+    in-out property <bool> cryocooler_is_on;
+
+    // Light switch
+    pure callback light_switch(bool);
+
+    // Program
+    pure callback close_program();
+
+    // Samples
+    pure callback edit_sample_name(string, string);
+    in-out property <[{pos: string, name: string}]> sample_model: [
+        { pos: "A1", name: "Sample 1" },
+        { pos: "A2", name: "Sample 2 has a very long name" },
+        { pos: "B1", name: "" },
+        { pos: "B2", name: "" },
+        { pos: "C1", name: "" },
+        { pos: "C2", name: "" },
+        { pos: "D1", name: "Sample D1" },
+        { pos: "D2", name: "" },
+    ];
+
+    out property <length> total_height: 400px;
+    out property <length> total_width: Const.useable_width - 2 * Const.border_spacing;
+    out property <color> border_color: Palette.overlay2;
+    out property <length> border_width: 2px;
+
+    // Temperature
+    in-out property <int> sample_temp: 293;
+
+    // Vacuum
+    in-out property <string> chamber_pressure;
+    in-out property <string> transfer_pressure;
+
+    // Valves
+    pure callback transfer_valve_set_open(bool);
+    in-out property <bool> transfer_valve_is_open;
+}

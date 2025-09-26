@@ -21,6 +21,7 @@ pub fn app_main(
 
     // initialize the different screens
     let _home_screen = HomeScreen::new(ui.as_weak(), tx.clone(), Arc::clone(&conf));
+    let _settings_screen = SettingsScreen::new(ui.as_weak(), tx.clone());
 
     ui.show()?;
 
@@ -47,10 +48,6 @@ impl HomeScreen {
             ui: ui.unwrap(),
         };
         hs.init();
-        hs.light_switch();
-        hs.cryocooler_set_on();
-        hs.edit_sample_name();
-        hs.transfer_valve_set_open();
 
         hs
     }
@@ -64,26 +61,32 @@ impl HomeScreen {
             .get_samples()
             .get_for_slint();
         self.ui
-            .global::<SampleLogic>()
+            .global::<Logic>()
             .set_sample_model(samples.into());
 
         // FIXME: bogus inits below
         self.ui
-            .global::<HomeLogic>()
+            .global::<Logic>()
             .set_transfer_pressure(format!("{:.2E} mbar", 0.3).into());
         // set chamber pressure scientifically formatted
         self.ui
-            .global::<HomeLogic>()
+            .global::<Logic>()
             .set_chamber_pressure(format!("{:.2E} mbar", 0.0001234).into());
-        self.ui.global::<HomeLogic>().set_cryocooler_is_on(false);
+        self.ui.global::<Logic>().set_cryocooler_is_on(false);
         self.ui
-            .global::<HomeLogic>()
+            .global::<Logic>()
             .set_transfer_valve_is_open(true);
+
+        // init buttons
+        self.light_switch();
+        self.cryocooler_set_on();
+        self.edit_sample_name();
+        self.transfer_valve_set_open();
     }
 
     fn light_switch(&self) {
         let tx = self.tx.clone();
-        self.ui.global::<HomeLogic>().on_light_switch({
+        self.ui.global::<Logic>().on_light_switch({
             move |val| {
                 let light_stat = match val {
                     true => LightState::On,
@@ -95,7 +98,7 @@ impl HomeScreen {
     }
 
     fn cryocooler_set_on(&self) {
-        self.ui.global::<HomeLogic>().on_cryocooler_set_on({
+        self.ui.global::<Logic>().on_cryocooler_set_on({
             move |val| {
                 println!("Cryocooler on: {}", val); // TODO
             }
@@ -103,7 +106,7 @@ impl HomeScreen {
     }
 
     fn edit_sample_name(&self) {
-        self.ui.global::<SampleLogic>().on_edit_sample_name({
+        self.ui.global::<Logic>().on_edit_sample_name({
             let ui = self.ui.as_weak();
             let cfg = Arc::clone(&self.conf);
             move |pos, name| {
@@ -133,7 +136,7 @@ impl HomeScreen {
                             return;
                         };
 
-                        let model = ui.unwrap().global::<SampleLogic>().get_sample_model();
+                        let model = ui.unwrap().global::<Logic>().get_sample_model();
                         model.set_row_data(idx, (new_name, pos));
                         dialog.unwrap().hide().unwrap();
                     }
@@ -143,9 +146,38 @@ impl HomeScreen {
     }
 
     fn transfer_valve_set_open(&self) {
-        self.ui.global::<HomeLogic>().on_transfer_valve_set_open({
+        self.ui.global::<Logic>().on_transfer_valve_set_open({
             move |val| {
                 println!("Transfer valve open: {}", val); // TODO
+            }
+        });
+    }
+}
+
+struct SettingsScreen {
+    ui: AppWindow,
+    tx: mpsc::Sender<ControllerCommands>,
+}
+
+impl SettingsScreen {
+    fn new(ui: Weak<AppWindow>, tx: mpsc::Sender<ControllerCommands>) -> Self {
+        let ss = Self {
+            tx,
+            ui: ui.unwrap(),
+        };
+        ss.init();
+
+        ss
+    }
+
+    fn init(&self) {
+        self.close_button();
+    }
+
+    fn close_button(&self) {
+        self.ui.global::<Logic>().on_close_program({
+            move || {
+                slint::quit_event_loop().unwrap();
             }
         });
     }

@@ -3,17 +3,7 @@ import { MyWindow } from "elements.slint";
 import { BigSwitch, Const, NormalText, LongButton, LightSwitch, SmallSwitch, InfoArea, PictogramButton, StatusOkErr, InfoAreaSmall, MyVerticalLayout, MyHorizontalLayout } from "elements.slint";
 import { Palette } from "palette.slint";
 import { Samples } from "samples.slint";
-
-export global HomeLogic {
-    pure callback light_switch(bool);
-    in-out property <int> sample_temp: 293;
-    in-out property <string> chamber_pressure;
-    in-out property <string> transfer_pressure;
-    pure callback cryocooler_set_on(bool);
-    in-out property <bool> cryocooler_is_on;
-    pure callback transfer_valve_set_open(bool);
-    in-out property <bool> transfer_valve_is_open;
-}
+import { Logic } from "logic.slint";
 
 export component HomeScreen inherits MyWindow {
     index: 0;
@@ -24,18 +14,18 @@ export component HomeScreen inherits MyWindow {
 
             InfoAreaSmall {
                 title: "Sample temperature";
-                text_color: (HomeLogic.sample_temp < 120) ? Palette.blue : Palette.red;
-                text: HomeLogic.sample_temp + " K";
+                text_color: (Logic.sample_temp < 120) ? Palette.blue : Palette.red;
+                text: Logic.sample_temp + " K";
             }
 
             InfoAreaSmall {
                 title: "Chamber";
-                text: HomeLogic.chamber_pressure;
+                text: Logic.chamber_pressure;
             }
 
             InfoAreaSmall {
                 title: "Transfer";
-                text: HomeLogic.transfer_pressure;
+                text: Logic.transfer_pressure;
             }
         }
 
@@ -48,28 +38,28 @@ export component HomeScreen inherits MyWindow {
 
                 BigSwitch {
                     title: "Cryocooler";
-                    right_side: HomeLogic.cryocooler_is_on;
+                    right_side: Logic.cryocooler_is_on;
                     left_text: "Off";
                     right_text: "On";
                     switched(right_side_active) => {
-                        HomeLogic.cryocooler_set_on(right_side_active);  // bool
+                        Logic.cryocooler_set_on(right_side_active);  // bool
                 }
                 }
 
                 BigSwitch {
                     title: "Transfer valve";
-                    right_side: HomeLogic.transfer_valve_is_open;
+                    right_side: Logic.transfer_valve_is_open;
                     left_text: "Closed";
                     right_text: "Open";
                     switched(right_side_active) => {
-                        HomeLogic.transfer_valve_set_open(right_side_active);  // bool
+                        Logic.transfer_valve_set_open(right_side_active);  // bool
                 }
                 }
             }
 
             LightSwitch {
                 clicked(val) => {
-                    HomeLogic.light_switch(val);
+                    Logic.light_switch(val);
                 }
             }
         }
