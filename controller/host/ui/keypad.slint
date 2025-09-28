@@ -1,0 +1,166 @@
+import { Const, MyVerticalLayout, NormalText, H2Text, RegularButton } from "elements.slint";
+import { Palette } from "palette.slint";
+
+export global KeypadLogic {
+    pure callback cancel_pressed();
+    pure callback ok_pressed(string);
+    in property <string> pin_entered: "";
+}
+
+component ButtonStyle inherits Rectangle {
+    width: 95px;
+    height: self.width;
+
+    border-radius: Const.border_radius_small;
+    border-width: 2px;
+    border-color: Palette.overlay2;
+
+}
+
+component NumberButton inherits ButtonStyle {
+    in property <int> value;
+
+    background: !ta.pressed ? Palette.button_off : Palette.button_on;
+
+    H2Text {
+        horizontal-alignment: center;
+        vertical-alignment: center;
+        text: value;
+    }
+
+    ta := TouchArea {
+        clicked => {
+            KeypadLogic.pin_entered += value;
+        }
+    }
+}
+
+component ClearButton inherits ButtonStyle {
+    background: !ta.pressed ? Palette.button_off : Palette.button_on;
+
+    H2Text {
+        horizontal-alignment: center;
+        vertical-alignment: center;
+        text: "CLR";
+    }
+
+    ta := TouchArea {
+        clicked => {
+            KeypadLogic.pin_entered = "";
+        }
+    }
+}
+
+export component Keypad inherits Window {
+    y: 20px;
+
+    height: 760px;
+
+    background: Palette.bg;
+
+    MyVerticalLayout {
+
+        H2Text {
+            text: "Enter PIN";
+            horizontal-alignment: center;
+        }
+
+        Rectangle {
+            x: (parent.width - self.width) / 2;
+            width: 3 * kb.width + 2 * Const.border_spacing;
+            min-height: 80px;
+
+            border-width: 2px;
+            border-color: Palette.overlay2;
+            border-radius: Const.border_radius_large;
+
+
+            H2Text {
+                text: KeypadLogic.pin_entered;
+                letter-spacing: 15px;
+            }
+        }
+
+        HorizontalLayout {
+            alignment: center;
+            GridLayout {
+                spacing: Const.border_spacing;
+                Row {
+                    NumberButton {
+                        value: 7;
+                    }
+
+                    NumberButton {
+                        value: 8;
+                    }
+
+                    NumberButton {
+                        value: 9;
+                    }
+                }
+
+                Row {
+                    NumberButton {
+                        value: 4;
+                    }
+
+                    NumberButton {
+                        value: 5;
+                    }
+
+                    NumberButton {
+                        value: 6;
+                    }
+                }
+
+                Row {
+                    NumberButton {
+                        value: 1;
+                    }
+
+                    NumberButton {
+                        value: 2;
+                    }
+
+                    kb := NumberButton {
+                        value: 3;
+                    }
+                }
+
+                Row {
+                    NumberButton {
+                        colspan: 2;
+                        width: 2 * kb.width + Const.border_spacing;
+                        height: kb.height;
+                        value: 0;
+                    }
+
+                    ClearButton{
+                        col: 2;
+                        width: kb.width;
+                        height: kb.height;
+                    }
+                }
+            }
+        }
+
+        HorizontalLayout {
+            alignment: end;
+            padding: Const.border_spacing;
+            spacing: Const.border_spacing;
+            RegularButton {
+                text: "Cancel";
+                clicked => {
+                    KeypadLogic.cancel_pressed();
+                }
+            }
+
+            RegularButton {
+                text: "Ok";
+                clicked => {
+                    KeypadLogic.ok_pressed(KeypadLogic.pin_entered);
+                }
+            }
+        }
+    }
+}

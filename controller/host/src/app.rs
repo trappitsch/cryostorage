@@ -6,7 +6,8 @@ use std::{
 };
 
 use icd::LightState;
-use slint::{Model, Weak};
+use slint::{Model, SharedString, Weak};
+use tokio::sync::mpsc as tokio_mpsc;
 
 use crate::{controller::ControllerCommands, prg_config::PrgConfig};
 
@@ -60,9 +61,7 @@ impl HomeScreen {
             .expect("Poisoned")
             .get_samples()
             .get_for_slint();
-        self.ui
-            .global::<Logic>()
-            .set_sample_model(samples.into());
+        self.ui.global::<Logic>().set_sample_model(samples.into());
 
         // FIXME: bogus inits below
         self.ui
@@ -73,9 +72,7 @@ impl HomeScreen {
             .global::<Logic>()
             .set_chamber_pressure(format!("{:.2E} mbar", 0.0001234).into());
         self.ui.global::<Logic>().set_cryocooler_is_on(false);
-        self.ui
-            .global::<Logic>()
-            .set_transfer_valve_is_open(true);
+        self.ui.global::<Logic>().set_transfer_valve_is_open(true);
 
         // init buttons
         self.light_switch();
@@ -110,37 +107,29 @@ impl HomeScreen {
             let ui = self.ui.as_weak();
             let cfg = Arc::clone(&self.conf);
             move |pos, name| {
-                let dialog = SampleEditDialog::new().unwrap();
-                dialog.set_sample_position(pos);
-                dialog.set_sample_name(name);
-                dialog.show().unwrap();
+                let message = format!("Edit name of sample at position {}", pos.clone());
+                let (tx, mut rx) = tokio_mpsc::channel(1);
+                let kb = KeyboardInput::new(tx);
+                kb.get_text_input(message.as_str(), name);
 
-                dialog.on_cancel_clicked({
-                    let dialog = dialog.as_weak();
-                    move || {
-                        dialog.unwrap().hide().unwrap();
-                    }
-                });
-
-                dialog.on_ok_clicked({
-                    let ui = ui.clone();
-                    let dialog = dialog.as_weak();
-                    let cfg = Arc::clone(&cfg);
-                    move |new_name| {
-                        println!("New name: {}", new_name); // TODO
-                        let pos = dialog.unwrap().get_sample_position();
-
-                        let Ok(idx) = cfg.lock().expect("Poisoned").update_sample(&pos, &new_name)
-                        else {
-                            eprintln!("Failed to update sample name");
-                            return;
+                let cfg = Arc::clone(&cfg);
+                let ui = ui.clone();
+                let fut = async move {
+                    let answer = rx.recv().await;
+                    if let Some(ans) = answer {
+                        if let Ok(idx) = cfg.lock().expect("Poisoned").update_sample(&pos, &ans) {
+                            let model = ui.unwrap().global::<Logic>().get_sample_model();
+                            model.set_row_data(idx, (ans, pos));
+                        } else {
+                            eprintln!("Failed to update sample position");
                         };
-
-                        let model = ui.unwrap().global::<Logic>().get_sample_model();
-                        model.set_row_data(idx, (new_name, pos));
-                        dialog.unwrap().hide().unwrap();
                     }
-                });
+                };
+
+                slint::spawn_local(async_compat::Compat::new(fut)).unwrap();
+
+                //         }
+                //     });
             }
         });
     }
@@ -172,12 +161,100 @@ impl SettingsScreen {
 
     fn init(&self) {
         self.close_button();
+        self.test_button();
+    }
+
+    // FIXME: Delete
+    fn test_button(&self) {
+        let ui = self.ui.as_weak();
+        self.ui.global::<Logic>().on_test_button_pressed({
+            move || {
+                let ui = ui.unwrap();
+                let text = ui.global::<Logic>().get_test_button_text();
+                println!("Test button text: {}", text);
+                let (tx, mut rx) = tokio_mpsc::channel(1);
+                let kb = KeyboardInput::new(tx);
+                kb.get_text_input("asdf", text);
+                let fut = async move {
+                    let result = rx.recv().await;
+                    if let Some(res) = result {
+                        ui.global::<Logic>().set_test_button_text(res);
+                    }
+                };
+                slint::spawn_local(async_compat::Compat::new(fut)).unwrap();
+            }
+        });
     }
 
     fn close_button(&self) {
         self.ui.global::<Logic>().on_close_program({
             move || {
                 slint::quit_event_loop().unwrap();
+            }
+        });
+    }
+}
+
+struct KeyboardInput {
+    tx: tokio_mpsc::Sender<SharedString>,
+}
+
+impl KeyboardInput {
+    fn new(tx: tokio_mpsc::Sender<SharedString>) -> Self {
+        Self { tx }
+    }
+
+    fn get_text_input(&self, message: &str, initial_text: SharedString) {
+        let keyboard = Keyboard::new().unwrap();
+        keyboard
+            .global::<KeyboardLogic>()
+            .set_message(message.into());
+        keyboard
+            .global::<KeyboardLogic>()
+            .set_text_entered(initial_text.clone());
+
+        keyboard.show().unwrap();
+
+        keyboard.global::<KeyboardLogic>().on_cancel_pressed({
+            let keyboard = keyboard.as_weak();
+            let tx = self.tx.clone();
+            move || {
+                let initial_text = initial_text.clone();
+                let tx = tx.clone();
+                let fut = async move {
+                    tx.send(initial_text.clone()).await.unwrap();
+                };
+                slint::spawn_local(async_compat::Compat::new(fut)).unwrap();
+                keyboard.unwrap().hide().unwrap();
+            }
+        });
+
+        keyboard.global::<KeyboardLogic>().on_ok_pressed({
+            let keyboard = keyboard.as_weak();
+            let tx = self.tx.clone();
+            move |new_text| {
+                let tx = tx.clone();
+                let fut = async move {
+                    tx.send(new_text).await.unwrap();
+                };
+                slint::spawn_local(async_compat::Compat::new(fut)).unwrap();
+                keyboard.unwrap().hide().unwrap();
+            }
+        });
+
+        keyboard.global::<KeyboardLogic>().on_backspace_pressed({
+            let keyboard = keyboard.as_weak();
+            move || {
+                let keyboard = keyboard.unwrap();
+                let text = keyboard.global::<KeyboardLogic>().get_text_entered();
+                // cut the last character off the string
+                let text = match text.as_str().char_indices().next_back() {
+                    Some((idx, _)) => &text[0..idx],
+                    None => text.as_str(),
+                };
+                keyboard
+                    .global::<KeyboardLogic>()
+                    .set_text_entered(text.into());
             }
         });
     }

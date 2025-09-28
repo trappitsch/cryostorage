@@ -1,0 +1,368 @@
+import { Const, MyVerticalLayout, NormalText, H2Text, RegularButton, H3Text } from "elements.slint";
+import { Palette } from "palette.slint";
+
+export global KeyboardLogic {
+    pure callback cancel_pressed();
+    pure callback ok_pressed(string);
+    pure callback backspace_pressed();
+    in-out property <string> message: "Input text:";
+    in-out property <string> text_entered: "";
+    in-out property <bool> shift_pressed: false;
+}
+
+component ButtonStyle inherits Rectangle {
+    width: 95px;
+    height: self.width;
+
+    border-radius: Const.border_radius_small;
+    border-width: 2px;
+    border-color: Palette.overlay2;
+}
+
+component StringButton inherits ButtonStyle {
+    in property <string> primary;
+    in property <string> secondary;
+
+    background: !ta.pressed ? Palette.button_off : Palette.button_on;
+    private property <string> value: (KeyboardLogic.shift_pressed && (secondary != "")) ? secondary : primary;
+
+    NormalText {
+        horizontal-alignment: center;
+        vertical-alignment: center;
+        text: value;
+    }
+
+    ta := TouchArea {
+        clicked => {
+            KeyboardLogic.text_entered += value;
+            KeyboardLogic.shift_pressed = false;
+        }
+    }
+}
+
+component ShiftButton inherits ButtonStyle {
+    background: !KeyboardLogic.shift_pressed ? Palette.button_off : Palette.button_on;
+
+    H2Text {
+        horizontal-alignment: center;
+        vertical-alignment: center;
+        text: "⇧";
+    }
+
+    ta := TouchArea {
+        clicked => {
+            KeyboardLogic.shift_pressed = !KeyboardLogic.shift_pressed;
+        }
+    }
+}
+
+component SpaceButton inherits ButtonStyle {
+    background: !ta.pressed ? Palette.button_off : Palette.button_on;
+
+    NormalText {
+        horizontal-alignment: center;
+        vertical-alignment: center;
+        text: "␣";
+    }
+
+    ta := TouchArea {
+        clicked => {
+            KeyboardLogic.text_entered += " ";
+            KeyboardLogic.shift_pressed = false;
+        }
+    }
+}
+
+component BackspaceButton inherits ButtonStyle {
+    private property <string> primary: "←";
+    private property <string> secondary: "CLR";
+
+    background: !ta.pressed ? Palette.button_off : Palette.button_on;
+
+    private property <string> value: KeyboardLogic.shift_pressed ? secondary : primary;
+
+    NormalText {
+        horizontal-alignment: center;
+        vertical-alignment: center;
+        text: value;
+    }
+
+    ta := TouchArea {
+        clicked => {
+            if (KeyboardLogic.shift_pressed) {
+                KeyboardLogic.text_entered = "";
+            } else {
+                KeyboardLogic.backspace_pressed();
+            }
+            KeyboardLogic.shift_pressed = false;
+        }
+    }
+}
+
+export component Keyboard inherits Window {
+    in-out property <string> message <=> KeyboardLogic.message;
+    in-out property <string> text_entered <=> KeyboardLogic.text_entered;
+    y: 20px;
+
+    height: 760px;
+    width: 1170px;
+
+    background: Palette.bg;
+
+    MyVerticalLayout {
+
+        H3Text {
+            text: KeyboardLogic.message;
+            horizontal-alignment: center;
+        }
+
+        Rectangle {
+            x: (parent.width - self.width) / 2;
+            width: 4 * kb.width + 2 * Const.border_spacing;
+            min-height: 80px;
+
+            border-width: 2px;
+            border-color: Palette.overlay2;
+            border-radius: Const.border_radius_large;
+
+            NormalText {
+                text: KeyboardLogic.text_entered;
+            }
+        }
+
+        HorizontalLayout {
+            alignment: center;
+            GridLayout {
+                padding-left: Const.border_spacing;
+                padding-right: Const.border_spacing;
+                spacing: Const.border_spacing;
+
+                Row {
+                    kb := StringButton {
+                        primary: "1";
+                        secondary: "!";
+                    }
+
+                    StringButton {
+                        primary: "2";
+                        secondary: "@";
+                    }
+
+                    StringButton {
+                        primary: "3";
+                        secondary: "#";
+                    }
+
+                    StringButton {
+                        primary: "4";
+                        secondary: "$";
+                    }
+
+                    StringButton {
+                        primary: "5";
+                        secondary: "%";
+                    }
+
+                    StringButton {
+                        primary: "6";
+                        secondary: "^";
+                    }
+
+                    StringButton {
+                        primary: "7";
+                        secondary: "&";
+                    }
+
+                    StringButton {
+                        primary: "8";
+                        secondary: "*";
+                    }
+
+                    StringButton {
+                        primary: "9";
+                        secondary: "(";
+                    }
+
+                    StringButton {
+                        primary: "0";
+                        secondary: ")";
+                    }
+                }
+
+                Row {
+                    StringButton {
+                        primary: "q";
+                        secondary: "Q";
+                    }
+
+                    StringButton {
+                        primary: "w";
+                        secondary: "W";
+                    }
+
+                    StringButton {
+                        primary: "e";
+                        secondary: "E";
+                    }
+
+                    StringButton {
+                        primary: "r";
+                        secondary: "R";
+                    }
+
+                    StringButton {
+                        primary: "t";
+                        secondary: "T";
+                    }
+
+                    StringButton {
+                        primary: "y";
+                        secondary: "Y";
+                    }
+
+                    StringButton {
+                        primary: "u";
+                        secondary: "U";
+                    }
+
+                    StringButton {
+                        primary: "i";
+                        secondary: "I";
+                    }
+
+                    StringButton {
+                        primary: "o";
+                        secondary: "O";
+                    }
+
+                    StringButton {
+                        primary: "p";
+                        secondary: "P";
+                    }
+                }
+
+                Row {
+                    StringButton {
+                        primary: "a";
+                        secondary: "A";
+                    }
+
+                    StringButton {
+                        primary: "s";
+                        secondary: "S";
+                    }
+
+                    StringButton {
+                        primary: "d";
+                        secondary: "D";
+                    }
+
+                    StringButton {
+                        primary: "f";
+                        secondary: "F";
+                    }
+
+                    StringButton {
+                        primary: "g";
+                        secondary: "G";
+                    }
+
+                    StringButton {
+                        primary: "h";
+                        secondary: "H";
+                    }
+
+                    StringButton {
+                        primary: "j";
+                        secondary: "J";
+                    }
+
+                    StringButton {
+                        primary: "k";
+                        secondary: "K";
+                    }
+
+                    StringButton {
+                        primary: "l";
+                        secondary: "L";
+                    }
+
+                    StringButton {
+                        primary: ":";
+                        secondary: ";";
+                    }
+                }
+
+                Row {
+                    ShiftButton { }
+
+                    StringButton {
+                        primary: "z";
+                        secondary: "Z";
+                    }
+
+                    StringButton {
+                        primary: "x";
+                        secondary: "X";
+                    }
+
+                    StringButton {
+                        primary: "c";
+                        secondary: "C";
+                    }
+
+                    StringButton {
+                        primary: "v";
+                        secondary: "V";
+                    }
+
+                    StringButton {
+                        primary: "b";
+                        secondary: "B";
+                    }
+
+                    StringButton {
+                        primary: "n";
+                        secondary: "N";
+                    }
+
+                    StringButton {
+                        primary: "m";
+                        secondary: "M";
+                    }
+
+                    SpaceButton { }
+
+                    BackspaceButton { }
+                }
+            }
+        }
+
+        HorizontalLayout {
+            alignment: end;
+            padding: Const.border_spacing;
+            spacing: Const.border_spacing;
+
+            RegularButton {
+                text: "Clear";
+                clicked => {
+                    KeyboardLogic.ok_pressed("");
+                }
+            }
+
+            RegularButton {
+                text: "Cancel";
+                clicked => {
+                    KeyboardLogic.cancel_pressed();
+                }
+            }
+
+            RegularButton {
+                text: "Ok";
+                clicked => {
+                    KeyboardLogic.ok_pressed(KeyboardLogic.text_entered);
+                }
+            }
+        }
+    }
+}

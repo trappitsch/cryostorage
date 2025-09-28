@@ -58,4 +58,8 @@ export global Logic {
     // Valves
     pure callback transfer_valve_set_open(bool);
     in-out property <bool> transfer_valve_is_open;
+
+    // TODO: remove the following debug
+    pure callback test_button_pressed();
+    in-out property <string> test_button_text: "Press Me";
 }

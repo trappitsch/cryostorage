@@ -4,58 +4,6 @@ import { Logic } from "logic.slint";
 
 import { StandardButton, Button } from "std-widgets.slint";
 
-export component SampleEditDialog inherits Window {
-    in-out property <string> sample_position: "N/A"; 
-    in-out property <string> sample_name;
-
-    callback cancel_clicked();
-    callback ok_clicked(string);
-
-    always-on-top: true;
-    y: 20px;
-    width: Const.screen_width / 2;
-    background: Palette.bg;
-
-    MyVerticalLayout {
-        padding: Const.border_spacing;
-
-        NormalText {
-            text: "Set sample name for position " + sample_position;
-        }
-
-        le := MyLineEdit {
-            text: sample_name;
-            placeholder-text: "Enter sample name";
-        }
-
-        HorizontalLayout {
-            padding-right: Const.border_spacing;
-            padding-bottom: Const.border_spacing;
-            spacing: Const.border_spacing;
-            alignment: end;
-
-            RegularButton {
-                text: "Clear";
-                clicked => {
-                    ok_clicked("");
-                }
-            }
-            RegularButton {
-                text: "Cancel";
-                clicked => {
-                    cancel_clicked();
-                }
-            }
-            RegularButton {
-                text: "Ok";
-                clicked => {
-                    ok_clicked(le.text);
-                }
-            }
-        }
-    }
-}
-
 component SampleButton inherits Rectangle {
     in-out property <string> position;
     in-out property <string> sample_name;

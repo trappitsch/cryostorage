@@ -5,11 +5,11 @@ import { HomeScreen } from "screen_home.slint";
 import { CryoScreen } from "screen_cryo.slint";
 import { VacuumScreen } from "screen_vacuum.slint";
 import { SettingsScreen } from "screen_settings.slint";
+import { Keyboard, KeyboardLogic } from "keyboard.slint";
+import { Keypad } from "keypad.slint";
 
-import { SampleEditDialog } from "samples.slint";
 import { Logic } from "logic.slint";
-
-export { SampleEditDialog, Logic } 
+export { Logic, Keyboard, KeyboardLogic, Keypad } 
 
 export component AppWindow inherits Window {
     in-out property <int> current_index: 3;

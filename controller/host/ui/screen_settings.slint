@@ -17,7 +17,7 @@ component Baking inherits Rectangle {
         alignment: space-between;
 
         H2Text {
-    text: "Baking";
+            text: "Baking";
             horizontal-alignment: center;
         }
 
@@ -44,7 +44,7 @@ component Baking inherits Rectangle {
             property <length> button_width: 85px;
 
             RegularButton {
-                enabled : !Logic.baking_is_enabled;
+                enabled: !Logic.baking_is_enabled;
                 width: button_width;
                 text: "- h";
                 clicked => {
@@ -53,19 +53,22 @@ component Baking inherits Rectangle {
                     }
                 }
             }
+
             RegularButton {
-                enabled : !Logic.baking_is_enabled;
+                enabled: !Logic.baking_is_enabled;
                 width: button_width;
                 text: "+ h";
                 clicked => {
                     Logic.baking_time.hours += 1;
                 }
             }
+
             Rectangle {
                 width: 20px;
             }
+
             RegularButton {
-                enabled : !Logic.baking_is_enabled;
+                enabled: !Logic.baking_is_enabled;
                 width: button_width;
                 text: "-10 min";
                 clicked => {
@@ -76,19 +79,22 @@ component Baking inherits Rectangle {
                     }
                 }
             }
+
             RegularButton {
-                enabled : !Logic.baking_is_enabled;
+                enabled: !Logic.baking_is_enabled;
                 width: button_width;
                 text: "+10 min";
                 clicked => {
-                    Logic.baking_time.minutes+= 10;
+                    Logic.baking_time.minutes += 10;
                 }
             }
+
             Rectangle {
                 width: 20px;
             }
+
             RegularButton {
-                enabled : !Logic.baking_is_enabled;
+                enabled: !Logic.baking_is_enabled;
                 width: button_width;
                 text: "Clear";
                 clicked => {
@@ -127,25 +133,25 @@ export component SettingsScreen inherits MyWindow {
 
     MyHorizontalLayout {
         MyVerticalLayout {
-            SmallSwitch { }
-
-            InfoAreaSmall {
-                title: "Warm temperature";
-                text_color: Palette.red;
-            }
-
-            StatusOkErr {
-                title: "StatusOkErr: Err";
-                ok: false;
-            }
-
-            StatusOkErr {
-                title: "StatusOkErr: Ok";
-            }
-
-            NormalText {
-                text: "Settings Screen!";
-            }
+            // SmallSwitch { }
+            //
+            // InfoAreaSmall {
+            //     title: "Warm temperature";
+            //     text_color: Palette.red;
+            // }
+            //
+            // StatusOkErr {
+            //     title: "StatusOkErr: Err";
+            //     ok: false;
+            // }
+            //
+            // StatusOkErr {
+            //     title: "StatusOkErr: Ok";
+            // }
+            //
+            // NormalText {
+            //     text: "Settings Screen!";
+            // }
 
             BigSwitch { }
 
@@ -156,7 +162,12 @@ export component SettingsScreen inherits MyWindow {
                 text_color: Palette.blue;
             }
 
-            LongButton { }
+            LongButton {
+                text: Logic.test_button_text;
+                clicked => {
+                    Logic.test_button_pressed();
+                }
+            }
         }
 
         MyVerticalLayout {
@@ -165,7 +176,7 @@ export component SettingsScreen inherits MyWindow {
 
             HorizontalLayout {
                 alignment: end;
-                PictogramButton { 
+                PictogramButton {
                     clicked => {
                         Logic.close_program();
                     }
