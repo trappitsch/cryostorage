@@ -1,11 +1,13 @@
 import { MyWindow } from "elements.slint";
 
-import { NormalText } from "elements.slint";
+import { Logic } from "logic.slint";
+import { NormalText, StatusOkErr } from "elements.slint";
 
 export component CryoScreen inherits MyWindow {
     index: 1;
 
-    NormalText {
-        text: "Cryo screen!";
+    StatusOkErr {
+        title: "Water flow";
+        ok: Logic.water_flow_ok;
     }
 }

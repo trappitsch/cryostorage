@@ -1,4 +1,5 @@
-import { Const, MyVerticalLayout, NormalText, H2Text, RegularButton } from "elements.slint";
+import { Const } from "consts.slint";
+import { MyVerticalLayout, NormalText, H2Text, RegularButton } from "elements.slint";
 import { Palette } from "palette.slint";
 
 export global KeypadLogic {
@@ -149,6 +150,7 @@ export component Keypad inherits Window {
             padding: Const.border_spacing;
             spacing: Const.border_spacing;
             RegularButton {
+                enabled: true;
                 text: "Cancel";
                 clicked => {
                     KeypadLogic.cancel_pressed();
@@ -156,6 +158,7 @@ export component Keypad inherits Window {
             }
 
             RegularButton {
+                enabled: true;
                 text: "Ok";
                 clicked => {
                     KeypadLogic.ok_pressed(KeypadLogic.pin_entered);

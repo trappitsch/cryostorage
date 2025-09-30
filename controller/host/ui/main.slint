@@ -1,4 +1,5 @@
-import { Const, TabButton } from "elements.slint";
+import { Const } from "consts.slint";
+import { TabButton } from "elements.slint";
 import { Palette } from "palette.slint";
 
 import { HomeScreen } from "screen_home.slint";
@@ -6,13 +7,13 @@ import { CryoScreen } from "screen_cryo.slint";
 import { VacuumScreen } from "screen_vacuum.slint";
 import { SettingsScreen } from "screen_settings.slint";
 import { Keyboard, KeyboardLogic } from "keyboard.slint";
-import { Keypad } from "keypad.slint";
+import { Keypad, KeypadLogic } from "keypad.slint";
 
 import { Logic } from "logic.slint";
-export { Logic, Keyboard, KeyboardLogic, Keypad } 
+export { Logic, Keyboard, KeyboardLogic, Keypad, KeypadLogic } 
 
 export component AppWindow inherits Window {
-    in-out property <int> current_index: 3;
+    in-out property <int> current_index: 1;
     callback current_index_changed(int);
 
     current_index_changed(new_index) => {

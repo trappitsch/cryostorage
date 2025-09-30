@@ -1,11 +1,57 @@
 import { MyWindow } from "elements.slint";
 
-import { NormalText } from "elements.slint";
+import { NormalText, MyHorizontalLayout, MyVerticalLayout, SmallSwitch } from "elements.slint";
 
 export component VacuumScreen inherits MyWindow {
     index: 2;
 
-    NormalText {
-        text: "Vacuum Screen!";
+    MyHorizontalLayout {
+        MyVerticalLayout {
+            NormalText {
+                text: "Vacuum drawing";
+            }
+
+            NormalText {
+                text: "Plot";
+            }
+        }
+
+        MyVerticalLayout {
+            SmallSwitch {
+                title: "Turbo pump";
+                left_text: "Off";
+                right_text: "On";
+            }
+            SmallSwitch {
+                title: "Ion pump";
+                left_text: "Off";
+                right_text: "On";
+            }
+            SmallSwitch {
+                title: "Gauge chamber";
+                left_text: "Off";
+                right_text: "On";
+            }
+            SmallSwitch {
+                title: "Gauge transfer";
+                left_text: "Off";
+                right_text: "On";
+            }
+            SmallSwitch {
+                title: "Valve transfer";
+                left_text: "Close";
+                right_text: "Open";
+            }
+            SmallSwitch {
+                title: "Valve pump";
+                left_text: "Close";
+                right_text: "Open";
+            }
+            SmallSwitch {
+                title: "Valve vent";
+                left_text: "Close";
+                right_text: "Open";
+            }
+        }
     }
 }

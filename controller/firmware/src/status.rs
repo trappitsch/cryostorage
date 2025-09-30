@@ -11,7 +11,7 @@ use crate::{
     }, vct::{GET_VCT_STATUS, WATCH_VCT_STATUS}
 };
 
-const BROADCAST_TIME_SEC: u64 = 3;
+const BROADCAST_TIME_SEC: u64 = 1;
 
 #[embassy_executor::task]
 pub async fn status_broadcast(sender: Sender<AppTx>, mut flow_meter: FlowMeterCtrl) {

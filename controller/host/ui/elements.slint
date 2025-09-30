@@ -1,29 +1,7 @@
+import { Const } from "consts.slint";
 import { Palette } from "palette.slint";
 import { LineEdit } from "std-widgets.slint";
-
-export global Const {
-    out property <length> big_switch_height: 160px;
-    out property <length> border_radius_large: 20px;
-    out property <length> border_radius_small: 10px;
-    out property <length> border_spacing: 20px;
-    out property <length> button_pictogram: 160px;
-    out property <length> button_height: 80px;
-    out property <length> button_width_regular: 160px;
-    out property <length> button_height_regular: 50px;
-    out property <length> edge_spacing: 50px;
-    out property <length> element_width_short: 300px;
-    out property <length> element_width_wide: 400px;
-    out property <length> info_height: 120px;
-    out property <length> light_dia: 160px;
-    out property <length> padding_large: 20px;
-    out property <length> padding_small: 10px;
-    out property <length> small_switch_height: 90px;
-    out property <length> screen_width: 1280px;
-    out property <length> screen_height: 800px;
-    out property <length> tab_button_width: 150px;
-    // calculated properties
-    out property <length> useable_width: screen_width - tab_button_width;
-}
+import { Logic } from "logic.slint";
 
 export component NormalText inherits Text {
     font-size: 20px;
@@ -183,6 +161,7 @@ export component StatusOkErr inherits Rectangle {
 
 export component LongButton inherits Rectangle {
     in property <string> text: "Long Button";
+    in property <bool> enabled: Logic.admin_mode;
     callback clicked();
 
     width: Const.element_width_wide;
@@ -192,23 +171,25 @@ export component LongButton inherits Rectangle {
 
     ta := TouchArea {
         clicked => {
-            root.clicked();
+            if (root.enabled) {
+                root.clicked();
+            }
         }
     }
 
-    background: !ta.pressed ? Palette.button_off : Palette.button_on;
+    background: enabled ? (!ta.pressed ? Palette.button_off : Palette.button_on) : Palette.button_off;
 
     NormalText {
         text: root.text;
         horizontal-alignment: center;
         vertical-alignment: center;
-        color: Palette.text;
+        color: enabled ? Palette.text : Palette.button_inactive_text;
     }
 }
 
 export component RegularButton inherits Rectangle {
     in property <string> text: "Regular Button";
-    in property <bool> enabled: true;
+    in property <bool> enabled: Logic.admin_mode;
     callback clicked();
 
     width: Const.button_width_regular;
@@ -230,7 +211,7 @@ export component RegularButton inherits Rectangle {
         text: root.text;
         horizontal-alignment: center;
         vertical-alignment: center;
-        color: enabled ? Palette.text : Palette.surface2;
+        color: enabled ? Palette.text : Palette.button_inactive_text;
     }
 }
 
@@ -239,6 +220,7 @@ export component BigSwitch inherits Rectangle {
     in-out property <string> title: "Big Switch";
     in-out property <string> left_text: "Left";
     in-out property <string> right_text: "Right";
+    in property <bool> enabled: Logic.admin_mode;
     callback switched(bool);
 
     width: Const.element_width_wide;
@@ -266,10 +248,12 @@ export component BigSwitch inherits Rectangle {
 
                 TouchArea {
                     clicked => {
-                        if (root.right_side) {
-                            root.right_side = false;
+                        if (root.enabled) {
+                            if (root.right_side) {
+                                root.right_side = false;
+                            }
+                            root.switched(root.right_side);
                         }
-                        root.switched(root.right_side);
                     }
                 }
 
@@ -277,7 +261,7 @@ export component BigSwitch inherits Rectangle {
                     text: root.left_text;
                     horizontal-alignment: center;
                     vertical-alignment: center;
-                    color: Palette.text;
+                    color: root.enabled ? Palette.text : Palette.button_inactive_text;
                 }
             }
 
@@ -291,10 +275,12 @@ export component BigSwitch inherits Rectangle {
 
                 TouchArea {
                     clicked => {
-                        if (!root.right_side) {
-                            root.right_side = true;
+                        if (root.enabled) {
+                            if (!root.right_side) {
+                                root.right_side = true;
+                            }
+                            root.switched(root.right_side);
                         }
-                        root.switched(root.right_side);
                     }
                 }
 
@@ -302,7 +288,7 @@ export component BigSwitch inherits Rectangle {
                     text: root.right_text;
                     horizontal-alignment: center;
                     vertical-alignment: center;
-                    color: Palette.text;
+                    color: root.enabled ? Palette.text : Palette.button_inactive_text;
                 }
             }
         }
@@ -314,6 +300,7 @@ export component SmallSwitch inherits Rectangle {
     in property <string> title: "Small Switch";
     in property <string> left_text: "Left";
     in property <string> right_text: "Right";
+    in property <bool> enabled: Logic.admin_mode;
     callback switched(bool);
 
     width: Const.element_width_short;
@@ -341,8 +328,10 @@ export component SmallSwitch inherits Rectangle {
 
                 TouchArea {
                     clicked => {
-                        if (root.right_side) {
-                            root.right_side = false;
+                        if (root.enabled) {
+                            if (root.right_side) {
+                                root.right_side = false;
+                            }
                         }
                     }
                 }
@@ -351,7 +340,7 @@ export component SmallSwitch inherits Rectangle {
                     text: root.left_text;
                     horizontal-alignment: center;
                     vertical-alignment: center;
-                    color: Palette.text;
+                    color: root.enabled ? Palette.text : Palette.button_inactive_text;
                 }
             }
 
@@ -365,8 +354,10 @@ export component SmallSwitch inherits Rectangle {
 
                 TouchArea {
                     clicked => {
-                        if (!root.right_side) {
-                            root.right_side = true;
+                        if (root.enabled) {
+                            if (!root.right_side) {
+                                root.right_side = true;
+                            }
                         }
                     }
                 }
@@ -375,7 +366,7 @@ export component SmallSwitch inherits Rectangle {
                     text: root.right_text;
                     horizontal-alignment: center;
                     vertical-alignment: center;
-                    color: Palette.text;
+                    color: root.enabled ? Palette.text : Palette.button_inactive_text;
                 }
             }
         }
@@ -384,6 +375,7 @@ export component SmallSwitch inherits Rectangle {
 
 export component PictogramButton inherits Rectangle {
     in property <image> icon: @image-url("imgs/door.svg");
+    in property <bool> enabled: Logic.admin_mode;
     callback clicked();
 
     width: Const.button_pictogram;
@@ -393,15 +385,17 @@ export component PictogramButton inherits Rectangle {
 
     ta := TouchArea {
         clicked => {
-            root.clicked();
+            if (root.enabled) {
+                root.clicked();
+            }
         }
     }
 
-    background: ta.pressed ? Palette.button_on : Palette.button_off;
+    background: root.enabled && ta.pressed ? Palette.button_on : Palette.button_off;
 
     Image {
         source: root.icon;
-        colorize: Palette.text;
+        colorize: root.enabled ? Palette.text : Palette.button_inactive_text;
         width: 50%;
         horizontal-alignment: center;
         vertical-alignment: center;

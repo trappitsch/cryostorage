@@ -2,27 +2,34 @@
 
 use std::{
     error::Error,
-    sync::{Arc, Mutex, mpsc},
+    sync::{Arc, Mutex},
 };
 
-use icd::LightState;
+use icd::{BakingState, LightState};
 use slint::{Model, SharedString, Weak};
-use tokio::sync::mpsc as tokio_mpsc;
+use tokio::sync::mpsc;
 
-use crate::{controller::ControllerCommands, prg_config::PrgConfig};
+use crate::{controller::ControllerCommands, prg_config::PrgConfig, status::InstrumentStatus};
 
 slint::include_modules!();
 
 pub fn app_main(
     tx: mpsc::Sender<ControllerCommands>,
     conf: Arc<Mutex<PrgConfig>>,
+    inst_status: Arc<Mutex<InstrumentStatus>>,
 ) -> Result<(), Box<dyn Error>> {
-    // slint
     let ui = AppWindow::new()?;
 
     // initialize the different screens
     let _home_screen = HomeScreen::new(ui.as_weak(), tx.clone(), Arc::clone(&conf));
-    let _settings_screen = SettingsScreen::new(ui.as_weak(), tx.clone());
+    let _settings_screen = SettingsScreen::new(ui.as_weak(), tx.clone(), Arc::clone(&conf));
+
+    // pass the ui to the instrument status handler
+    inst_status.lock().expect("Poisoned").set_ui(ui.as_weak());
+
+    // Debug builds
+    #[cfg(debug_assertions)]
+    ui.global::<Logic>().set_admin_mode(true);
 
     ui.show()?;
 
@@ -89,7 +96,8 @@ impl HomeScreen {
                     true => LightState::On,
                     false => LightState::Off,
                 };
-                tx.send(ControllerCommands::Light(light_stat)).unwrap();
+                tx.try_send(ControllerCommands::Light(light_stat))
+                    .expect("Channel must be open");
             }
         });
     }
@@ -108,7 +116,7 @@ impl HomeScreen {
             let cfg = Arc::clone(&self.conf);
             move |pos, name| {
                 let message = format!("Edit name of sample at position {}", pos.clone());
-                let (tx, mut rx) = tokio_mpsc::channel(1);
+                let (tx, mut rx) = mpsc::channel(1);
                 let kb = KeyboardInput::new(tx);
                 kb.get_text_input(message.as_str(), name);
 
@@ -121,9 +129,11 @@ impl HomeScreen {
                             let model = ui.unwrap().global::<Logic>().get_sample_model();
                             model.set_row_data(idx, (ans, pos));
                         } else {
-                            eprintln!("Failed to update sample position");
-                        };
-                    }
+                            eprintln!("Failed to update sample name: no position {pos}");
+                        }
+                    } else {
+                        eprintln!("Failed to update sample name: no answer from keyboard");
+                    };
                 };
 
                 slint::spawn_local(async_compat::Compat::new(fut)).unwrap();
@@ -146,22 +156,88 @@ impl HomeScreen {
 struct SettingsScreen {
     ui: AppWindow,
     tx: mpsc::Sender<ControllerCommands>,
+    conf: Arc<Mutex<PrgConfig>>,
 }
 
 impl SettingsScreen {
-    fn new(ui: Weak<AppWindow>, tx: mpsc::Sender<ControllerCommands>) -> Self {
+    fn new(
+        ui: Weak<AppWindow>,
+        tx: mpsc::Sender<ControllerCommands>,
+        conf: Arc<Mutex<PrgConfig>>,
+    ) -> Self {
         let ss = Self {
             tx,
             ui: ui.unwrap(),
+            conf,
         };
         ss.init();
-
+        ss.baking();
         ss
     }
 
     fn init(&self) {
+        self.admin_mode();
         self.close_button();
         self.test_button();
+    }
+
+    fn admin_mode(&self) {
+        self.ui.global::<Logic>().on_enter_admin_mode({
+            let ui = self.ui.as_weak();
+            let conf = Arc::clone(&self.conf);
+            move || {
+                let ui = ui.unwrap();
+                if ui.global::<Logic>().get_admin_mode() {
+                    ui.global::<Logic>().set_admin_mode(false);
+                } else {
+                    let keypad = Keypad::new().unwrap();
+                    keypad.show().unwrap();
+
+                    keypad.global::<KeypadLogic>().on_cancel_pressed({
+                        let keypad = keypad.as_weak();
+                        move || {
+                            keypad.unwrap().hide().unwrap();
+                        }
+                    });
+
+                    keypad.global::<KeypadLogic>().on_ok_pressed({
+                        let keypad = keypad.as_weak();
+                        let ui = ui.as_weak();
+                        let pin_expected = conf.lock().expect("Poisoned").get_admin_pin();
+                        move |code| {
+                            if code.as_str() == pin_expected.as_str() {
+                                ui.unwrap().global::<Logic>().set_admin_mode(true);
+                            }
+                            keypad.unwrap().hide().unwrap();
+                        }
+                    });
+                }
+            }
+        });
+    }
+
+    fn baking(&self) {
+        self.ui.global::<Logic>().on_baking_enabled({
+            let ui = self.ui.as_weak();
+            let tx = self.tx.clone();
+            move |val| {
+                let ui = ui.unwrap();
+                let baking_state = match val {
+                    true => {
+                        let baking_time = ui.global::<Logic>().get_baking_time();
+                        let time_sec = baking_time.hours * 3600
+                            + baking_time.minutes * 60
+                            + baking_time.seconds;
+                        BakingState::On {
+                            time_sec: time_sec as u64,
+                        }
+                    }
+                    false => BakingState::Off,
+                };
+                tx.try_send(ControllerCommands::Baking(baking_state.clone()))
+                    .expect("Channel must be open");
+            }
+        });
     }
 
     // FIXME: Delete
@@ -172,7 +248,7 @@ impl SettingsScreen {
                 let ui = ui.unwrap();
                 let text = ui.global::<Logic>().get_test_button_text();
                 println!("Test button text: {}", text);
-                let (tx, mut rx) = tokio_mpsc::channel(1);
+                let (tx, mut rx) = mpsc::channel(1);
                 let kb = KeyboardInput::new(tx);
                 kb.get_text_input("asdf", text);
                 let fut = async move {
@@ -196,11 +272,11 @@ impl SettingsScreen {
 }
 
 struct KeyboardInput {
-    tx: tokio_mpsc::Sender<SharedString>,
+    tx: mpsc::Sender<SharedString>,
 }
 
 impl KeyboardInput {
-    fn new(tx: tokio_mpsc::Sender<SharedString>) -> Self {
+    fn new(tx: mpsc::Sender<SharedString>) -> Self {
         Self { tx }
     }
 

@@ -1,6 +1,7 @@
 import { MyWindow } from "elements.slint";
 
-import { Const, NormalText, BigSwitch, SmallSwitch, InfoArea, LongButton, PictogramButton, InfoAreaSmall, StatusOkErr, MyHorizontalLayout, MyVerticalLayout, H3Text, H2Text, RegularButton } from "elements.slint";
+import { Const } from "consts.slint";
+import { NormalText, BigSwitch, SmallSwitch, InfoArea, LongButton, PictogramButton, InfoAreaSmall, StatusOkErr, MyHorizontalLayout, MyVerticalLayout, H3Text, H2Text, RegularButton } from "elements.slint";
 import { Palette } from "palette.slint";
 
 import { TimePickerPopup } from "std-widgets.slint";
@@ -108,7 +109,7 @@ component Baking inherits Rectangle {
             spacing: Const.border_spacing;
             alignment: end;
             RegularButton {
-                enabled: Logic.baking_is_enabled;
+                enabled: Logic.admin_mode && Logic.baking_is_enabled;
                 text: "Stop";
                 clicked => {
                     Logic.baking_enabled(false);
@@ -117,7 +118,7 @@ component Baking inherits Rectangle {
             }
 
             RegularButton {
-                enabled: !Logic.baking_is_enabled;
+                enabled: Logic.admin_mode && !Logic.baking_is_enabled;
                 text: "Start";
                 clicked => {
                     Logic.baking_enabled(true);
@@ -133,25 +134,24 @@ export component SettingsScreen inherits MyWindow {
 
     MyHorizontalLayout {
         MyVerticalLayout {
-            // SmallSwitch { }
-            //
-            // InfoAreaSmall {
-            //     title: "Warm temperature";
-            //     text_color: Palette.red;
-            // }
-            //
-            // StatusOkErr {
-            //     title: "StatusOkErr: Err";
-            //     ok: false;
-            // }
-            //
-            // StatusOkErr {
-            //     title: "StatusOkErr: Ok";
-            // }
-            //
-            // NormalText {
-            //     text: "Settings Screen!";
-            // }
+
+            LongButton {
+                text: "Admin mode";
+                enabled: true;
+                background: Logic.admin_mode ? Palette.button_on : Palette.button_off;
+                clicked => {
+                    Logic.enter_admin_mode();
+                }
+            }
+
+            StatusOkErr {
+                title: "StatusOkErr: Err";
+                ok: false;
+            }
+
+            StatusOkErr {
+                title: "StatusOkErr: Ok";
+            }
 
             BigSwitch { }
 
@@ -177,6 +177,7 @@ export component SettingsScreen inherits MyWindow {
             HorizontalLayout {
                 alignment: end;
                 PictogramButton {
+                    enabled: true;
                     clicked => {
                         Logic.close_program();
                     }

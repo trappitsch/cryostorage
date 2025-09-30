@@ -14,7 +14,7 @@ pub struct SleptMillis {
     pub millis: u16,
 }
 
-#[derive(Clone, Debug, Default, Serialize, Deserialize, Schema)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq, Schema)]
 pub enum BakingState {
     /// For how long in seconds to turn the baking on / is it on already
     On { time_sec: u64 },

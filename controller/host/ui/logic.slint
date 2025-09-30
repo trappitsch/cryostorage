@@ -1,4 +1,4 @@
-import { Const } from "elements.slint";
+import { Const } from "consts.slint";
 import { Palette } from "palette.slint";
 
 
@@ -24,11 +24,16 @@ export global Logic {
     pure callback cryocooler_set_on(bool);
     in-out property <bool> cryocooler_is_on;
 
+    // Flow meter
+    in-out property <bool> water_flow_ok;
+
     // Light switch
     pure callback light_switch(bool);
 
     // Program
     pure callback close_program();
+    in-out property <bool> admin_mode: false;
+    pure callback enter_admin_mode();
 
     // Samples
     pure callback edit_sample_name(string, string);

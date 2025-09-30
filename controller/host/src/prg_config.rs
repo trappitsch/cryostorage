@@ -17,6 +17,7 @@ pub const CONFIG_FNAME: &str = "cryostorage_config.ron";
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PrgConfig {
     fname: PathBuf,
+    admin_pin: String,
     controller_config: ControllerConfig,
     samples: Samples,
 }
@@ -33,6 +34,7 @@ impl PrgConfig {
 
         let mut ret_self = Self {
             fname,
+            admin_pin: String::from("1234"),
             controller_config: ControllerConfig::default(),
             samples: Samples::new(),
         };
@@ -60,6 +62,11 @@ impl PrgConfig {
             .open(&self.fname)?;
         writeln!(&mut f, "{}", content)?;
         Ok(())
+    }
+
+    /// Get a clone of the admin pin.
+    pub fn get_admin_pin(&self) -> String {
+        self.admin_pin.clone()
     }
 
     /// Get a clone of the controller configuration.
