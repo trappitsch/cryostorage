@@ -4,7 +4,7 @@ use std::sync::{
     atomic::{AtomicU32, Ordering},
 };
 
-use icd::{BakingState, BcCtrlStatus, LightState, SetLightEndpoint};
+use icd::{BakingState, BcInstStatus, LightState, SetLightEndpoint};
 use poststation_sdk::PoststationClient;
 use serde::{Deserialize, Serialize};
 use tokio::sync::{broadcast, mpsc};
@@ -17,10 +17,7 @@ pub enum ControllerCommands {
 }
 
 /// Task that communicates with the controller firmware via poststation.
-pub async fn controller_task(
-    cntrl: Controller,
-    mut rx: mpsc::Receiver<ControllerCommands>,
-) {
+pub async fn controller_task(cntrl: Controller, mut rx: mpsc::Receiver<ControllerCommands>) {
     let mut rx_shutdown = crate::HALT_SENDER.get().unwrap().subscribe();
     loop {
         tokio::select! {
@@ -34,7 +31,6 @@ pub async fn controller_task(
                         cntrl.baking(state).await;
                     }
                 }
-                println!("Command processed");
                 }
             }
             _ = rx_shutdown.recv() => {
@@ -56,7 +52,7 @@ pub async fn controller_broadcast_listener(
     let mut rx_shutdown = crate::HALT_SENDER.get().unwrap().subscribe();
     loop {
         tokio::select! {
-            stream_result = client.stream_topic::<BcCtrlStatus>(serial) => {
+            stream_result = client.stream_topic::<BcInstStatus>(serial) => {
                 if let Ok(mut listener) = stream_result {
                 let msg = listener.recv().await;
                 if let Some(status) = msg {
@@ -72,6 +68,7 @@ pub async fn controller_broadcast_listener(
     }
 }
 
+/// Holds the controller communication functions.
 pub struct Controller {
     serial: u64,
     client: PoststationClient,
@@ -96,7 +93,7 @@ impl Controller {
         let _ = self
             .client
             .proxy_endpoint::<SetLightEndpoint>(self.serial, self.ctr(), &light_state)
-            .await; // FIXME: need error checking
+            .await; // FIXME: need error checking, test with invalid serial number
     }
 
     pub async fn baking(&self, baking_state: BakingState) {

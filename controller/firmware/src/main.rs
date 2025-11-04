@@ -1,16 +1,5 @@
-// TODO:
-// - Finish VCT status task for broadcasting VCT status -> directly in broadcast!
-// - Flow meter broadcast -> directly in broadcast!
 #![no_std]
 #![no_main]
-
-pub mod app;
-pub mod baking;
-pub mod flow;
-pub mod handlers;
-pub mod status;
-pub mod valve;
-pub mod vct;
 
 use app::AppTx;
 use defmt::info;
@@ -21,6 +10,7 @@ use embassy_rp::{
     gpio::{Input, Level, Output, Pull},
     peripherals::USB,
     usb,
+    watchdog::Watchdog,
 };
 use embassy_time::{Duration, Instant, Ticker};
 use embassy_usb::{Config, UsbDevice};
@@ -30,26 +20,47 @@ use postcard_rpc::{
 };
 use static_cell::StaticCell;
 
-use crate::{
-    baking::{baking_ctrl_task, baking_main_task, BakingCtrl},
-    flow::FlowMeterCtrl,
-    status::status_broadcast,
-    valve::{valve_pump_task, valve_transfer_task, ValveCtrl},
-    vct::{vct_status_task, VctCtrl, VctStatus},
-};
-
-use {defmt_rtt as _, panic_probe as _};
-
 bind_interrupts!(pub struct Irqs {
     USBCTRL_IRQ => usb::InterruptHandler<USB>;
 });
 
-// FIXME: tune this value to 100ms
-const VALVE_PULSE_DURATION_MS: u64 = 2_000;
+use crate::{
+    baking::{Baking, baking_task},
+    broadcaster::broadcaster_task,
+    flow_meter::FlowMeter,
+    valve::{Valve, ValveSelector, valve_task},
+    vct::{Vct, vct_task},
+};
+
+use {defmt_rtt as _, panic_probe as _};
+
+// postcard-rpc / poststation
+mod app;
+mod handlers;
+
+// hardware
+mod baking;
+mod broadcaster;
+mod flow_meter;
+mod valve;
+mod vct;
+
+const BROADCAST_INTERVAL_MS: u64 = 1000;
 
 #[unsafe(link_section = ".start_block")]
 #[used]
 pub static IMAGE_DEF: ImageDef = ImageDef::secure_exe();
+
+// Program metadata for `picotool info`.
+// This is needed if you are using picotool to flash the device
+#[unsafe(link_section = ".bi_entries")]
+#[used]
+pub static PICOTOOL_ENTRIES: [embassy_rp::binary_info::EntryAddr; 4] = [
+    embassy_rp::binary_info::rp_program_name!(c"RP2350 template"),
+    embassy_rp::binary_info::rp_program_description!(c"An example template for the RP2350"),
+    embassy_rp::binary_info::rp_cargo_version!(),
+    embassy_rp::binary_info::rp_program_build_attribute!(),
+];
 
 fn usb_config(serial: &'static str) -> Config<'static> {
     let mut config = Config::new(0x16c0, 0x27DD);
@@ -100,57 +111,12 @@ async fn main(spawner: Spawner) {
     let pbufs = app::PBUFS.take();
     let config = usb_config(ser_buf);
 
-    // PIN CONFIGURATION
-    let p_light = Output::new(p.PIN_19, Level::Low);
-
-    let p_baking = Output::new(p.PIN_20, Level::Low);
-
-    let p_valve_pump_open = Output::new(p.PIN_2, Level::Low);
-    let p_valve_pump_close = Output::new(p.PIN_3, Level::Low);
-    let p_valve_pump_status_open = Input::new(p.PIN_6, Pull::None);
-    let p_valve_pump_status_closed = Input::new(p.PIN_7, Pull::None);
-
-    let p_valve_transfer_open = Output::new(p.PIN_4, Level::Low);
-    let p_valve_transfer_close = Output::new(p.PIN_5, Level::Low);
-    let p_valve_transfer_status_open = Input::new(p.PIN_8, Pull::None);
-    let p_valve_transfer_status_closed = Input::new(p.PIN_9, Pull::None);
-
-    let p_vct_status_gate = Input::new(p.PIN_14, Pull::None);
-    let p_vct_status_attach = Input::new(p.PIN_16, Pull::None);
-    let p_vct_handshake = Output::new(p.PIN_17, Level::Low);
-
-    let p_flow_meter_nerr = Input::new(p.PIN_15, Pull::None);
-
-    // Baking
-    let baking_ctrl = BakingCtrl::default();
-
-    // Valves
-    let valve_pump = ValveCtrl::new(
-        p_valve_pump_open,
-        p_valve_pump_close,
-        VALVE_PULSE_DURATION_MS,
-        p_valve_pump_status_open,
-        p_valve_pump_status_closed,
-    );
-
-    let valve_transfer = ValveCtrl::new(
-        p_valve_transfer_open,
-        p_valve_transfer_close,
-        VALVE_PULSE_DURATION_MS,
-        p_valve_transfer_status_open,
-        p_valve_transfer_status_closed,
-    );
-
-    let flow_meter_ctrl= FlowMeterCtrl::new(p_flow_meter_nerr);
-
-    // VCT
-    let vct_ctrl = VctCtrl::new(p_vct_handshake);
-    let vct_status = VctStatus::new(p_vct_status_gate, p_vct_status_attach);
+    // Define outputs that go straight into context
+    let light_output = Output::new(p.PIN_19, Level::Low);
 
     let context = app::Context {
         unique_id,
-        p_light,
-        vct_ctrl,
+        light_output,
     };
 
     let (device, tx_impl, rx_impl) =
@@ -165,27 +131,51 @@ async fn main(spawner: Spawner) {
         vkk,
     );
     let sender = server.sender();
+
+    // Watchdog
+    //
+    // - We save the residual baking time in scratch index 0
+    let mut watchdog = Watchdog::new(p.WATCHDOG);
+    watchdog.start(Duration::from_millis(BROADCAST_INTERVAL_MS * 2));
+
+    // Define my hardware here
+    let residual_baking_time = watchdog.get_scratch(0);
+    let baking = Baking::new(
+        Output::new(p.PIN_20, Level::Low),
+        residual_baking_time as u64,
+    );
+    let flow_meter = FlowMeter::new(Input::new(p.PIN_15, Pull::None));
+    let pump_valve = Valve::new(
+        Output::new(p.PIN_2, Level::Low), // Control option
+        Output::new(p.PIN_3, Level::Low), // Control close
+        Input::new(p.PIN_6, Pull::None),  // State open
+        Input::new(p.PIN_7, Pull::None),  // State closed
+    );
+    let transfer_valve = Valve::new(
+        Output::new(p.PIN_4, Level::Low), // Control option
+        Output::new(p.PIN_5, Level::Low), // Control close
+        Input::new(p.PIN_8, Pull::None),  // State open
+        Input::new(p.PIN_9, Pull::None),  // State closed
+    );
+    let vct = Vct::new(
+        Output::new(p.PIN_17, Level::Low), // Init NotReady
+        Input::new(p.PIN_14, Pull::None),
+        Input::new(p.PIN_16, Pull::None),
+    );
+
     // We need to spawn the USB task so that USB messages are handled by
     // embassy-usb
     spawner.must_spawn(usb_task(device));
-    info!("USB task spawned");
-    // spawner.must_spawn(logging_task(sender.clone()));
-    // info!("Logging task spawned");
-    // Valves
-    spawner.must_spawn(valve_transfer_task(valve_transfer));
-    info!("Valve transfer task spawned");
-    spawner.must_spawn(valve_pump_task(valve_pump));
-    info!("Valve pump task spawned");
-    // Baking
-    spawner.must_spawn(baking_main_task(baking_ctrl));
-    info!("Baking main task spawned");
-    spawner.must_spawn(baking_ctrl_task(p_baking));
-    info!("Baking control task spawned");
-    // VCT
-    spawner.must_spawn(vct_status_task(vct_status));
-    // Broadcast
-    spawner.must_spawn(status_broadcast(sender, flow_meter_ctrl));
-    info!("Status broadcast task spawned");
+    spawner.must_spawn(logging_task(sender.clone()));
+
+    // Spawn my tasks
+    spawner.must_spawn(baking_task(baking));
+    spawner.must_spawn(valve_task(pump_valve, ValveSelector::Pump));
+    spawner.must_spawn(valve_task(transfer_valve, ValveSelector::Transfer));
+    spawner.must_spawn(vct_task(vct));
+
+    // Broadcaster
+    spawner.must_spawn(broadcaster_task(sender, watchdog, flow_meter));
 
     // Begin running!
     loop {
@@ -206,7 +196,6 @@ pub async fn usb_task(mut usb: UsbDevice<'static, app::AppDriver>) {
 pub async fn logging_task(sender: Sender<AppTx>) {
     let mut ticker = Ticker::every(Duration::from_secs(3));
     let start = Instant::now();
-
     loop {
         ticker.next().await;
         let _ = sender_fmt!(sender, "Uptime: {:?}", start.elapsed()).await;

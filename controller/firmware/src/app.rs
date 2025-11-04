@@ -1,25 +1,22 @@
 //! A basic postcard-rpc/poststation-compatible application
 
-use crate::{
-    handlers::{
-        get_baking, get_light, get_valve_pump, get_valve_transfer, get_vct_handshake,
-        get_vct_status, picoboot_reset, set_baking, set_light, set_valve_pump, set_valve_transfer,
-        set_vct_handshake, sleep_handler, unique_id,
-    },
-    vct::VctCtrl,
+use crate::handlers::{
+    baking_set_handler, light_set_handler, picoboot_reset, pump_valve_set_handler,
+    transfer_valve_set_handler, unique_id, vct_handshake_set_handler,
 };
-use embassy_rp::{gpio::Output, peripherals::USB, usb};
+use embassy_rp::gpio::Output;
+use embassy_rp::{peripherals::USB, usb};
 use embassy_sync::blocking_mutex::raw::ThreadModeRawMutex;
+
 use icd::{ENDPOINT_LIST, TOPICS_IN_LIST, TOPICS_OUT_LIST};
 use icd::{
-    GetBakingEndpoint, GetLightEndpoint, GetUniqueIdEndpoint, GetValvePumpEndpoint,
-    GetValveTransferEndpoint, GetVctHandshake, GetVctStatus, RebootToPicoBoot, SetBakingEndpoint,
-    SetLightEndpoint, SetValvePumpEndpoint, SetValveTransferEndpoint, SetVctHandshake,
-    SleepEndpoint,
+    GetUniqueIdEndpoint, RebootToPicoBoot, SetBakingEndpoint, SetLightEndpoint,
+    SetPumpValveEndpoint, SetTransferValveEndpoint, SetVctHandshakeEndpoint,
 };
+
 use postcard_rpc::server::impls::embassy_usb_v0_4::{
     PacketBuffers,
-    dispatch_impl::{WireRxBuf, WireRxImpl, WireSpawnImpl, WireStorage, WireTxImpl, spawn_fn},
+    dispatch_impl::{WireRxBuf, WireRxImpl, WireSpawnImpl, WireStorage, WireTxImpl},
 };
 use postcard_rpc::{
     define_dispatch,
@@ -33,10 +30,7 @@ pub struct Context {
     /// We'll use this unique ID to identify ourselves to the poststation
     /// server. This should be unique per device.
     pub unique_id: u64,
-    /// Pin the light switch is connected to
-    pub p_light: Output<'static>,
-    /// VCT controller
-    pub vct_ctrl: VctCtrl,
+    pub light_output: Output<'static>,
 }
 
 impl SpawnContext for Context {
@@ -50,24 +44,14 @@ impl SpawnContext for Context {
 }
 
 pub struct TaskContext {
+    #[allow(dead_code)]
     pub unique_id: u64,
 }
 
 /// Type Aliases
-///
-/// These aliases are used to keep the types from getting too out of hand.
-///
-/// If you are using the RP2040/2350 - you shouldn't need to modify any of these!
-/// This alias describes the type of driver we will need. In this case, we
-/// are using the embassy-usb driver with the RP2040/2350 USB peripheral
 pub type AppDriver = usb::Driver<'static, USB>;
 /// Storage describes the things we need to keep as a static, so it can be shared
 /// with anyone who needs to send messages.
-///
-/// We can accept any mutex (this is using the thread-mode mutex, meaning that
-/// it will work outside of interrupts or interrupt executors). The numeric
-/// items control the buffer sizes allocated for Config, BOS, Control, and
-/// MSOS USB buffers. See embassy-usb for more details on this.
 pub type AppStorage = WireStorage<ThreadModeRawMutex, AppDriver, 256, 256, 64, 256>;
 /// BufStorage is the space used for receiving and sending frames. These values
 /// control the largest frames we can send or receive.
@@ -84,14 +68,12 @@ pub static PBUFS: ConstStaticCell<BufStorage> = ConstStaticCell::new(BufStorage:
 /// Statically store our USB app buffers
 pub static STORAGE: AppStorage = AppStorage::new();
 
-// This macro defines your application
+// Macro to define the application
 define_dispatch! {
-    // You can set the name of your app to any valid Rust type name. We use
-    // "MyApp" here. You'll use this in `main` to create an instance of the
-    // app.
+    // Name of the app
     app: MyApp;
     // This chooses how we spawn functions. Here, we use the implementation
-    // from the `embassy_usb_v0_4` implementation
+    // from the `embassy_usb_v0_5` implementation
     spawn_fn: spawn_fn;
     // This is our TX impl, which we aliased above
     tx_impl: AppTx;
@@ -101,17 +83,6 @@ define_dispatch! {
     context: Context;
 
     // Endpoints are how we handle request/response pairs from the client.
-    //
-    // The "EndpointTy" are the names of the endpoints we defined in our ICD
-    // crate. The "kind" is the kind of handler, which can be "blocking",
-    // "async", or "spawn". Blocking endpoints will be called directly.
-    // Async endpoints will also be called directly, but will be await-ed on,
-    // allowing you to call async functions. Spawn endpoints will spawn an
-    // embassy task, which allows for handling messages that may take some
-    // amount of time to complete.
-    //
-    // The "handler"s are the names of the functions (or tasks) that will be
-    // called when messages from this endpoint are received.
     endpoints: {
         // This list comes from our ICD crate. All of the endpoint handlers we
         // define below MUST be contained in this list.
@@ -121,18 +92,11 @@ define_dispatch! {
         | ----------                | ----      | -------                       |
         | GetUniqueIdEndpoint       | blocking  | unique_id                     |
         | RebootToPicoBoot          | blocking  | picoboot_reset                |
-        | SleepEndpoint             | spawn     | sleep_handler                 |
-        | GetBakingEndpoint         | spawn     | get_baking                    |
-        | SetBakingEndpoint         | blocking  | set_baking                    |
-        | GetLightEndpoint          | blocking  | get_light                     |
-        | SetLightEndpoint          | blocking  | set_light                     |
-        | GetValvePumpEndpoint      | spawn     | get_valve_pump                |
-        | SetValvePumpEndpoint      | blocking  | set_valve_pump                |
-        | GetValveTransferEndpoint  | spawn     | get_valve_transfer            |
-        | SetValveTransferEndpoint  | blocking  | set_valve_transfer            |
-        | GetVctHandshake           | blocking  | get_vct_handshake             |
-        | SetVctHandshake           | blocking  | set_vct_handshake             |
-        | GetVctStatus              | spawn     | get_vct_status                |
+        | SetBakingEndpoint         | blocking  | baking_set_handler            |
+        | SetLightEndpoint          | blocking  | light_set_handler             |
+        | SetPumpValveEndpoint      | blocking  | pump_valve_set_handler        |
+        | SetTransferValveEndpoint  | blocking  | transfer_valve_set_handler    |
+        | SetVctHandshakeEndpoint   | blocking  | vct_handshake_set_handler     |
     };
 
     // Topics IN are messages we receive from the client, but that we do not reply
