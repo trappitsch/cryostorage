@@ -1,7 +1,7 @@
 import { Const } from "consts.slint";
 import { Palette } from "palette.slint";
 import { LineEdit } from "std-widgets.slint";
-import { Logic } from "logic.slint";
+import { Logic, ValvePumpState } from "logic.slint";
 
 export component NormalText inherits Text {
     font-size: 20px;
@@ -26,8 +26,6 @@ export component H3Text inherits NormalText {
 export component MyWindow inherits Rectangle {
     in-out property <int> index;
     in property <int> current_index;
-
-    background: Palette.bg;
 
     visible: self.index == self.current_index ? true : false;
 
@@ -404,4 +402,15 @@ export component PictogramButton inherits Rectangle {
 
 export component MyLineEdit inherits LineEdit {
     font-size: 20px;
+}
+
+export component VacuumStateCircle inherits Rectangle {
+    in property <ValvePumpState> state: ValvePumpState.UndefinedOrError;
+
+    width: Const.vacuum_image_status_circle_size;
+    height: Const.vacuum_image_status_circle_size;
+    border-radius: self.width / 2;
+    border-width: 0px;
+
+    background: state == ValvePumpState.OpenOrOn ? Palette.green : (state == ValvePumpState.ClosedOrOff ? Palette.peach: Palette.red);
 }

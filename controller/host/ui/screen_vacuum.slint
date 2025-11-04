@@ -1,19 +1,83 @@
 import { MyWindow } from "elements.slint";
 
-import { NormalText, MyHorizontalLayout, MyVerticalLayout, SmallSwitch } from "elements.slint";
+import { NormalText, MyHorizontalLayout, MyVerticalLayout, SmallSwitch, VacuumStateCircle } from "elements.slint";
+import { Const } from "consts.slint";
+
+import { Palette } from "palette.slint";
+import { Logic } from "logic.slint";
 
 export component VacuumScreen inherits MyWindow {
     index: 2;
 
-    MyHorizontalLayout {
-        MyVerticalLayout {
-            NormalText {
-                text: "Vacuum drawing";
-            }
+    // Vacuum system image
+    vi := Image {
+        x: Const.border_spacing;
+        y: Const.border_spacing;
+        source: @image-url("imgs/vacuum_system.svg");
+    }
 
-            NormalText {
-                text: "Plot";
-            }
+    VacuumStateCircle {
+        state: Logic.ion_pump_state;
+        x: vi.x + 53px;
+        y: vi.y + 76px;
+    }
+
+    VacuumStateCircle {
+        state: Logic.turbo_pump_state;
+        x: vi.x + 269px;
+        y: vi.y + 288px;
+    }
+
+    VacuumStateCircle {
+        state: Logic.pump_valve_state;
+        x: vi.x + 269px;
+        y: vi.y + 201px;
+    }
+
+    VacuumStateCircle {
+        state: Logic.transfer_valve_state;
+        x: vi.x + 484px;
+        y: vi.y + 76px;
+    }
+
+    VacuumStateCircle {
+        state: Logic.vent_valve_state;
+        x: vi.x + 348px;
+        y: vi.y + 288px;
+    }
+
+    NormalText {
+        x: vi.x + 140px;  // position of chamber in inkscape
+        y: vi.y + 12px;
+
+        width: 278px;  // size of chamber in inkscape
+        height: 148px;
+
+        horizontal-alignment: center;
+        vertical-alignment: center;
+
+        color: Palette.sky;
+        text: "Chamber\n" + Logic.chamber_pressure;
+    }
+
+    NormalText {
+        x: vi.x + 515px;  // position of pipe between valve and dock in inkscape
+        y: vi.y;
+
+        width: 207px;  // length of pipe in inkscape
+        height: 80px;  // y position of pipe in inkscape
+
+        horizontal-alignment: center;
+        vertical-alignment: bottom;
+
+        color: Palette.yellow;
+        text: "Transfer\n" + Logic.transfer_pressure;
+    }
+
+    MyHorizontalLayout {
+
+        /// Shove the rest right
+        Rectangle {
         }
 
         MyVerticalLayout {
@@ -22,31 +86,37 @@ export component VacuumScreen inherits MyWindow {
                 left_text: "Off";
                 right_text: "On";
             }
+
             SmallSwitch {
                 title: "Ion pump";
                 left_text: "Off";
                 right_text: "On";
             }
+
             SmallSwitch {
                 title: "Gauge chamber";
                 left_text: "Off";
                 right_text: "On";
             }
+
             SmallSwitch {
                 title: "Gauge transfer";
                 left_text: "Off";
                 right_text: "On";
             }
+
             SmallSwitch {
                 title: "Valve transfer";
                 left_text: "Close";
                 right_text: "Open";
             }
+
             SmallSwitch {
                 title: "Valve pump";
                 left_text: "Close";
                 right_text: "Open";
             }
+
             SmallSwitch {
                 title: "Valve vent";
                 left_text: "Close";

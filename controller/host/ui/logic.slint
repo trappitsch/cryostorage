@@ -9,6 +9,13 @@ export struct BakingTime {
     seconds: int,
 }
 
+// Valve and pump states
+export enum ValvePumpState {
+    OpenOrOn,
+    ClosedOrOff,
+    UndefinedOrError,
+}
+
 // Logic
 export global Logic {
     // Baking
@@ -57,12 +64,19 @@ export global Logic {
     in-out property <int> sample_temp: 293;
 
     // Vacuum
-    in-out property <string> chamber_pressure;
-    in-out property <string> transfer_pressure;
+    in-out property <string> chamber_pressure: "3.2e-10 mbar";
+    in-out property <string> transfer_pressure: "1.3e-7 mbar";
 
     // Valves
     pure callback transfer_valve_set_open(bool);
     in-out property <bool> transfer_valve_is_open;
+
+    // Valve and pump states 
+    in-out property <ValvePumpState> transfer_valve_state: ValvePumpState.UndefinedOrError;
+    in-out property <ValvePumpState> pump_valve_state: ValvePumpState.OpenOrOn;
+    in-out property <ValvePumpState> turbo_pump_state: ValvePumpState.OpenOrOn;
+    in-out property <ValvePumpState> vent_valve_state: ValvePumpState.ClosedOrOff;
+    in-out property <ValvePumpState> ion_pump_state: ValvePumpState.OpenOrOn;
 
     // TODO: remove the following debug
     pure callback test_button_pressed();
