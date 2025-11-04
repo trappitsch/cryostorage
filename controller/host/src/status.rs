@@ -1,6 +1,6 @@
 //! Handle the instrument status and, when status changes, update UI.
 
-use icd::{BakingState, CtrlStatus, FlowMeterState, ValveState, VctStates};
+use icd::{BakingState, FlowMeterState, InstrumentState, ValveState, VctState};
 use slint::{ComponentHandle, Weak};
 
 use crate::app::{AppWindow, BakingTime, Logic};
@@ -11,8 +11,7 @@ pub struct InstrumentStatus {
     flow_meter: FlowMeterState,
     valve_pump: ValveState,
     valve_transfer: ValveState,
-    vct: VctStates,
-    skip_baking_update: bool, // skip the next baking update?
+    vct: VctState,
 }
 
 impl InstrumentStatus {
@@ -24,8 +23,7 @@ impl InstrumentStatus {
             flow_meter: FlowMeterState::default(),
             valve_pump: ValveState::default(),
             valve_transfer: ValveState::default(),
-            vct: VctStates::default(),
-            skip_baking_update: true,
+            vct: VctState::default(),
         }
     }
 
@@ -35,7 +33,7 @@ impl InstrumentStatus {
     }
 
     /// Update status from a broadcast message. Then update UI.
-    pub fn update_from_bc(&mut self, status: CtrlStatus) {
+    pub fn update_from_bc(&mut self, status: InstrumentState) {
         self.baking = status.baking;
         self.flow_meter = status.flow_meter;
         self.valve_pump = status.pump_valve;
@@ -59,16 +57,15 @@ impl InstrumentStatus {
                 BakingState::Off => (false, BakingTime::default()),
             };
             let water_flow_ok = matches!(self.flow_meter, FlowMeterState::Ok);
-            ui
-                .upgrade_in_event_loop(move |ui| {
-                    ui.global::<Logic>()
-                        .set_baking_is_enabled(baking_is_enabled);
-                    if baking_is_enabled {
-                        ui.global::<Logic>().set_baking_time(baking_time);
-                    };
-                    ui.global::<Logic>().set_water_flow_ok(water_flow_ok);
-                })
-                .unwrap();
+            ui.upgrade_in_event_loop(move |ui| {
+                ui.global::<Logic>()
+                    .set_baking_is_enabled(baking_is_enabled);
+                if baking_is_enabled {
+                    ui.global::<Logic>().set_baking_time(baking_time);
+                };
+                ui.global::<Logic>().set_water_flow_ok(water_flow_ok);
+            })
+            .unwrap();
         }
     }
 }

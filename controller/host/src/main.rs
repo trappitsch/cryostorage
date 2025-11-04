@@ -1,9 +1,12 @@
 use std::sync::{Arc, Mutex};
 
 use poststation_sdk::connect;
-use tokio::sync::{broadcast, mpsc, OnceCell};
+use tokio::sync::{OnceCell, broadcast, mpsc};
 
-use crate::{controller::{controller_broadcast_listener, controller_task, Controller}, status::InstrumentStatus};
+use crate::{
+    controller::{Controller, controller_broadcast_listener, controller_task},
+    status::InstrumentStatus,
+};
 
 mod app;
 mod controller;
@@ -25,7 +28,7 @@ async fn main() {
     let (tx_halt, _) = broadcast::channel(1);
     HALT_SENDER.set(tx_halt.clone()).expect("Uninitialized");
 
-    // comms for controller task 
+    // comms for controller task
     let (tx_ctrl, rx_ctrl) = mpsc::channel(32);
 
     // controller
