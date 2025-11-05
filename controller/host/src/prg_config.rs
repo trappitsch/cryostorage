@@ -10,7 +10,7 @@ use std::{
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
-use crate::{controller::ControllerConfig, samples::Samples};
+use crate::{CONFIG_FOLDER, controller::ControllerConfig, samples::Samples};
 
 pub const CONFIG_FNAME: &str = "cryostorage_config.ron";
 
@@ -27,8 +27,7 @@ impl PrgConfig {
     pub fn try_new() -> Result<Self> {
         let fname = env::home_dir()
             .expect("Home directory must be known")
-            .join(".config")
-            .join("cryostorage");
+            .join(CONFIG_FOLDER);
         fs::create_dir_all(&fname)?;
         let fname = fname.join(CONFIG_FNAME);
 

@@ -7,7 +7,7 @@ use std::sync::{
 use icd::{BakingState, BcInstStatus, LightState, SetLightEndpoint};
 use poststation_sdk::PoststationClient;
 use serde::{Deserialize, Serialize};
-use tokio::sync::{broadcast, mpsc};
+use tokio::sync::mpsc;
 
 use crate::status::InstrumentStatus;
 

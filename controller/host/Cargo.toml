@@ -6,7 +6,10 @@ edition = "2024"
 [dependencies]
 anyhow          = "1.0.100"
 async-compat    = "0.2.5"
+chrono = { version = "0.4.42", features = ["serde"] }
 icd             = { version = "0.1.0", path = "../icd" }
+measurements    = { version = "0.11.1", features = ["serde", "std"] }
+plotters        = "0.3.7"
 poststation-sdk = "0.4.1"
 ron             = "0.11.0"
 serde           = { version = "1.0.226", features = ["derive"] }

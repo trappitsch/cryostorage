@@ -13,8 +13,12 @@ mod controller;
 mod prg_config;
 mod samples;
 mod status;
+mod vacuum_history;
+
+pub const CONFIG_FOLDER:  &str = ".cryostorage";
 
 pub static HALT_SENDER: OnceCell<broadcast::Sender<()>> = OnceCell::const_new();
+
 
 #[tokio::main]
 async fn main() {
@@ -36,7 +40,7 @@ async fn main() {
         .lock()
         .expect("Locking config must work")
         .get_controller_config();
-    let client = connect(controller_config.address).await.unwrap();
+    let client = connect(controller_config.address).await.expect("Poststation must be running");
     let cntrl = Controller::new(client.clone(), controller_config.serial);
 
     let cntrl_tsk = tokio::spawn(controller_task(cntrl, rx_ctrl));

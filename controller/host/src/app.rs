@@ -27,6 +27,16 @@ pub fn app_main(
     // pass the ui to the instrument status handler
     inst_status.lock().expect("Poisoned").set_ui(ui.as_weak());
 
+    // FIXME:
+    let mut vh = crate::vacuum_history::VacuumHistory::new(
+        crate::vacuum_history::PlotSizePx {
+            width: 800,
+            height: 400,
+        },
+        ui.as_weak(),
+    );
+    vh.add_measurement(measurements::Pressure::from_millibars(1.0e-7), measurements::Pressure::from_millibars(1.0e-5))?;
+
     // Debug builds
     #[cfg(debug_assertions)]
     ui.global::<Logic>().set_admin_mode(true);
