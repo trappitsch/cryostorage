@@ -66,6 +66,7 @@ fn usb_config(serial: &'static str) -> Config<'static> {
     let mut config = Config::new(0x16c0, 0x27DD);
     config.manufacturer = Some("Reto Trappitsch, EPFL");
     config.product = Some("Cryostorage Controller");
+    info!("USB Serial: {}", serial);
     config.serial_number = Some(serial);
 
     // Required for windows compatibility.
