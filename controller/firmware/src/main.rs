@@ -147,16 +147,16 @@ async fn main(spawner: Spawner) {
     );
     let flow_meter = FlowMeter::new(Input::new(p.PIN_15, Pull::None));
     let pump_valve = Valve::new(
-        Output::new(p.PIN_2, Level::Low), // Control option
-        Output::new(p.PIN_3, Level::Low), // Control close
-        Input::new(p.PIN_6, Pull::None),  // State open
-        Input::new(p.PIN_7, Pull::None),  // State closed
-    );
-    let transfer_valve = Valve::new(
         Output::new(p.PIN_4, Level::Low), // Control option
         Output::new(p.PIN_5, Level::Low), // Control close
         Input::new(p.PIN_8, Pull::None),  // State open
         Input::new(p.PIN_9, Pull::None),  // State closed
+    );
+    let transfer_valve = Valve::new(
+        Output::new(p.PIN_2, Level::Low), // Control option
+        Output::new(p.PIN_3, Level::Low), // Control close
+        Input::new(p.PIN_6, Pull::None),  // State open
+        Input::new(p.PIN_7, Pull::None),  // State closed
     );
     let vct = Vct::new(
         Output::new(p.PIN_17, Level::Low), // Init NotReady

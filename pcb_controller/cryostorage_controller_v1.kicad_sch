@@ -7161,7 +7161,7 @@
 		)
 		(uuid f0ad8f12-3e89-4855-9b7f-23ea0e7a436e)
 	)
-	(text "1: +VAC/VDC\n2: -Power\n3: N.O. Contact\n4: Common"
+	(text "1: +VAC/VDC\n2: -Power\n3: N.C. Contact \n   (closed when no flow/power)\n4: Common"
 		(exclude_from_sim no)
 		(at 49.784 117.094 0)
 		(effects

@@ -62,8 +62,8 @@ impl Valve {
 
     /// Get the current state of the valve.
     pub fn state(&self) -> ValveState {
-        let is_open = self.pin_state_open.is_high();
-        let is_closed = self.pin_state_closed.is_high();
+        let is_open = self.pin_state_open.is_low();
+        let is_closed = self.pin_state_closed.is_low();
         if is_open && !is_closed {
             ValveState::Open
         } else if !is_open && is_closed {
