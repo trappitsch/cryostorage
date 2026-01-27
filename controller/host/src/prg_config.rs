@@ -20,6 +20,7 @@ pub struct PrgConfig {
     admin_pin: String,
     controller_config: ControllerConfig,
     samples: Samples,
+    limits: InstrumentLimits,
 }
 
 impl PrgConfig {
@@ -36,10 +37,12 @@ impl PrgConfig {
             admin_pin: String::from("1234"),
             controller_config: ControllerConfig::default(),
             samples: Samples::new(),
+            limits: InstrumentLimits::default(),
         };
 
         ret_self.load_from_file();
         ret_self.save_to_file()?; // FIXME: Remove this line later
+        println!("Configuration loaded from {:?}", ret_self.fname);
 
         Ok(ret_self)
     }
@@ -83,5 +86,27 @@ impl PrgConfig {
         let res = self.samples.update_sample(pos, value);
         self.save_to_file()?;
         res
+    }
+}
+
+/// Limits of the instrument.
+///
+/// These limits are used to ensure safe opearations and to prevent damage to the system and the
+/// chamber. They are checked against with current values to allow or disallow certain operations.
+#[derive(Debug, Serialize, Deserialize)]
+pub struct InstrumentLimits {
+    /// Maximum pressure allowable in main chamber to initiate a sample transfer.
+    pub max_main_pressure_transfer: f64,
+    /// Pressure difference threshold between main and pump to allow opening the pump valve. This
+    /// is a factor between the two pressures.
+    pub max_pressure_diff_pump_valve: f64,
+}
+
+impl Default for InstrumentLimits {
+    fn default() -> Self {
+        Self {
+            max_main_pressure_transfer: 5e-8,
+            max_pressure_diff_pump_valve: 10.0,
+        }
     }
 }

@@ -1,7 +1,7 @@
 import { Const } from "consts.slint";
 import { Palette } from "palette.slint";
 import { LineEdit } from "std-widgets.slint";
-import { Logic, ValvePumpState } from "logic.slint";
+import { Logic, ValveOrPumpState } from "logic.slint";
 
 export component NormalText inherits Text {
     font-size: 20px;
@@ -247,10 +247,7 @@ export component BigSwitch inherits Rectangle {
                 TouchArea {
                     clicked => {
                         if (root.enabled) {
-                            if (root.right_side) {
-                                root.right_side = false;
-                            }
-                            root.switched(root.right_side);
+                            root.switched(false);
                         }
                     }
                 }
@@ -274,10 +271,7 @@ export component BigSwitch inherits Rectangle {
                 TouchArea {
                     clicked => {
                         if (root.enabled) {
-                            if (!root.right_side) {
-                                root.right_side = true;
-                            }
-                            root.switched(root.right_side);
+                        root.switched(true);
                         }
                     }
                 }
@@ -294,7 +288,7 @@ export component BigSwitch inherits Rectangle {
 }
 
 export component SmallSwitch inherits Rectangle {
-    property <bool> right_side: false;
+    in-out property <bool> right_side: false;
     in property <string> title: "Small Switch";
     in property <string> left_text: "Left";
     in property <string> right_text: "Right";
@@ -327,9 +321,7 @@ export component SmallSwitch inherits Rectangle {
                 TouchArea {
                     clicked => {
                         if (root.enabled) {
-                            if (root.right_side) {
-                                root.right_side = false;
-                            }
+                            root.switched(false);
                         }
                     }
                 }
@@ -353,9 +345,7 @@ export component SmallSwitch inherits Rectangle {
                 TouchArea {
                     clicked => {
                         if (root.enabled) {
-                            if (!root.right_side) {
-                                root.right_side = true;
-                            }
+                            root.switched(true);
                         }
                     }
                 }
@@ -405,12 +395,12 @@ export component MyLineEdit inherits LineEdit {
 }
 
 export component VacuumStateCircle inherits Rectangle {
-    in property <ValvePumpState> state: ValvePumpState.UndefinedOrError;
+    in property <ValveOrPumpState> state: ValveOrPumpState.UndefinedOrError;
 
     width: Const.vacuum_image_status_circle_size;
     height: Const.vacuum_image_status_circle_size;
     border-radius: self.width / 2;
     border-width: 0px;
 
-    background: state == ValvePumpState.OpenOrOn ? Palette.green : (state == ValvePumpState.ClosedOrOff ? Palette.peach: Palette.red);
+    background: state == ValveOrPumpState.OpenOrOn ? Palette.green : (state == ValveOrPumpState.ClosedOrOff ? Palette.blue : (state == ValveOrPumpState.SetDifferentFromCalled ? Palette.peach : Palette.red));
 }

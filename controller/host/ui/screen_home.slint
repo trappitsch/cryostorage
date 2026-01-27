@@ -52,8 +52,8 @@ export component HomeScreen inherits MyWindow {
                     right_side: Logic.transfer_valve_is_open;
                     left_text: "Closed";
                     right_text: "Open";
-                    switched(right_side_active) => {
-                        Logic.transfer_valve_set_open(right_side_active);  // bool
+                    switched(set_open) => {
+                        Logic.transfer_valve_set_open(set_open);  // bool
                 }
                 }
             }

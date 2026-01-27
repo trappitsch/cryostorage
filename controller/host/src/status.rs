@@ -3,15 +3,18 @@
 use icd::{BakingState, FlowMeterState, InstrumentState, ValveState, VctState};
 use slint::{ComponentHandle, Weak};
 
-use crate::app::{AppWindow, BakingTime, Logic};
+use crate::app::{AppWindow, BakingTime, Logic, ValveOrPumpState };
 
 pub struct InstrumentStatus {
     ui: Option<Weak<AppWindow>>,
-    baking: BakingState,
-    flow_meter: FlowMeterState,
-    valve_pump: ValveState,
-    valve_transfer: ValveState,
-    vct: VctState,
+    baking_call: BakingState,
+    baking_curr: BakingState,
+    flow_meter_curr: FlowMeterState,
+    valve_pump_call: ValveState,
+    valve_pump_curr: ValveState,
+    valve_transfer_call: ValveState,
+    valve_transfer_curr: ValveState,
+    vct_curr: VctState,
 }
 
 impl InstrumentStatus {
@@ -19,33 +22,49 @@ impl InstrumentStatus {
     pub fn new() -> Self {
         Self {
             ui: None,
-            baking: BakingState::default(),
-            flow_meter: FlowMeterState::default(),
-            valve_pump: ValveState::default(),
-            valve_transfer: ValveState::default(),
-            vct: VctState::default(),
+            baking_call: BakingState::default(),
+            baking_curr: BakingState::default(),
+            flow_meter_curr: FlowMeterState::default(),
+            valve_pump_call: ValveState::default(),
+            valve_pump_curr: ValveState::default(),
+            valve_transfer_call: ValveState::default(),
+            valve_transfer_curr: ValveState::default(),
+            vct_curr: VctState::default(),
         }
     }
 
-    /// Set the UI component.
+    /// Set the UI component of this class.
+    ///
+    /// Can be set later such that the new can initialize it as `None`.
     pub fn set_ui(&mut self, ui: Weak<AppWindow>) {
         self.ui = Some(ui);
     }
 
-    /// Update status from a broadcast message. Then update UI.
-    pub fn update_from_bc(&mut self, status: InstrumentState) {
-        self.baking = status.baking;
-        self.flow_meter = status.flow_meter;
-        self.valve_pump = status.pump_valve;
-        self.valve_transfer = status.transfer_valve;
-        self.vct = status.vct;
-        self.update_ui();
+    /// Set valve pump called state.
+    pub fn set_valve_pump_call(&mut self, state: ValveState) {
+        self.valve_pump_call = state;
     }
 
-    /// Update the UI.
-    fn update_ui(&self) {
+    /// Set valve transfer called state.
+    pub fn set_valve_transfer_call(&mut self, state: ValveState) {
+        self.valve_transfer_call = state;
+    }
+
+    /// Update status from a broadcast message. Then update UI.
+    pub fn update_from_controller_broadcast(&mut self, status: InstrumentState) {
+        self.baking_curr = status.baking;
+        self.flow_meter_curr = status.flow_meter;
+        self.valve_pump_curr = status.pump_valve;
+        self.valve_transfer_curr = status.transfer_valve;
+        self.vct_curr = status.vct;
+        self.update_ui_controler_broadcast();
+    }
+
+    /// Update the UI after a controller broadcast.
+    fn update_ui_controler_broadcast(&self) {
         if let Some(ui) = &self.ui {
-            let (baking_is_enabled, baking_time) = match self.baking {
+            // Baking
+            let (baking_is_enabled, baking_time) = match self.baking_curr {
                 BakingState::On { time_sec } => {
                     let baking_time = BakingTime {
                         hours: (time_sec.div_euclid(3600)) as i32,
@@ -56,7 +75,39 @@ impl InstrumentStatus {
                 }
                 BakingState::Off => (false, BakingTime::default()),
             };
-            let water_flow_ok = matches!(self.flow_meter, FlowMeterState::Ok);
+
+            // Water flow
+            let water_flow_ok = matches!(self.flow_meter_curr, FlowMeterState::Ok);
+
+            // Pump valve status
+            let valve_pump_state = if self.valve_pump_call == self.valve_pump_curr {
+                match self.valve_pump_curr {
+                    ValveState::Open => ValveOrPumpState::OpenOrOn,
+                    ValveState::Closed => ValveOrPumpState::ClosedOrOff,
+                    _ => unreachable!("Call state can only be on or off"),
+                }
+            } else {
+                match self.valve_pump_curr {
+                    ValveState::Undefined => ValveOrPumpState::UndefinedOrError,
+                    _ => ValveOrPumpState::SetDifferentFromCalled,
+                }
+            };
+
+            // Transfer valve status
+            let valve_transfer_state = if self.valve_transfer_call == self.valve_transfer_curr {
+                match self.valve_transfer_curr {
+                    ValveState::Open => ValveOrPumpState::OpenOrOn,
+                    ValveState::Closed => ValveOrPumpState::ClosedOrOff,
+                    _ => unreachable!("Call state can only be on or off"),
+                }
+            } else {
+                match self.valve_transfer_curr {
+                    ValveState::Undefined => ValveOrPumpState::UndefinedOrError,
+                    _ => ValveOrPumpState::SetDifferentFromCalled,
+                }
+            };
+
+            // Update UI in event loop
             ui.upgrade_in_event_loop(move |ui| {
                 ui.global::<Logic>()
                     .set_baking_is_enabled(baking_is_enabled);
@@ -64,6 +115,9 @@ impl InstrumentStatus {
                     ui.global::<Logic>().set_baking_time(baking_time);
                 };
                 ui.global::<Logic>().set_water_flow_ok(water_flow_ok);
+                ui.global::<Logic>().set_pump_valve_state(valve_pump_state);
+                ui.global::<Logic>()
+                    .set_transfer_valve_state(valve_transfer_state);
             })
             .unwrap();
         }

@@ -10,10 +10,11 @@ export struct BakingTime {
 }
 
 // Valve and pump states
-export enum ValvePumpState {
+export enum ValveOrPumpState {
     OpenOrOn,
     ClosedOrOff,
     UndefinedOrError,
+    SetDifferentFromCalled
 }
 
 // Logic
@@ -68,16 +69,18 @@ export global Logic {
     in-out property <string> transfer_pressure: "1.3e-7 mbar";
     in property <image> vacuum_plot;
 
-    // Valves
+    // Valves: callbacks and button settings indicators
     pure callback transfer_valve_set_open(bool);
     in-out property <bool> transfer_valve_is_open;
+    pure callback pump_valve_set_open(bool);
+    in-out property <bool> pump_valve_is_open;
 
-    // Valve and pump states 
-    in-out property <ValvePumpState> transfer_valve_state: ValvePumpState.UndefinedOrError;
-    in-out property <ValvePumpState> pump_valve_state: ValvePumpState.OpenOrOn;
-    in-out property <ValvePumpState> turbo_pump_state: ValvePumpState.OpenOrOn;
-    in-out property <ValvePumpState> vent_valve_state: ValvePumpState.ClosedOrOff;
-    in-out property <ValvePumpState> ion_pump_state: ValvePumpState.OpenOrOn;
+    // Valve and pump states: for status indicator
+    in-out property <ValveOrPumpState> transfer_valve_state: ValveOrPumpState.UndefinedOrError;
+    in-out property <ValveOrPumpState> pump_valve_state: ValveOrPumpState.OpenOrOn;
+    in-out property <ValveOrPumpState> turbo_pump_state: ValveOrPumpState.OpenOrOn;
+    in-out property <ValveOrPumpState> vent_valve_state: ValveOrPumpState.SetDifferentFromCalled;
+    in-out property <ValveOrPumpState> ion_pump_state: ValveOrPumpState.ClosedOrOff;
 
     // TODO: remove the following debug
     pure callback test_button_pressed();

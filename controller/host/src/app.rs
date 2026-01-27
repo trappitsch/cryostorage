@@ -20,7 +20,12 @@ pub fn app_main(
 ) -> Result<(), Box<dyn Error>> {
     let ui = AppWindow::new()?;
 
-    // initialize the different screens
+    // initialize the various GUI handlers
+    let _controller_cmd_handler = ControllerCommandHandler::new(
+        ui.as_weak(),
+        tx.clone(),
+        Arc::clone(&conf),
+    );
     let _home_screen = HomeScreen::new(ui.as_weak(), tx.clone(), Arc::clone(&conf));
     let _settings_screen = SettingsScreen::new(ui.as_weak(), tx.clone(), Arc::clone(&conf));
 
@@ -45,6 +50,72 @@ pub fn app_main(
 
     ui.run()?;
     Ok(())
+}
+
+/// Controller command handler for the GUI.
+///
+/// This handler controls all the Cryocooler controller commands and sends ControllerCommands to
+/// the controller handler, which talks to poststation. This here is the intermediary between the
+/// GUI and the rest of the logic.
+struct ControllerCommandHandler {
+    conf: Arc<Mutex<PrgConfig>>,
+    tx: mpsc::Sender<ControllerCommands>,
+    ui: AppWindow,
+}
+
+impl ControllerCommandHandler {
+    /// Initialize all switches
+    fn new(
+        ui: Weak<AppWindow>,
+        tx: mpsc::Sender<ControllerCommands>,
+        conf: Arc<Mutex<PrgConfig>>,
+    ) -> Self {
+        let hs = Self {
+            conf,
+            tx,
+            ui: ui.unwrap(),
+        };
+        hs.init();
+
+        hs
+    }
+
+    /// Initialize the controller command handler with the current and saved values.
+    fn init(&self) {
+        // FIXME: bogus inits below
+        self.ui.global::<Logic>().set_cryocooler_is_on(false);
+        self.ui.global::<Logic>().set_transfer_valve_is_open(true);
+        self.ui.global::<Logic>().set_pump_valve_is_open(false);
+
+        // init buttons
+        self.light_switch();
+        self.transfer_valve_set_open();
+        // self.pump_valve_set_open();
+    }
+
+    fn light_switch(&self) {
+        let tx = self.tx.clone();
+        self.ui.global::<Logic>().on_light_switch({
+            move |val| {
+                let light_stat = match val {
+                    true => LightState::On,
+                    false => LightState::Off,
+                };
+                tx.try_send(ControllerCommands::Light(light_stat))
+                    .expect("Channel must be open");
+            }
+        });
+    }
+
+    fn transfer_valve_set_open(&self) {
+        let ui = self.ui.as_weak();
+        self.ui.global::<Logic>().on_transfer_valve_set_open({
+            move |val| {
+                println!("Transfer valve open: {}", val); // TODO:
+                ui.unwrap().global::<Logic>().set_transfer_valve_is_open(val);
+            }
+        });
+    }
 }
 
 struct HomeScreen {
@@ -89,28 +160,12 @@ impl HomeScreen {
             .global::<Logic>()
             .set_chamber_pressure(format!("{:.2E} mbar", 0.0001234).into());
         self.ui.global::<Logic>().set_cryocooler_is_on(false);
-        self.ui.global::<Logic>().set_transfer_valve_is_open(true);
 
         // init buttons
-        self.light_switch();
         self.cryocooler_set_on();
         self.edit_sample_name();
-        self.transfer_valve_set_open();
     }
 
-    fn light_switch(&self) {
-        let tx = self.tx.clone();
-        self.ui.global::<Logic>().on_light_switch({
-            move |val| {
-                let light_stat = match val {
-                    true => LightState::On,
-                    false => LightState::Off,
-                };
-                tx.try_send(ControllerCommands::Light(light_stat))
-                    .expect("Channel must be open");
-            }
-        });
-    }
 
     fn cryocooler_set_on(&self) {
         self.ui.global::<Logic>().on_cryocooler_set_on({
@@ -150,14 +205,6 @@ impl HomeScreen {
 
                 //         }
                 //     });
-            }
-        });
-    }
-
-    fn transfer_valve_set_open(&self) {
-        self.ui.global::<Logic>().on_transfer_valve_set_open({
-            move |val| {
-                println!("Transfer valve open: {}", val); // TODO
             }
         });
     }

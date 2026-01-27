@@ -56,7 +56,7 @@ pub async fn controller_broadcast_listener(
                 if let Ok(mut listener) = stream_result {
                 let msg = listener.recv().await;
                 if let Some(status) = msg {
-                    inst_status.lock().expect("Poisoned").update_from_bc(status);
+                    inst_status.lock().expect("Poisoned").update_from_controller_broadcast(status);
                     }
                 }
             }
@@ -105,10 +105,19 @@ impl Controller {
 }
 
 /// A structure that holds the configuration for the controller.
-#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ControllerConfig {
     /// The serial number of the controller -> get form poststation.
     pub serial: u64,
     /// Address and port of the poststation serve.
     pub address: String,
+}
+
+impl Default for ControllerConfig {
+    fn default() -> Self {
+        Self {
+            serial: 123456789,
+            address: String::from("127.0.0.1:51837"),
+        }
+    }
 }

@@ -108,14 +108,22 @@ export component VacuumScreen inherits MyWindow {
 
             SmallSwitch {
                 title: "Valve transfer";
+                right_side: Logic.transfer_valve_is_open;
                 left_text: "Close";
                 right_text: "Open";
+                switched(set_open) => {
+                    Logic.transfer_valve_set_open(set_open);  // bool
+                }
             }
 
             SmallSwitch {
                 title: "Valve pump";
+                right_side: Logic.pump_valve_is_open;
                 left_text: "Close";
                 right_text: "Open";
+                switched(set_open) => {
+                    Logic.pump_valve_set_open(set_open);  // bool
+                }
             }
 
             SmallSwitch {
