@@ -144,24 +144,26 @@ export component SettingsScreen inherits MyWindow {
                 }
             }
 
-            StatusOkErr {
-                title: "StatusOkErr: Err";
-                ok: false;
-            }
+            // FIXME: Remove the following examples: commented out components as demos
+            // StatusOkErr {
+            //     title: "StatusOkErr: Err";
+            //     ok: false;
+            // }
+            //
+            // StatusOkErr {
+            //     title: "StatusOkErr: Ok";
+            // }
+            //
+            // BigSwitch { }
+            //
+            // SmallSwitch { }
+            //
+            // InfoArea {
+            //     title: "Cold temperature";
+            //     text_color: Palette.blue;
+            // }
 
-            StatusOkErr {
-                title: "StatusOkErr: Ok";
-            }
-
-            BigSwitch { }
-
-            SmallSwitch { }
-
-            InfoArea {
-                title: "Cold temperature";
-                text_color: Palette.blue;
-            }
-
+            // FIXME: Test button to be removed
             LongButton {
                 text: Logic.test_button_text;
                 clicked => {

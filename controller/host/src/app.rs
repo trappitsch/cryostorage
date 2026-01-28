@@ -5,7 +5,7 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-use icd::{BakingState, LightState};
+use icd::{BakingState, LightState, ValveState, VctHandshake};
 use slint::{Model, SharedString, Weak};
 use tokio::sync::mpsc;
 
@@ -91,7 +91,7 @@ impl ControllerCommandHandler {
         self.baking();
         self.light_switch();
         self.transfer_valve_set_open();
-        // self.pump_valve_set_open();
+        self.pump_valve_set_open();
     }
 
     fn baking(&self) {
@@ -132,11 +132,33 @@ impl ControllerCommandHandler {
         });
     }
 
+    fn pump_valve_set_open(&self) {
+        let ui = self.ui.as_weak();
+        let tx = self.tx.clone();
+        self.ui.global::<Logic>().on_pump_valve_set_open({
+            move |val| {
+                let vst = match val {
+                    true => ValveState::Open,
+                    false => ValveState::Closed,
+                };
+                tx.try_send(ControllerCommands::PumpValve(vst))
+                    .expect("Channel must be open");
+                ui.unwrap().global::<Logic>().set_pump_valve_is_open(val);
+            }
+        });
+    }
+
     fn transfer_valve_set_open(&self) {
         let ui = self.ui.as_weak();
+        let tx = self.tx.clone();
         self.ui.global::<Logic>().on_transfer_valve_set_open({
             move |val| {
-                println!("Transfer valve open: {}", val); // TODO:
+                let vst = match val {
+                    true => ValveState::Open,
+                    false => ValveState::Closed,
+                };
+                tx.try_send(ControllerCommands::TransferValve(vst))
+                    .expect("Channel must be open");
                 ui.unwrap()
                     .global::<Logic>()
                     .set_transfer_valve_is_open(val);
@@ -178,22 +200,23 @@ impl GuiCommandHandler {
 
     // FIXME: Delete
     fn test_button(&self) {
+        self.ui
+            .global::<Logic>()
+            .set_test_button_text("Toggle VCT handshake".into());
         let ui = self.ui.as_weak();
+        let tx = self.tx.clone();
         self.ui.global::<Logic>().on_test_button_pressed({
             move || {
                 let ui = ui.unwrap();
-                let text = ui.global::<Logic>().get_test_button_text();
-                println!("Test button text: {}", text);
-                let (tx, mut rx) = mpsc::channel(1);
-                let kb = KeyboardInput::new(tx);
-                kb.get_text_input("asdf", text);
-                let fut = async move {
-                    let result = rx.recv().await;
-                    if let Some(res) = result {
-                        ui.global::<Logic>().set_test_button_text(res);
-                    }
+                let new_state = !ui.global::<Logic>().get_test_button_state();
+                let vct_state = if new_state {
+                    VctHandshake::Ready
+                } else {
+                    VctHandshake::NotReady
                 };
-                slint::spawn_local(async_compat::Compat::new(fut)).unwrap();
+                tx.try_send(ControllerCommands::VctHandshake(vct_state))
+                    .expect("Channel must be open");
+                ui.global::<Logic>().set_test_button_state(new_state);
             }
         });
     }

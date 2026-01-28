@@ -4,7 +4,10 @@ use std::sync::{
     atomic::{AtomicU32, Ordering},
 };
 
-use icd::{BakingState, BcInstStatus, LightState, SetLightEndpoint};
+use icd::{
+    BakingState, BcInstStatus, LightState, SetLightEndpoint, SetPumpValveEndpoint,
+    SetTransferValveEndpoint, ValveState, VctHandshake, SetVctHandshakeEndpoint,
+};
 use poststation_sdk::PoststationClient;
 use serde::{Deserialize, Serialize};
 use tokio::sync::mpsc;
@@ -14,6 +17,9 @@ use crate::status::InstrumentStatus;
 pub enum ControllerCommands {
     Light(LightState),
     Baking(BakingState),
+    TransferValve(ValveState),
+    PumpValve(ValveState),
+    VctHandshake(VctHandshake),
 }
 
 /// Task that communicates with the controller firmware via poststation.
@@ -24,13 +30,22 @@ pub async fn controller_task(cntrl: Controller, mut rx: mpsc::Receiver<Controlle
             command_result = rx.recv() => {
                 if let Some(cmd) = command_result {
                     match cmd {
-                    ControllerCommands::Light(state) => {
-                        cntrl.light(state).await;
+                        ControllerCommands::Light(state) => {
+                            cntrl.light(state).await;
+                        }
+                        ControllerCommands::Baking(state) => {
+                            cntrl.baking(state).await;
+                        }
+                        ControllerCommands::PumpValve(state) => {
+                            cntrl.pump_valve(state).await;
+                        }
+                        ControllerCommands::TransferValve(state) => {
+                            cntrl.transfer_valve(state).await;
+                        }
+                        ControllerCommands::VctHandshake(handshake) => {
+                            cntrl.vct_handshake(handshake).await;
+                        }
                     }
-                    ControllerCommands::Baking(state) => {
-                        cntrl.baking(state).await;
-                    }
-                }
                 }
             }
             _ = rx_shutdown.recv() => {
@@ -89,17 +104,38 @@ impl Controller {
         self.ctr.fetch_add(1, Ordering::Relaxed)
     }
 
-    pub async fn light(&self, light_state: LightState) {
-        let _ = self
-            .client
-            .proxy_endpoint::<SetLightEndpoint>(self.serial, self.ctr(), &light_state)
-            .await; // FIXME: need error checking, test with invalid serial number
-    }
-
     pub async fn baking(&self, baking_state: BakingState) {
         let _ = self
             .client
             .proxy_endpoint::<icd::SetBakingEndpoint>(self.serial, self.ctr(), &baking_state)
+            .await; // FIXME: need error checking
+    }
+
+    pub async fn light(&self, light_state: LightState) {
+        let _ = self
+            .client
+            .proxy_endpoint::<SetLightEndpoint>(self.serial, self.ctr(), &light_state)
+            .await; // FIXME: need error checking
+    }
+
+    pub async fn pump_valve(&self, valve_state: ValveState) {
+        let _ = self
+            .client
+            .proxy_endpoint::<SetPumpValveEndpoint>(self.serial, self.ctr(), &valve_state)
+            .await; // FIXME: need error checking
+    }
+
+    pub async fn transfer_valve(&self, valve_state: ValveState) {
+        let _ = self
+            .client
+            .proxy_endpoint::<SetTransferValveEndpoint>(self.serial, self.ctr(), &valve_state)
+            .await; // FIXME: need error checking
+    }
+
+    pub async fn vct_handshake(&self, handshake: VctHandshake) {
+        let _ = self
+            .client
+            .proxy_endpoint::<SetVctHandshakeEndpoint>(self.serial, self.ctr(), &handshake)
             .await; // FIXME: need error checking
     }
 }
