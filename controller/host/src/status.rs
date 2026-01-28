@@ -33,6 +33,16 @@ impl InstrumentStatus {
         }
     }
 
+    /// Initialize the call states to the current states.
+    ///
+    /// This is used at startup to avoid false error states.
+    /// FIXME: This is currently not used anywhere. Needs to be fixed.
+    pub fn initialize_call_states(&mut self) {
+        self.baking_call = self.baking_curr.clone();
+        self.valve_pump_call = self.valve_pump_curr.clone();
+        self.valve_transfer_call = self.valve_transfer_curr.clone();
+    }
+
     /// Set the UI component of this class.
     ///
     /// Can be set later such that the new can initialize it as `None`.
@@ -84,7 +94,8 @@ impl InstrumentStatus {
                 match self.valve_pump_curr {
                     ValveState::Open => ValveOrPumpState::OpenOrOn,
                     ValveState::Closed => ValveOrPumpState::ClosedOrOff,
-                    _ => unreachable!("Call state can only be on or off"),
+                    // Undefined in call state only possible at startup.
+                    ValveState::Undefined => ValveOrPumpState::UndefinedOrError,  
                 }
             } else {
                 match self.valve_pump_curr {
@@ -98,7 +109,8 @@ impl InstrumentStatus {
                 match self.valve_transfer_curr {
                     ValveState::Open => ValveOrPumpState::OpenOrOn,
                     ValveState::Closed => ValveOrPumpState::ClosedOrOff,
-                    _ => unreachable!("Call state can only be on or off"),
+                    // Undefined in call state only possible at startup.
+                    ValveState::Undefined => ValveOrPumpState::UndefinedOrError,  
                 }
             } else {
                 match self.valve_transfer_curr {

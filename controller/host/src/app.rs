@@ -21,13 +21,11 @@ pub fn app_main(
     let ui = AppWindow::new()?;
 
     // initialize the various GUI handlers
-    let _controller_cmd_handler = ControllerCommandHandler::new(
-        ui.as_weak(),
-        tx.clone(),
-        Arc::clone(&conf),
-    );
-    let _home_screen = HomeScreen::new(ui.as_weak(), tx.clone(), Arc::clone(&conf));
-    let _settings_screen = SettingsScreen::new(ui.as_weak(), tx.clone(), Arc::clone(&conf));
+    let _controller_cmd_handler =
+        ControllerCommandHandler::new(ui.as_weak(), Arc::clone(&conf), tx.clone());
+    let _gui_cmd_handler = GuiCommandHandler::new(ui.as_weak(), Arc::clone(&conf), tx.clone());
+    let _instrument_cmd_handler =
+        InstrumentCommandHandler::new(ui.as_weak(), Arc::clone(&conf), tx.clone());
 
     // pass the ui to the instrument status handler
     inst_status.lock().expect("Poisoned").set_ui(ui.as_weak());
@@ -40,7 +38,10 @@ pub fn app_main(
         },
         ui.as_weak(),
     );
-    vh.add_measurement(measurements::Pressure::from_millibars(1.0e-7), measurements::Pressure::from_millibars(1.0e-5))?;
+    vh.add_measurement(
+        measurements::Pressure::from_millibars(1.0e-7),
+        measurements::Pressure::from_millibars(1.0e-5),
+    )?;
 
     // Debug builds
     #[cfg(debug_assertions)]
@@ -58,26 +59,25 @@ pub fn app_main(
 /// the controller handler, which talks to poststation. This here is the intermediary between the
 /// GUI and the rest of the logic.
 struct ControllerCommandHandler {
+    ui: AppWindow,
     conf: Arc<Mutex<PrgConfig>>,
     tx: mpsc::Sender<ControllerCommands>,
-    ui: AppWindow,
 }
 
 impl ControllerCommandHandler {
     /// Initialize all switches
     fn new(
         ui: Weak<AppWindow>,
-        tx: mpsc::Sender<ControllerCommands>,
         conf: Arc<Mutex<PrgConfig>>,
+        tx: mpsc::Sender<ControllerCommands>,
     ) -> Self {
-        let hs = Self {
+        let sf = Self {
+            ui: ui.unwrap(),
             conf,
             tx,
-            ui: ui.unwrap(),
         };
-        hs.init();
-
-        hs
+        sf.init();
+        sf
     }
 
     /// Initialize the controller command handler with the current and saved values.
@@ -88,9 +88,34 @@ impl ControllerCommandHandler {
         self.ui.global::<Logic>().set_pump_valve_is_open(false);
 
         // init buttons
+        self.baking();
         self.light_switch();
         self.transfer_valve_set_open();
         // self.pump_valve_set_open();
+    }
+
+    fn baking(&self) {
+        self.ui.global::<Logic>().on_baking_enabled({
+            let ui = self.ui.as_weak();
+            let tx = self.tx.clone();
+            move |val| {
+                let ui = ui.unwrap();
+                let baking_state = match val {
+                    true => {
+                        let baking_time = ui.global::<Logic>().get_baking_time();
+                        let time_sec = baking_time.hours * 3600
+                            + baking_time.minutes * 60
+                            + baking_time.seconds;
+                        BakingState::On {
+                            time_sec: time_sec as u64,
+                        }
+                    }
+                    false => BakingState::Off,
+                };
+                tx.try_send(ControllerCommands::Baking(baking_state.clone()))
+                    .expect("Channel must be open");
+            }
+        });
     }
 
     fn light_switch(&self) {
@@ -112,65 +137,106 @@ impl ControllerCommandHandler {
         self.ui.global::<Logic>().on_transfer_valve_set_open({
             move |val| {
                 println!("Transfer valve open: {}", val); // TODO:
-                ui.unwrap().global::<Logic>().set_transfer_valve_is_open(val);
+                ui.unwrap()
+                    .global::<Logic>()
+                    .set_transfer_valve_is_open(val);
             }
         });
     }
 }
 
-struct HomeScreen {
+/// Handler for GUI-related command.
+///
+/// Examples here are: admin mode, exit, etc.
+struct GuiCommandHandler {
+    ui: AppWindow,
     conf: Arc<Mutex<PrgConfig>>,
     tx: mpsc::Sender<ControllerCommands>,
-    ui: AppWindow,
 }
 
-impl HomeScreen {
-    /// Initialize all switches
+impl GuiCommandHandler {
     fn new(
         ui: Weak<AppWindow>,
-        tx: mpsc::Sender<ControllerCommands>,
         conf: Arc<Mutex<PrgConfig>>,
+        tx: mpsc::Sender<ControllerCommands>,
     ) -> Self {
-        let hs = Self {
+        let sf = Self {
+            ui: ui.unwrap(),
             conf,
             tx,
-            ui: ui.unwrap(),
         };
-        hs.init();
-
-        hs
+        sf.init();
+        sf
     }
 
-    /// Initialize the screen with the current and saved values.right
     fn init(&self) {
-        let samples = self
-            .conf
-            .lock()
-            .expect("Poisoned")
-            .get_samples()
-            .get_for_slint();
-        self.ui.global::<Logic>().set_sample_model(samples.into());
-
-        // FIXME: bogus inits below
-        self.ui
-            .global::<Logic>()
-            .set_transfer_pressure(format!("{:.2E} mbar", 0.3).into());
-        // set chamber pressure scientifically formatted
-        self.ui
-            .global::<Logic>()
-            .set_chamber_pressure(format!("{:.2E} mbar", 0.0001234).into());
-        self.ui.global::<Logic>().set_cryocooler_is_on(false);
-
-        // init buttons
-        self.cryocooler_set_on();
+        self.test_button(); // FIXME: Delete
+        self.admin_mode();
+        self.close_button();
         self.edit_sample_name();
     }
 
+    // FIXME: Delete
+    fn test_button(&self) {
+        let ui = self.ui.as_weak();
+        self.ui.global::<Logic>().on_test_button_pressed({
+            move || {
+                let ui = ui.unwrap();
+                let text = ui.global::<Logic>().get_test_button_text();
+                println!("Test button text: {}", text);
+                let (tx, mut rx) = mpsc::channel(1);
+                let kb = KeyboardInput::new(tx);
+                kb.get_text_input("asdf", text);
+                let fut = async move {
+                    let result = rx.recv().await;
+                    if let Some(res) = result {
+                        ui.global::<Logic>().set_test_button_text(res);
+                    }
+                };
+                slint::spawn_local(async_compat::Compat::new(fut)).unwrap();
+            }
+        });
+    }
 
-    fn cryocooler_set_on(&self) {
-        self.ui.global::<Logic>().on_cryocooler_set_on({
-            move |val| {
-                println!("Cryocooler on: {}", val); // TODO
+    fn admin_mode(&self) {
+        self.ui.global::<Logic>().on_enter_admin_mode({
+            let ui = self.ui.as_weak();
+            let conf = Arc::clone(&self.conf);
+            move || {
+                let ui = ui.unwrap();
+                if ui.global::<Logic>().get_admin_mode() {
+                    ui.global::<Logic>().set_admin_mode(false);
+                } else {
+                    let keypad = Keypad::new().unwrap();
+                    keypad.show().unwrap();
+
+                    keypad.global::<KeypadLogic>().on_cancel_pressed({
+                        let keypad = keypad.as_weak();
+                        move || {
+                            keypad.unwrap().hide().unwrap();
+                        }
+                    });
+
+                    keypad.global::<KeypadLogic>().on_ok_pressed({
+                        let keypad = keypad.as_weak();
+                        let ui = ui.as_weak();
+                        let pin_expected = conf.lock().expect("Poisoned").get_admin_pin();
+                        move |code| {
+                            if code.as_str() == pin_expected.as_str() {
+                                ui.unwrap().global::<Logic>().set_admin_mode(true);
+                            }
+                            keypad.unwrap().hide().unwrap();
+                        }
+                    });
+                }
+            }
+        });
+    }
+
+    fn close_button(&self) {
+        self.ui.global::<Logic>().on_close_program({
+            move || {
+                slint::quit_event_loop().unwrap();
             }
         });
     }
@@ -210,119 +276,46 @@ impl HomeScreen {
     }
 }
 
-struct SettingsScreen {
+/// Command handler for connected instruments.
+struct InstrumentCommandHandler {
     ui: AppWindow,
-    tx: mpsc::Sender<ControllerCommands>,
     conf: Arc<Mutex<PrgConfig>>,
+    tx: mpsc::Sender<ControllerCommands>,
 }
 
-impl SettingsScreen {
+impl InstrumentCommandHandler {
     fn new(
         ui: Weak<AppWindow>,
-        tx: mpsc::Sender<ControllerCommands>,
         conf: Arc<Mutex<PrgConfig>>,
+        tx: mpsc::Sender<ControllerCommands>,
     ) -> Self {
-        let ss = Self {
-            tx,
+        let sf = Self {
             ui: ui.unwrap(),
             conf,
+            tx,
         };
-        ss.init();
-        ss.baking();
-        ss
+        sf.init();
+        sf
     }
 
     fn init(&self) {
-        self.admin_mode();
-        self.close_button();
-        self.test_button();
+        self.cryocooler_set_on();
+
+        // FIXME: bogus inits below
+        self.ui
+            .global::<Logic>()
+            .set_transfer_pressure(format!("{:.2E} mbar", 0.3).into());
+        // set chamber pressure scientifically formatted
+        self.ui
+            .global::<Logic>()
+            .set_chamber_pressure(format!("{:.2E} mbar", 0.0001234).into());
+        self.ui.global::<Logic>().set_cryocooler_is_on(false);
     }
 
-    fn admin_mode(&self) {
-        self.ui.global::<Logic>().on_enter_admin_mode({
-            let ui = self.ui.as_weak();
-            let conf = Arc::clone(&self.conf);
-            move || {
-                let ui = ui.unwrap();
-                if ui.global::<Logic>().get_admin_mode() {
-                    ui.global::<Logic>().set_admin_mode(false);
-                } else {
-                    let keypad = Keypad::new().unwrap();
-                    keypad.show().unwrap();
-
-                    keypad.global::<KeypadLogic>().on_cancel_pressed({
-                        let keypad = keypad.as_weak();
-                        move || {
-                            keypad.unwrap().hide().unwrap();
-                        }
-                    });
-
-                    keypad.global::<KeypadLogic>().on_ok_pressed({
-                        let keypad = keypad.as_weak();
-                        let ui = ui.as_weak();
-                        let pin_expected = conf.lock().expect("Poisoned").get_admin_pin();
-                        move |code| {
-                            if code.as_str() == pin_expected.as_str() {
-                                ui.unwrap().global::<Logic>().set_admin_mode(true);
-                            }
-                            keypad.unwrap().hide().unwrap();
-                        }
-                    });
-                }
-            }
-        });
-    }
-
-    fn baking(&self) {
-        self.ui.global::<Logic>().on_baking_enabled({
-            let ui = self.ui.as_weak();
-            let tx = self.tx.clone();
+    fn cryocooler_set_on(&self) {
+        self.ui.global::<Logic>().on_cryocooler_set_on({
             move |val| {
-                let ui = ui.unwrap();
-                let baking_state = match val {
-                    true => {
-                        let baking_time = ui.global::<Logic>().get_baking_time();
-                        let time_sec = baking_time.hours * 3600
-                            + baking_time.minutes * 60
-                            + baking_time.seconds;
-                        BakingState::On {
-                            time_sec: time_sec as u64,
-                        }
-                    }
-                    false => BakingState::Off,
-                };
-                tx.try_send(ControllerCommands::Baking(baking_state.clone()))
-                    .expect("Channel must be open");
-            }
-        });
-    }
-
-    // FIXME: Delete
-    fn test_button(&self) {
-        let ui = self.ui.as_weak();
-        self.ui.global::<Logic>().on_test_button_pressed({
-            move || {
-                let ui = ui.unwrap();
-                let text = ui.global::<Logic>().get_test_button_text();
-                println!("Test button text: {}", text);
-                let (tx, mut rx) = mpsc::channel(1);
-                let kb = KeyboardInput::new(tx);
-                kb.get_text_input("asdf", text);
-                let fut = async move {
-                    let result = rx.recv().await;
-                    if let Some(res) = result {
-                        ui.global::<Logic>().set_test_button_text(res);
-                    }
-                };
-                slint::spawn_local(async_compat::Compat::new(fut)).unwrap();
-            }
-        });
-    }
-
-    fn close_button(&self) {
-        self.ui.global::<Logic>().on_close_program({
-            move || {
-                slint::quit_event_loop().unwrap();
+                println!("Cryocooler on: {}", val); // TODO:
             }
         });
     }
