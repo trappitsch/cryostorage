@@ -12,7 +12,7 @@ use poststation_sdk::PoststationClient;
 use serde::{Deserialize, Serialize};
 use tokio::sync::mpsc;
 
-use crate::status::InstrumentStatus;
+use crate::{get_log_sender, logger::LogMessage, status::InstrumentStatus};
 
 pub enum ControllerCommands {
     Light(LightState),
@@ -25,6 +25,10 @@ pub enum ControllerCommands {
 /// Task that communicates with the controller firmware via poststation.
 pub async fn controller_task(cntrl: Controller, mut rx: mpsc::Receiver<ControllerCommands>) {
     let mut rx_shutdown = crate::HALT_SENDER.get().unwrap().subscribe();
+
+    let log_sender = crate::get_log_sender();
+    log_sender.try_send(LogMessage::new_info("Controller task started")).unwrap();
+
     loop {
         tokio::select! {
             command_result = rx.recv() => {
@@ -105,38 +109,53 @@ impl Controller {
     }
 
     pub async fn baking(&self, baking_state: BakingState) {
-        let _ = self
+        if self
             .client
             .proxy_endpoint::<icd::SetBakingEndpoint>(self.serial, self.ctr(), &baking_state)
-            .await; // FIXME: need error checking
+            .await.is_err(){
+            let ls = get_log_sender();
+            ls.send(LogMessage::new_error("Failed to send new baking state to controller")).await.expect("Log send must work");
+        }
     }
 
     pub async fn light(&self, light_state: LightState) {
-        let _ = self
+        if self
             .client
             .proxy_endpoint::<SetLightEndpoint>(self.serial, self.ctr(), &light_state)
-            .await; // FIXME: need error checking
+            .await.is_err(){
+            let ls = get_log_sender();
+            ls.send(LogMessage::new_error("Failed to send new light state to controller")).await.expect("Log send must work");
+        }
     }
 
     pub async fn pump_valve(&self, valve_state: ValveState) {
-        let _ = self
+        if self
             .client
             .proxy_endpoint::<SetPumpValveEndpoint>(self.serial, self.ctr(), &valve_state)
-            .await; // FIXME: need error checking
+            .await.is_err(){
+            let ls = get_log_sender();
+            ls.send(LogMessage::new_error("Failed to send new pump valve state to controller")).await.expect("Log send must work");
+        }   
     }
 
     pub async fn transfer_valve(&self, valve_state: ValveState) {
-        let _ = self
+        if self
             .client
             .proxy_endpoint::<SetTransferValveEndpoint>(self.serial, self.ctr(), &valve_state)
-            .await; // FIXME: need error checking
+            .await.is_err(){
+            let ls = get_log_sender();
+            ls.send(LogMessage::new_error("Failed to send new transfer valve state to controller")).await.expect("Log send must work");
+        }
     }
 
     pub async fn vct_handshake(&self, handshake: VctHandshake) {
-        let _ = self
+        if self
             .client
             .proxy_endpoint::<SetVctHandshakeEndpoint>(self.serial, self.ctr(), &handshake)
-            .await; // FIXME: need error checking
+            .await.is_err(){
+            let ls = get_log_sender();
+            ls.send(LogMessage::new_error("Failed to send new VCT handshake to controller")).await.expect("Log send must work");
+        } 
     }
 }
 

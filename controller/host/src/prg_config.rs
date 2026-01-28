@@ -25,12 +25,13 @@ pub struct PrgConfig {
 
 impl PrgConfig {
     /// Create a new PrgConfig instance with saved or default values.
+    ///
+    /// The configuration folder is created, if it does not exist, in `main.rs`.
     pub fn try_new() -> Result<Self> {
         let fname = env::home_dir()
             .expect("Home directory must be known")
-            .join(CONFIG_FOLDER);
-        fs::create_dir_all(&fname)?;
-        let fname = fname.join(CONFIG_FNAME);
+            .join(CONFIG_FOLDER)
+            .join(CONFIG_FNAME);
 
         let mut ret_self = Self {
             fname,

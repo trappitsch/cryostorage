@@ -1,10 +1,25 @@
 import { MyWindow } from "elements.slint";
 
 import { Const } from "consts.slint";
-import { NormalText, BigSwitch, SmallSwitch, InfoArea, LongButton, PictogramButton, InfoAreaSmall, StatusOkErr, MyHorizontalLayout, MyVerticalLayout, H3Text, H2Text, RegularButton } from "elements.slint";
+import {
+    NormalText,
+    BigSwitch,
+    SmallSwitch,
+    InfoArea,
+    LongButton,
+    PictogramButton,
+    InfoAreaSmall,
+    StatusOkErr,
+    MyHorizontalLayout,
+    MyVerticalLayout,
+    H3Text,
+    H2Text,
+    RegularButton,
+    NormalText,
+} from "elements.slint";
 import { Palette } from "palette.slint";
 
-import { TimePickerPopup } from "std-widgets.slint";
+import { TimePickerPopup, TextEdit, ListView } from "std-widgets.slint";
 import { Logic } from "logic.slint";
 
 component Baking inherits Rectangle {
@@ -132,15 +147,34 @@ component Baking inherits Rectangle {
 export component SettingsScreen inherits MyWindow {
     index: 3;
 
-    MyHorizontalLayout {
-        MyVerticalLayout {
+    MyVerticalLayout {
+        spacing: Const.border_spacing;
+        MyHorizontalLayout {
+            MyVerticalLayout {
 
-            LongButton {
-                text: "Admin mode";
-                enabled: true;
-                background: Logic.admin_mode ? Palette.button_on : Palette.button_off;
-                clicked => {
-                    Logic.enter_admin_mode();
+                LongButton {
+                    text: "Admin mode";
+                    enabled: true;
+                    background: Logic.admin_mode ? Palette.button_on : Palette.button_off;
+                    clicked => {
+                        Logic.enter_admin_mode();
+                    }
+                }
+
+                LongButton {
+                    text: "Exit program";
+                    enabled: true;
+                    clicked => {
+                        Logic.close_program();
+                    }
+                }
+
+                // FIXME: Test button to be removed
+                LongButton {
+                    text: Logic.test_button_text;
+                    clicked => {
+                        Logic.test_button_pressed();
+                    }
                 }
             }
 
@@ -151,8 +185,7 @@ export component SettingsScreen inherits MyWindow {
             // }
             //
             // StatusOkErr {
-            //     title: "StatusOkErr: Ok";
-            // }
+            //     title: "StatusOkErr: Ok"; }
             //
             // BigSwitch { }
             //
@@ -163,25 +196,47 @@ export component SettingsScreen inherits MyWindow {
             //     text_color: Palette.blue;
             // }
 
-            // FIXME: Test button to be removed
-            LongButton {
-                text: Logic.test_button_text;
-                clicked => {
-                    Logic.test_button_pressed();
-                }
+            MyVerticalLayout {
+
+                Baking { }
+
+                // HorizontalLayout {
+                //     alignment: end;
+                //     PictogramButton {
+                //         enabled: true;
+                //         clicked => {
+                //             Logic.close_program();
+                //         }
+                //     }
+                // }
             }
         }
 
-        MyVerticalLayout {
+        H3Text {
+            x: Const.border_spacing;
+            text: "Log messages:";
+            horizontal-alignment: left;
+        }
 
-            Baking { }
+        Rectangle {
+            x: Const.border_spacing;
+            width: Const.useable_width - 2 * Const.border_spacing;
+            height: 250px;
 
-            HorizontalLayout {
-                alignment: end;
-                PictogramButton {
-                    enabled: true;
-                    clicked => {
-                        Logic.close_program();
+            ListView {
+
+                property <int> cnt: 0;
+
+                for data[idx] in Logic.log_messages: Rectangle {
+                    height: 25px;
+                    background: mod(idx, 2) == 0 ? Palette.mantle : Palette.crust;
+
+                    Text {
+                        x: 0;
+                        font-size: 12pt;
+                        color: Palette.text;
+                        text: data;
+                        horizontal-alignment: left;
                     }
                 }
             }

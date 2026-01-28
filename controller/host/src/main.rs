@@ -1,27 +1,39 @@
-use std::sync::{Arc, Mutex};
+use std::{
+    env, fs,
+    sync::{Arc, Mutex},
+};
 
 use poststation_sdk::connect;
-use tokio::sync::{OnceCell, broadcast, mpsc};
+use tokio::sync::{OnceCell, broadcast, mpsc, oneshot};
 
 use crate::{
     controller::{Controller, controller_broadcast_listener, controller_task},
+    logger::{LogHandler, LogMessage},
     status::InstrumentStatus,
 };
 
 mod app;
 mod controller;
+mod logger;
 mod prg_config;
 mod samples;
 mod status;
 mod vacuum_history;
 
-pub const CONFIG_FOLDER:  &str = ".cryostorage";
+pub const CONFIG_FOLDER: &str = ".cryostorage";
+pub const LOG_LEVEL_DISPLAY: logger::Level = logger::Level::Warning;
 
 pub static HALT_SENDER: OnceCell<broadcast::Sender<()>> = OnceCell::const_new();
-
+pub static LOG_SENDER: OnceCell<mpsc::Sender<LogMessage>> = OnceCell::const_new();
 
 #[tokio::main]
 async fn main() {
+    // Create the configuration folder if it doesn't exist
+    let conf_folder_pth = env::home_dir()
+        .expect("Home directory must be known")
+        .join(CONFIG_FOLDER);
+    fs::create_dir_all(&conf_folder_pth).expect("Could not create config folder");
+
     // config
     let conf = Arc::new(Mutex::new(prg_config::PrgConfig::try_new().unwrap()));
 
@@ -32,6 +44,14 @@ async fn main() {
     let (tx_halt, _) = broadcast::channel(1);
     HALT_SENDER.set(tx_halt.clone()).expect("Uninitialized");
 
+    // LogHandler
+    let (tx_log, rx_log) = mpsc::channel(128);
+    let (tx_ui_set, rx_ui_set) = oneshot::channel();
+    let log_handler = LogHandler::new(rx_log);
+    LOG_SENDER.set(tx_log.clone()).expect("Uninitialized");
+
+    let log_handler_listen = tokio::spawn(logger::log_handler_task(log_handler, rx_ui_set));
+
     // comms for controller task
     let (tx_ctrl, rx_ctrl) = mpsc::channel(32);
 
@@ -40,7 +60,9 @@ async fn main() {
         .lock()
         .expect("Locking config must work")
         .get_controller_config();
-    let client = connect(controller_config.address).await.expect("Poststation must be running");
+    let client = connect(controller_config.address)
+        .await
+        .expect("Poststation must be running");
     let cntrl = Controller::new(client.clone(), controller_config.serial);
 
     let cntrl_tsk = tokio::spawn(controller_task(cntrl, rx_ctrl));
@@ -52,12 +74,29 @@ async fn main() {
         Arc::clone(&inst_status),
     ));
 
-    match app::app_main(tx_ctrl.clone(), Arc::clone(&conf), Arc::clone(&inst_status)) {
+    tx_log
+        .try_send(LogMessage::new_info("Application started"))
+        .unwrap();
+
+    match app::app_main(
+        tx_ctrl.clone(),
+        Arc::clone(&conf),
+        Arc::clone(&inst_status),
+        tx_ui_set,
+    ) {
         Ok(_) => {
             tx_halt.send(()).unwrap();
-            let _ = tokio::join!(cntrl_tsk, cntrl_bc_listen);
+            let _ = tokio::join!(cntrl_tsk, cntrl_bc_listen, log_handler_listen);
             println!("App exited normally");
         }
         Err(e) => eprintln!("App exited with error: {}", e),
     }
+}
+
+// Convenience function to get a clone of the log sender
+pub fn get_log_sender() -> mpsc::Sender<LogMessage> {
+    LOG_SENDER
+        .get()
+        .expect("Log sender must be initialized")
+        .clone()
 }

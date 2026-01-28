@@ -82,6 +82,9 @@ export global Logic {
     in-out property <ValveOrPumpState> vent_valve_state: ValveOrPumpState.SetDifferentFromCalled;
     in-out property <ValveOrPumpState> ion_pump_state: ValveOrPumpState.ClosedOrOff;
 
+    // Logging
+    in-out property <[string]> log_messages: [];
+
     // TODO: remove the following debug
     pure callback test_button_pressed();
     in-out property <string> test_button_text: "Press Me";

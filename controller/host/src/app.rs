@@ -7,7 +7,7 @@ use std::{
 
 use icd::{BakingState, LightState, ValveState, VctHandshake};
 use slint::{Model, SharedString, Weak};
-use tokio::sync::mpsc;
+use tokio::sync::{mpsc, oneshot};
 
 use crate::{controller::ControllerCommands, prg_config::PrgConfig, status::InstrumentStatus};
 
@@ -17,8 +17,12 @@ pub fn app_main(
     tx: mpsc::Sender<ControllerCommands>,
     conf: Arc<Mutex<PrgConfig>>,
     inst_status: Arc<Mutex<InstrumentStatus>>,
+    tx_ui_set_logger: oneshot::Sender<Weak<AppWindow>>,
 ) -> Result<(), Box<dyn Error>> {
     let ui = AppWindow::new()?;
+    if tx_ui_set_logger.send(ui.as_weak()).is_err() {
+        panic!("Failed to send UI to the logger");
+    };
 
     // initialize the various GUI handlers
     let _controller_cmd_handler =

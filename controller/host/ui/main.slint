@@ -13,7 +13,7 @@ import { Logic } from "logic.slint";
 export { Logic, Keyboard, KeyboardLogic, Keypad, KeypadLogic } 
 
 export component AppWindow inherits Window {
-    in-out property <int> current_index: 2;
+    in-out property <int> current_index: 3;
     callback current_index_changed(int);
 
     current_index_changed(new_index) => {
@@ -21,10 +21,13 @@ export component AppWindow inherits Window {
     }
 
     no-frame: true;
+
     x: 0px;
     y: 0px;
+
     width: Const.screen_width;
     height: Const.screen_height;
+
     // background: Palette.bg;
 
     Rectangle {
