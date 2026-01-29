@@ -89,10 +89,3 @@ async fn main() {
     }
 }
 
-// Convenience function to get a clone of the log sender
-pub fn get_log_sender() -> mpsc::Sender<LogMessage> {
-    LOG_SENDER
-        .get()
-        .expect("Log sender must be initialized")
-        .clone()
-}

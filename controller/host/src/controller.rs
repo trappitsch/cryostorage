@@ -11,7 +11,7 @@ use icd::{
     BakingState, BcInstStatus, LightState, SetLightEndpoint, SetPumpValveEndpoint,
     SetTransferValveEndpoint, SetVctHandshakeEndpoint, ValveState, VctHandshake,
 };
-use poststation_sdk::PoststationClient;
+use poststation_sdk::{ClientError, PoststationClient};
 use serde::{Deserialize, Serialize};
 use tokio::{sync::mpsc, time::sleep};
 
@@ -78,25 +78,36 @@ pub async fn controller_broadcast_listener(
     loop {
         tokio::select! {
             stream_result = client.stream_topic::<BcInstStatus>(serial) => {
-                if let Ok(mut listener) = stream_result {
-
-                    tokio::select! {
-                        msg = listener.recv() => {
-                            if let Some(status) = msg {
-                                inst_status.lock().expect("Poisoned").update_from_controller_broadcast(status);
-                            } else {
-                                send_log_message(LogMessage::new_error("Poststation broadcast stream closed unexpectedly.")).await;
+                // if let Ok(mut listener) = stream_result {
+                match stream_result {
+                    Ok(mut listener) => {
+                        tokio::select! {
+                            msg = listener.recv() => {
+                                if let Some(status) = msg {
+                                    inst_status.lock().expect("Poisoned").update_from_controller_broadcast(status);
+                                } else {
+                                    send_log_message(LogMessage::new_error("Poststation broadcast stream closed unexpectedly.")).await;
+                                }
+                            }
+                            _ = sleep(listener_wait_time) => {
+                                    send_log_message(LogMessage::new_warning("Poststation listener timed out while waiting for broadcast message.")).await;
                             }
                         }
-                        _ = sleep(listener_wait_time) => {
-                                send_log_message(LogMessage::new_warning("Poststation listener timed out while waiting for broadcast message.")).await;
-                        }
                     }
-                } else {
-                    send_log_message(LogMessage::new_error(format!(
-                        "Poststation failed to connect to broadcast stream. Retry in {} ms. ", icd::BROADCAST_INTERVAL_MS).as_str())
-                    ).await;
-                    sleep(Duration::from_millis(icd::BROADCAST_INTERVAL_MS)).await;
+                    Err(e) => {
+                        if e.to_string().contains("Device Disconnected") {
+                            send_log_message(LogMessage::new_error(&format!(
+                                "Controller is disconnected: Please check the connection. Retry in {} ms.", icd::BROADCAST_INTERVAL_MS
+                            )))
+                            .await;
+                        } else {
+                            send_log_message(LogMessage::new_error(
+                                "Connection to poststation lost. Ensure poststation is running and restart this program."
+                            )).await;
+                            break;
+                        }
+                        sleep(Duration::from_millis(icd::BROADCAST_INTERVAL_MS)).await;
+                    }
                 }
             }
             _ = rx_shutdown.recv() => {
