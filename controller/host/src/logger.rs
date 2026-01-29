@@ -131,7 +131,7 @@ impl LogHandler {
             }
         }
 
-       // Save message to buffer if required.
+        // Save message to buffer if required.
         if msg.level >= LOG_LEVEL_DISPLAY {
             self.update_ui(msg);
         }

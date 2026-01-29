@@ -45,8 +45,6 @@ mod flow_meter;
 mod valve;
 mod vct;
 
-const BROADCAST_INTERVAL_MS: u64 = 1000;
-
 #[unsafe(link_section = ".start_block")]
 #[used]
 pub static IMAGE_DEF: ImageDef = ImageDef::secure_exe();
@@ -137,7 +135,7 @@ async fn main(spawner: Spawner) {
     //
     // - We save the residual baking time in scratch index 0
     let mut watchdog = Watchdog::new(p.WATCHDOG);
-    watchdog.start(Duration::from_millis(BROADCAST_INTERVAL_MS * 2));
+    watchdog.start(Duration::from_millis(icd::BROADCAST_INTERVAL_MS * 2));
 
     // Define my hardware here
     let residual_baking_time = watchdog.get_scratch(0);

@@ -1,16 +1,19 @@
 //! This module handles communication with the controller firmware via poststation.
-use std::sync::{
-    Arc, Mutex,
-    atomic::{AtomicU32, Ordering},
+use std::{
+    sync::{
+        Arc, Mutex,
+        atomic::{AtomicU32, Ordering},
+    },
+    time::Duration,
 };
 
 use icd::{
     BakingState, BcInstStatus, LightState, SetLightEndpoint, SetPumpValveEndpoint,
-    SetTransferValveEndpoint, ValveState, VctHandshake, SetVctHandshakeEndpoint,
+    SetTransferValveEndpoint, SetVctHandshakeEndpoint, ValveState, VctHandshake,
 };
 use poststation_sdk::PoststationClient;
 use serde::{Deserialize, Serialize};
-use tokio::sync::mpsc;
+use tokio::{time::sleep, sync::mpsc};
 
 use crate::{get_log_sender, logger::LogMessage, status::InstrumentStatus};
 
@@ -27,7 +30,9 @@ pub async fn controller_task(cntrl: Controller, mut rx: mpsc::Receiver<Controlle
     let mut rx_shutdown = crate::HALT_SENDER.get().unwrap().subscribe();
 
     let log_sender = crate::get_log_sender();
-    log_sender.try_send(LogMessage::new_info("Controller task started")).unwrap();
+    log_sender
+        .try_send(LogMessage::new_info("Controller task started"))
+        .unwrap();
 
     loop {
         tokio::select! {
@@ -53,7 +58,7 @@ pub async fn controller_task(cntrl: Controller, mut rx: mpsc::Receiver<Controlle
                 }
             }
             _ = rx_shutdown.recv() => {
-                println!("controller task is shutting down.");
+                println!("Controller command handling task shutting down");
                 break;
             }
         }
@@ -69,18 +74,34 @@ pub async fn controller_broadcast_listener(
     inst_status: Arc<Mutex<InstrumentStatus>>,
 ) {
     let mut rx_shutdown = crate::HALT_SENDER.get().unwrap().subscribe();
+
+    let listener_wait_time = Duration::from_millis(icd::BROADCAST_INTERVAL_MS * 2);
+    let ls = get_log_sender();
+
     loop {
         tokio::select! {
             stream_result = client.stream_topic::<BcInstStatus>(serial) => {
                 if let Ok(mut listener) = stream_result {
-                let msg = listener.recv().await;
-                if let Some(status) = msg {
-                    inst_status.lock().expect("Poisoned").update_from_controller_broadcast(status);
+
+                    tokio::select! {
+                        msg = listener.recv() => {
+                            if let Some(status) = msg {
+                                inst_status.lock().expect("Poisoned").update_from_controller_broadcast(status);
+                            } else {
+                                ls.send(LogMessage::new_error("Poststation broadcast stream closed unexpectedly.")).await.expect("Log send must work");
+                            }
+                        }
+                        _ = sleep(listener_wait_time) => {
+                                ls.send(LogMessage::new_warning("Poststation listener timed out while waiting for broadcast message.")).await.expect("Log send must work");
+                        }
                     }
+                } else {
+                    ls.send(LogMessage::new_error(format!("Poststation failed to connect to broadcast stream. Retry in {} ms. ", icd::BROADCAST_INTERVAL_MS).as_str())).await.expect("Log send must work");
+                    sleep(Duration::from_millis(icd::BROADCAST_INTERVAL_MS)).await;
                 }
             }
             _ = rx_shutdown.recv() => {
-                println!("controller broadcast listener is shutting down.");
+                println!("Controller broadcast listener shutting down");
                 break;
             }
         }
@@ -112,9 +133,15 @@ impl Controller {
         if self
             .client
             .proxy_endpoint::<icd::SetBakingEndpoint>(self.serial, self.ctr(), &baking_state)
-            .await.is_err(){
+            .await
+            .is_err()
+        {
             let ls = get_log_sender();
-            ls.send(LogMessage::new_error("Failed to send new baking state to controller")).await.expect("Log send must work");
+            ls.send(LogMessage::new_error(
+                "Failed to send new baking state to controller",
+            ))
+            .await
+            .expect("Log send must work");
         }
     }
 
@@ -122,9 +149,15 @@ impl Controller {
         if self
             .client
             .proxy_endpoint::<SetLightEndpoint>(self.serial, self.ctr(), &light_state)
-            .await.is_err(){
+            .await
+            .is_err()
+        {
             let ls = get_log_sender();
-            ls.send(LogMessage::new_error("Failed to send new light state to controller")).await.expect("Log send must work");
+            ls.send(LogMessage::new_error(
+                "Failed to send new light state to controller",
+            ))
+            .await
+            .expect("Log send must work");
         }
     }
 
@@ -132,19 +165,31 @@ impl Controller {
         if self
             .client
             .proxy_endpoint::<SetPumpValveEndpoint>(self.serial, self.ctr(), &valve_state)
-            .await.is_err(){
+            .await
+            .is_err()
+        {
             let ls = get_log_sender();
-            ls.send(LogMessage::new_error("Failed to send new pump valve state to controller")).await.expect("Log send must work");
-        }   
+            ls.send(LogMessage::new_error(
+                "Failed to send new pump valve state to controller",
+            ))
+            .await
+            .expect("Log send must work");
+        }
     }
 
     pub async fn transfer_valve(&self, valve_state: ValveState) {
         if self
             .client
             .proxy_endpoint::<SetTransferValveEndpoint>(self.serial, self.ctr(), &valve_state)
-            .await.is_err(){
+            .await
+            .is_err()
+        {
             let ls = get_log_sender();
-            ls.send(LogMessage::new_error("Failed to send new transfer valve state to controller")).await.expect("Log send must work");
+            ls.send(LogMessage::new_error(
+                "Failed to send new transfer valve state to controller",
+            ))
+            .await
+            .expect("Log send must work");
         }
     }
 
@@ -152,10 +197,16 @@ impl Controller {
         if self
             .client
             .proxy_endpoint::<SetVctHandshakeEndpoint>(self.serial, self.ctr(), &handshake)
-            .await.is_err(){
+            .await
+            .is_err()
+        {
             let ls = get_log_sender();
-            ls.send(LogMessage::new_error("Failed to send new VCT handshake to controller")).await.expect("Log send must work");
-        } 
+            ls.send(LogMessage::new_error(
+                "Failed to send new VCT handshake to controller",
+            ))
+            .await
+            .expect("Log send must work");
+        }
     }
 }
 

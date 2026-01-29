@@ -3,7 +3,7 @@
 use icd::{BakingState, FlowMeterState, InstrumentState, ValveState, VctState};
 use slint::{ComponentHandle, Weak};
 
-use crate::app::{AppWindow, BakingTime, Logic, ValveOrPumpState };
+use crate::app::{AppWindow, BakingTime, Logic, ValveOrPumpState};
 
 pub struct InstrumentStatus {
     ui: Option<Weak<AppWindow>>,
@@ -95,7 +95,7 @@ impl InstrumentStatus {
                     ValveState::Open => ValveOrPumpState::OpenOrOn,
                     ValveState::Closed => ValveOrPumpState::ClosedOrOff,
                     // Undefined in call state only possible at startup.
-                    ValveState::Undefined => ValveOrPumpState::UndefinedOrError,  
+                    ValveState::Undefined => ValveOrPumpState::UndefinedOrError,
                 }
             } else {
                 match self.valve_pump_curr {
@@ -110,7 +110,7 @@ impl InstrumentStatus {
                     ValveState::Open => ValveOrPumpState::OpenOrOn,
                     ValveState::Closed => ValveOrPumpState::ClosedOrOff,
                     // Undefined in call state only possible at startup.
-                    ValveState::Undefined => ValveOrPumpState::UndefinedOrError,  
+                    ValveState::Undefined => ValveOrPumpState::UndefinedOrError,
                 }
             } else {
                 match self.valve_transfer_curr {

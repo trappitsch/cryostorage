@@ -17,6 +17,8 @@ pub use vct::*;
 
 use postcard_rpc::{TopicDirection, endpoints, topics};
 
+pub const BROADCAST_INTERVAL_MS: u64 = 1000;
+
 /// State of the entire instrument.
 #[derive(Debug, Default, Serialize, Deserialize, Schema)]
 pub struct InstrumentState {

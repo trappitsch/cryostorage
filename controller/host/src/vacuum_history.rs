@@ -145,7 +145,11 @@ impl VacuumHistory {
         chart
             .configure_mesh()
             .light_line_style(&self.plot_style.mesh_major_color)
-            .label_style((self.plot_style.font.as_str(), 24).into_font().color(&self.plot_style.fg_color))
+            .label_style(
+                (self.plot_style.font.as_str(), 24)
+                    .into_font()
+                    .color(&self.plot_style.fg_color),
+            )
             .axis_style(&self.plot_style.fg_color)
             .x_desc("Time")
             .x_labels(6)
