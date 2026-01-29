@@ -197,6 +197,17 @@ impl GuiCommandHandler {
     }
 
     fn init(&self) {
+        // set the sample names from config
+        let model = self.ui.global::<Logic>().get_sample_model();
+        let curr_samples = {
+            self.conf.lock().expect("Poisoned").get_samples()
+        };
+        for (idx, (pos, name)) in curr_samples.into_iter().enumerate() {
+            model.set_row_data(idx, (name.into(), pos.into()));
+        }
+
+
+        // buttons
         self.test_button(); // FIXME: Delete
         self.admin_mode();
         self.close_button();

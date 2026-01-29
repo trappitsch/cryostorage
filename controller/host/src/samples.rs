@@ -21,6 +21,7 @@ impl Samples {
     }
 
     /// Get a vector of tuples for the btreemap.
+    /// FIXME: delete?
     pub fn get_for_slint(&self) -> [(slint::SharedString, slint::SharedString); 8] {
         let mut model: [(slint::SharedString, slint::SharedString); 8] = Default::default();
         println!("BTreeMap contents: {:?}", self.names);
@@ -30,6 +31,11 @@ impl Samples {
             model[it].0 = value.into();
         }
         model
+    }
+
+    /// Get the sample name for a given position.
+    pub fn get_sample_name(&self, pos: &str) -> Option<String> {
+        self.names.get(pos).cloned()
     }
 
     /// Update the sample name at the given position and return the index of the entry.
@@ -46,21 +52,25 @@ impl Samples {
     }
 }
 
-impl Iterator for Samples {
-    type Item = (&'static str, String);
+// Implement Iterator trait for owned value of Samples. 
+//
+// It returns a tuple of (position, sample_name) for each iteration, until depleted.
+// Position come from SMP_POSITIONS, and sample_name from the BTreeMap.
+impl IntoIterator for Samples {
+    type Item = (String, String);
+    type IntoIter = std::vec::IntoIter<Self::Item>;
 
-    fn next(&mut self) -> Option<Self::Item> {
-        // This is a simple iterator that goes through the sample positions
-        // and returns their names. It will return None when all positions
-        // have been iterated over.
+    fn into_iter(self) -> Self::IntoIter {
+        let mut items = Vec::new();
         for &pos in SMP_POSITIONS.iter() {
             if let Some(name) = self.names.get(pos) {
-                return Some((pos, name.clone()));
+                items.push((pos.into(), name.clone()));
             }
         }
-        None
+        items.into_iter()
     }
 }
+
 
 // tests
 #[cfg(test)]
