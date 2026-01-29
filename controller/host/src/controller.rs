@@ -13,9 +13,12 @@ use icd::{
 };
 use poststation_sdk::PoststationClient;
 use serde::{Deserialize, Serialize};
-use tokio::{time::sleep, sync::mpsc};
+use tokio::{sync::mpsc, time::sleep};
 
-use crate::{get_log_sender, logger::LogMessage, status::InstrumentStatus};
+use crate::{
+    logger::{LogMessage, send_log_message},
+    status::InstrumentStatus,
+};
 
 pub enum ControllerCommands {
     Light(LightState),
@@ -28,11 +31,6 @@ pub enum ControllerCommands {
 /// Task that communicates with the controller firmware via poststation.
 pub async fn controller_task(cntrl: Controller, mut rx: mpsc::Receiver<ControllerCommands>) {
     let mut rx_shutdown = crate::HALT_SENDER.get().unwrap().subscribe();
-
-    let log_sender = crate::get_log_sender();
-    log_sender
-        .try_send(LogMessage::new_info("Controller task started"))
-        .unwrap();
 
     loop {
         tokio::select! {
@@ -76,7 +74,6 @@ pub async fn controller_broadcast_listener(
     let mut rx_shutdown = crate::HALT_SENDER.get().unwrap().subscribe();
 
     let listener_wait_time = Duration::from_millis(icd::BROADCAST_INTERVAL_MS * 2);
-    let ls = get_log_sender();
 
     loop {
         tokio::select! {
@@ -88,15 +85,17 @@ pub async fn controller_broadcast_listener(
                             if let Some(status) = msg {
                                 inst_status.lock().expect("Poisoned").update_from_controller_broadcast(status);
                             } else {
-                                ls.send(LogMessage::new_error("Poststation broadcast stream closed unexpectedly.")).await.expect("Log send must work");
+                                send_log_message(LogMessage::new_error("Poststation broadcast stream closed unexpectedly.")).await;
                             }
                         }
                         _ = sleep(listener_wait_time) => {
-                                ls.send(LogMessage::new_warning("Poststation listener timed out while waiting for broadcast message.")).await.expect("Log send must work");
+                                send_log_message(LogMessage::new_warning("Poststation listener timed out while waiting for broadcast message.")).await;
                         }
                     }
                 } else {
-                    ls.send(LogMessage::new_error(format!("Poststation failed to connect to broadcast stream. Retry in {} ms. ", icd::BROADCAST_INTERVAL_MS).as_str())).await.expect("Log send must work");
+                    send_log_message(LogMessage::new_error(format!(
+                        "Poststation failed to connect to broadcast stream. Retry in {} ms. ", icd::BROADCAST_INTERVAL_MS).as_str())
+                    ).await;
                     sleep(Duration::from_millis(icd::BROADCAST_INTERVAL_MS)).await;
                 }
             }
@@ -136,12 +135,10 @@ impl Controller {
             .await
             .is_err()
         {
-            let ls = get_log_sender();
-            ls.send(LogMessage::new_error(
+            send_log_message(LogMessage::new_error(
                 "Failed to send new baking state to controller",
             ))
-            .await
-            .expect("Log send must work");
+            .await;
         }
     }
 
@@ -152,12 +149,10 @@ impl Controller {
             .await
             .is_err()
         {
-            let ls = get_log_sender();
-            ls.send(LogMessage::new_error(
+            send_log_message(LogMessage::new_error(
                 "Failed to send new light state to controller",
             ))
-            .await
-            .expect("Log send must work");
+            .await;
         }
     }
 
@@ -168,12 +163,10 @@ impl Controller {
             .await
             .is_err()
         {
-            let ls = get_log_sender();
-            ls.send(LogMessage::new_error(
+            send_log_message(LogMessage::new_error(
                 "Failed to send new pump valve state to controller",
             ))
-            .await
-            .expect("Log send must work");
+            .await;
         }
     }
 
@@ -184,12 +177,10 @@ impl Controller {
             .await
             .is_err()
         {
-            let ls = get_log_sender();
-            ls.send(LogMessage::new_error(
+            send_log_message(LogMessage::new_error(
                 "Failed to send new transfer valve state to controller",
             ))
-            .await
-            .expect("Log send must work");
+            .await;
         }
     }
 
@@ -200,12 +191,10 @@ impl Controller {
             .await
             .is_err()
         {
-            let ls = get_log_sender();
-            ls.send(LogMessage::new_error(
+            send_log_message(LogMessage::new_error(
                 "Failed to send new VCT handshake to controller",
             ))
-            .await
-            .expect("Log send must work");
+            .await;
         }
     }
 }

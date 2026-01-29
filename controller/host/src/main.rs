@@ -48,7 +48,7 @@ async fn main() {
     let (tx_log, rx_log) = mpsc::channel(128);
     let (tx_ui_set, rx_ui_set) = oneshot::channel();
     let log_handler = LogHandler::new(rx_log);
-    LOG_SENDER.set(tx_log.clone()).expect("Uninitialized");
+    LOG_SENDER.set(tx_log).expect("Uninitialized");
 
     let log_handler_listen = tokio::spawn(logger::log_handler_task(log_handler, rx_ui_set));
 
@@ -73,10 +73,6 @@ async fn main() {
         controller_config.serial,
         Arc::clone(&inst_status),
     ));
-
-    tx_log
-        .try_send(LogMessage::new_info("Application started"))
-        .unwrap();
 
     match app::app_main(
         tx_ctrl.clone(),

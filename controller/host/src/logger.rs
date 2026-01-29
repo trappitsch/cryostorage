@@ -9,8 +9,7 @@ use slint::{ComponentHandle, Model, Weak};
 use tokio::sync::{mpsc, oneshot};
 
 use crate::{
-    CONFIG_FOLDER, LOG_LEVEL_DISPLAY,
-    app::{AppWindow, Logic},
+    CONFIG_FOLDER, LOG_LEVEL_DISPLAY, LOG_SENDER, app::{AppWindow, Logic}
 };
 
 /// The severity level of a log message.
@@ -178,6 +177,36 @@ pub async fn log_handler_task(
                 break;
             }
         }
+    }
+}
+
+// Get a clone of the log sender.
+pub fn get_log_sender() -> mpsc::Sender<LogMessage> {
+    LOG_SENDER
+        .get()
+        .expect("Log sender must be initialized")
+        .clone()
+}
+
+/// Convenience function to await sending a log message.
+///
+/// If an error occurs, this error is printed to stderr. Otherwise, the program will continue as
+/// normal.
+pub async fn send_log_message(msg: LogMessage) {
+    let ls = get_log_sender();
+    if let Err(e) = ls.send(msg).await {
+        eprintln!("Could not send log message: {}", e);
+    }
+}
+
+/// Convenience function to send a log message without awaiting.
+///
+/// If an error occurs, this error is printed to stderr. Otherwise, the program will continue as
+/// normal.
+pub fn send_log_message_now(msg: LogMessage) {
+    let ls = get_log_sender();
+    if let Err(e) = ls.try_send(msg) {
+        eprintln!("Could not send log message now: {}", e);
     }
 }
 

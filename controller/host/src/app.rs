@@ -20,6 +20,7 @@ pub fn app_main(
     tx_ui_set_logger: oneshot::Sender<Weak<AppWindow>>,
 ) -> Result<(), Box<dyn Error>> {
     let ui = AppWindow::new()?;
+
     if tx_ui_set_logger.send(ui.as_weak()).is_err() {
         panic!("Failed to send UI to the logger");
     };
