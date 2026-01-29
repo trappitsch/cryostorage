@@ -7,7 +7,7 @@ use poststation_sdk::connect;
 use tokio::sync::{OnceCell, broadcast, mpsc, oneshot};
 
 use crate::{
-    controller::{Controller, controller_broadcast_listener, controller_task},
+    controller::{Controller, ControllerCommands, controller_broadcast_listener, controller_task},
     logger::{LogHandler, LogMessage},
     status::InstrumentStatus,
 };
@@ -25,6 +25,8 @@ pub const LOG_LEVEL_DISPLAY: logger::Level = logger::Level::Warning;
 
 pub static HALT_SENDER: OnceCell<broadcast::Sender<()>> = OnceCell::const_new();
 pub static LOG_SENDER: OnceCell<mpsc::Sender<LogMessage>> = OnceCell::const_new();
+pub static CONTROLLER_COMMAND_SENDER: OnceCell<mpsc::Sender<ControllerCommands>> =
+    OnceCell::const_new();
 
 #[tokio::main]
 async fn main() {
@@ -54,6 +56,9 @@ async fn main() {
 
     // comms for controller task
     let (tx_ctrl, rx_ctrl) = mpsc::channel(32);
+    CONTROLLER_COMMAND_SENDER
+        .set(tx_ctrl.clone())
+        .expect("Uninitialized");
 
     // controller
     let controller_config = conf
@@ -75,7 +80,6 @@ async fn main() {
     ));
 
     match app::app_main(
-        tx_ctrl.clone(),
         Arc::clone(&conf),
         Arc::clone(&inst_status),
         tx_ui_set,
@@ -88,4 +92,3 @@ async fn main() {
         Err(e) => eprintln!("App exited with error: {}", e),
     }
 }
-

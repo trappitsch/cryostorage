@@ -9,12 +9,11 @@ use icd::{BakingState, LightState, ValveState, VctHandshake};
 use slint::{Model, SharedString, Weak};
 use tokio::sync::{mpsc, oneshot};
 
-use crate::{controller::ControllerCommands, prg_config::PrgConfig, status::InstrumentStatus};
+use crate::{controller::{ControllerCommands, send_cntrl_cmd_now}, prg_config::PrgConfig, status::InstrumentStatus};
 
 slint::include_modules!();
 
 pub fn app_main(
-    tx: mpsc::Sender<ControllerCommands>,
     conf: Arc<Mutex<PrgConfig>>,
     inst_status: Arc<Mutex<InstrumentStatus>>,
     tx_ui_set_logger: oneshot::Sender<Weak<AppWindow>>,
@@ -27,10 +26,10 @@ pub fn app_main(
 
     // initialize the various GUI handlers
     let _controller_cmd_handler =
-        ControllerCommandHandler::new(ui.as_weak(), Arc::clone(&conf), tx.clone());
-    let _gui_cmd_handler = GuiCommandHandler::new(ui.as_weak(), Arc::clone(&conf), tx.clone());
+        ControllerCommandHandler::new(ui.as_weak(), Arc::clone(&conf));
+    let _gui_cmd_handler = GuiCommandHandler::new(ui.as_weak(), Arc::clone(&conf));
     let _instrument_cmd_handler =
-        InstrumentCommandHandler::new(ui.as_weak(), Arc::clone(&conf), tx.clone());
+        InstrumentCommandHandler::new(ui.as_weak(), Arc::clone(&conf));
 
     // pass the ui to the instrument status handler
     inst_status.lock().expect("Poisoned").set_ui(ui.as_weak());
@@ -66,7 +65,6 @@ pub fn app_main(
 struct ControllerCommandHandler {
     ui: AppWindow,
     conf: Arc<Mutex<PrgConfig>>,
-    tx: mpsc::Sender<ControllerCommands>,
 }
 
 impl ControllerCommandHandler {
@@ -74,12 +72,10 @@ impl ControllerCommandHandler {
     fn new(
         ui: Weak<AppWindow>,
         conf: Arc<Mutex<PrgConfig>>,
-        tx: mpsc::Sender<ControllerCommands>,
     ) -> Self {
         let sf = Self {
             ui: ui.unwrap(),
             conf,
-            tx,
         };
         sf.init();
         sf
@@ -102,7 +98,6 @@ impl ControllerCommandHandler {
     fn baking(&self) {
         self.ui.global::<Logic>().on_baking_enabled({
             let ui = self.ui.as_weak();
-            let tx = self.tx.clone();
             move |val| {
                 let ui = ui.unwrap();
                 let baking_state = match val {
@@ -117,37 +112,32 @@ impl ControllerCommandHandler {
                     }
                     false => BakingState::Off,
                 };
-                tx.try_send(ControllerCommands::Baking(baking_state.clone()))
-                    .expect("Channel must be open");
+                send_cntrl_cmd_now(ControllerCommands::Baking(baking_state.clone()));
             }
         });
     }
 
     fn light_switch(&self) {
-        let tx = self.tx.clone();
         self.ui.global::<Logic>().on_light_switch({
             move |val| {
                 let light_stat = match val {
                     true => LightState::On,
                     false => LightState::Off,
                 };
-                tx.try_send(ControllerCommands::Light(light_stat))
-                    .expect("Channel must be open");
+                send_cntrl_cmd_now(ControllerCommands::Light(light_stat));
             }
         });
     }
 
     fn pump_valve_set_open(&self) {
         let ui = self.ui.as_weak();
-        let tx = self.tx.clone();
         self.ui.global::<Logic>().on_pump_valve_set_open({
             move |val| {
                 let vst = match val {
                     true => ValveState::Open,
                     false => ValveState::Closed,
                 };
-                tx.try_send(ControllerCommands::PumpValve(vst))
-                    .expect("Channel must be open");
+                send_cntrl_cmd_now(ControllerCommands::PumpValve(vst));
                 ui.unwrap().global::<Logic>().set_pump_valve_is_open(val);
             }
         });
@@ -155,15 +145,13 @@ impl ControllerCommandHandler {
 
     fn transfer_valve_set_open(&self) {
         let ui = self.ui.as_weak();
-        let tx = self.tx.clone();
         self.ui.global::<Logic>().on_transfer_valve_set_open({
             move |val| {
                 let vst = match val {
                     true => ValveState::Open,
                     false => ValveState::Closed,
                 };
-                tx.try_send(ControllerCommands::TransferValve(vst))
-                    .expect("Channel must be open");
+                send_cntrl_cmd_now(ControllerCommands::TransferValve(vst));
                 ui.unwrap()
                     .global::<Logic>()
                     .set_transfer_valve_is_open(val);
@@ -178,19 +166,16 @@ impl ControllerCommandHandler {
 struct GuiCommandHandler {
     ui: AppWindow,
     conf: Arc<Mutex<PrgConfig>>,
-    tx: mpsc::Sender<ControllerCommands>,
 }
 
 impl GuiCommandHandler {
     fn new(
         ui: Weak<AppWindow>,
         conf: Arc<Mutex<PrgConfig>>,
-        tx: mpsc::Sender<ControllerCommands>,
     ) -> Self {
         let sf = Self {
             ui: ui.unwrap(),
             conf,
-            tx,
         };
         sf.init();
         sf
@@ -220,7 +205,6 @@ impl GuiCommandHandler {
             .global::<Logic>()
             .set_test_button_text("Toggle VCT handshake".into());
         let ui = self.ui.as_weak();
-        let tx = self.tx.clone();
         self.ui.global::<Logic>().on_test_button_pressed({
             move || {
                 let ui = ui.unwrap();
@@ -230,8 +214,7 @@ impl GuiCommandHandler {
                 } else {
                     VctHandshake::NotReady
                 };
-                tx.try_send(ControllerCommands::VctHandshake(vct_state))
-                    .expect("Channel must be open");
+                send_cntrl_cmd_now(ControllerCommands::VctHandshake(vct_state));
                 ui.global::<Logic>().set_test_button_state(new_state);
             }
         });
@@ -319,19 +302,16 @@ impl GuiCommandHandler {
 struct InstrumentCommandHandler {
     ui: AppWindow,
     conf: Arc<Mutex<PrgConfig>>,
-    tx: mpsc::Sender<ControllerCommands>,
 }
 
 impl InstrumentCommandHandler {
     fn new(
         ui: Weak<AppWindow>,
         conf: Arc<Mutex<PrgConfig>>,
-        tx: mpsc::Sender<ControllerCommands>,
     ) -> Self {
         let sf = Self {
             ui: ui.unwrap(),
             conf,
-            tx,
         };
         sf.init();
         sf

@@ -169,7 +169,6 @@ pub async fn log_handler_task(
         tokio::select! {
             message = log_handler.rx.recv() => {
                 if let Some(msg) = message {
-                    dbg!(&msg);
                     log_handler.add_new_message(msg);
                 }
             }
@@ -180,8 +179,8 @@ pub async fn log_handler_task(
     }
 }
 
-// Get a clone of the log sender.
-pub fn get_log_sender() -> mpsc::Sender<LogMessage> {
+/// Get a clone of the log sender.
+fn get_log_sender() -> mpsc::Sender<LogMessage> {
     LOG_SENDER
         .get()
         .expect("Log sender must be initialized")

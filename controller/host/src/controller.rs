@@ -210,6 +210,36 @@ impl Controller {
     }
 }
 
+/// Get a clone of the controller command sender.
+fn get_cntrl_cmd_sender() -> mpsc::Sender<ControllerCommands> {
+    crate::CONTROLLER_COMMAND_SENDER
+        .get()
+        .expect("Uninitialized")
+        .clone()
+}
+
+/// Convenience function to await sending a controller command.
+///
+/// If an error occurs, this error is printed to stderr. Otherwise, the program will continue
+/// as normal.
+pub async fn send_cntrl_cmd(cmd: ControllerCommands) {
+    let sender = get_cntrl_cmd_sender();
+    if let Err(e) = sender.send(cmd).await {
+        eprintln!("Could not send controller command: {}", e);
+    }
+}
+
+/// Convenience function to send a controller command without awaiting.
+///
+/// If an error occurs, this error is printed to stderr. Otherwise, the program will continue
+/// as normal.
+pub fn send_cntrl_cmd_now(cmd: ControllerCommands) {
+    let sender = get_cntrl_cmd_sender();
+    if let Err(e) = sender.try_send(cmd) {
+        eprintln!("Could not send controller command now: {}", e);
+    }
+}
+
 /// A structure that holds the configuration for the controller.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ControllerConfig {
