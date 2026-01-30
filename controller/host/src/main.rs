@@ -13,7 +13,9 @@ use crate::{
 };
 
 mod app;
+mod connections;
 mod controller;
+mod instruments;
 mod logger;
 mod prg_config;
 mod samples;
