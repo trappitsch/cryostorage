@@ -55,9 +55,8 @@ pub async fn controller_task(cntrl: Controller, mut rx: mpsc::Receiver<Controlle
                     }
                 }
             }
-            _ = sleep(Duration::from_secs(60)) => {
+            _ = sleep(Duration::from_secs(10)) => {
                 // keep alive task, query unique ID every minute to keep stuff alive
-                println!("Sending keep-alive to controller");
                 cntrl.keep_alive().await;
             }
             _ = rx_shutdown.recv() => {

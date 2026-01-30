@@ -2,11 +2,10 @@
 
 use embassy_rp::watchdog::Watchdog;
 use embassy_time::{Duration, Timer};
-use icd::{BcInstStatus, InstrumentState};
+use icd::{BROADCAST_INTERVAL_MS, BcInstStatus, InstrumentState};
 use postcard_rpc::server::Sender;
 
 use crate::{
-    BROADCAST_INTERVAL_MS,
     app::AppTx,
     baking::baking_get,
     flow_meter::FlowMeter,
