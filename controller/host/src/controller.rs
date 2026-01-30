@@ -9,7 +9,7 @@ use std::{
 
 use icd::{
     BakingState, BcInstStatus, LightState, SetLightEndpoint, SetPumpValveEndpoint,
-    SetTransferValveEndpoint, SetVctHandshakeEndpoint, ValveState, VctHandshake,
+    SetTransferValveEndpoint, SetVctHandshakeEndpoint, ValveState, VctHandshake, GetUniqueIdEndpoint,
 };
 use poststation_sdk::{ClientError, PoststationClient};
 use serde::{Deserialize, Serialize};
@@ -54,6 +54,11 @@ pub async fn controller_task(cntrl: Controller, mut rx: mpsc::Receiver<Controlle
                         }
                     }
                 }
+            }
+            _ = sleep(Duration::from_secs(60)) => {
+                // keep alive task, query unique ID every minute to keep stuff alive
+                println!("Sending keep-alive to controller");
+                cntrl.keep_alive().await;
             }
             _ = rx_shutdown.recv() => {
                 println!("Controller command handling task shutting down");
@@ -137,6 +142,20 @@ impl Controller {
     #[inline(always)]
     fn ctr(&self) -> u32 {
         self.ctr.fetch_add(1, Ordering::Relaxed)
+    }
+
+    pub async fn keep_alive(&self) {
+        if self
+            .client
+            .proxy_endpoint::<GetUniqueIdEndpoint>(self.serial, self.ctr(), &())
+            .await
+            .is_err()
+        {
+            send_log_message(LogMessage::new_error(
+                "Failed to send keep-alive to controller",
+            ))
+            .await;
+        }
     }
 
     pub async fn baking(&self, baking_state: BakingState) {
