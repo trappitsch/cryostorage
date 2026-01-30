@@ -3,11 +3,10 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-use poststation_sdk::connect;
 use tokio::sync::{OnceCell, broadcast, mpsc, oneshot};
 
 use crate::{
-    controller::{Controller, ControllerCommands, controller_broadcast_listener, controller_task},
+    controller::{ControllerCommands, start_controller_tasks},
     logger::{LogHandler, LogMessage},
     status::InstrumentStatus,
 };
@@ -67,25 +66,11 @@ async fn main() {
         .lock()
         .expect("Locking config must work")
         .get_controller_config();
-    let client = connect(controller_config.address)
-        .await
-        .expect("Poststation must be running");
-    let cntrl = Controller::new(client.clone(), controller_config.serial);
+    let (cntrl_tsk, cntrl_bc_listen) =
+        start_controller_tasks(controller_config, Arc::clone(&inst_status), rx_ctrl).await;
 
-    let cntrl_tsk = tokio::spawn(controller_task(cntrl, rx_ctrl));
-
-    let controller_config = conf.lock().expect("Poisoned").get_controller_config();
-    let cntrl_bc_listen = tokio::spawn(controller_broadcast_listener(
-        client,
-        controller_config.serial,
-        Arc::clone(&inst_status),
-    ));
-
-    match app::app_main(
-        Arc::clone(&conf),
-        Arc::clone(&inst_status),
-        tx_ui_set,
-    ) {
+    // start the app
+    match app::app_main(Arc::clone(&conf), Arc::clone(&inst_status), tx_ui_set) {
         Ok(_) => {
             tx_halt.send(()).unwrap();
             let _ = tokio::join!(cntrl_tsk, cntrl_bc_listen, log_handler_listen);

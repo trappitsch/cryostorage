@@ -1,24 +1,22 @@
 //! This module handles communication with the controller firmware via poststation.
 use std::{
-    sync::{
-        Arc, Mutex,
-        atomic::{AtomicU32, Ordering},
-    },
+    sync::{Arc, Mutex},
     time::Duration,
 };
 
-use icd::{
-    BakingState, BcInstStatus, LightState, SetLightEndpoint, SetPumpValveEndpoint,
-    SetTransferValveEndpoint, SetVctHandshakeEndpoint, ValveState, VctHandshake, GetUniqueIdEndpoint,
-};
-use poststation_sdk::{ClientError, PoststationClient};
+use icd::{BakingState, BcInstStatus, LightState, ValveState, VctHandshake};
+use poststation_sdk::{PoststationClient, connect};
 use serde::{Deserialize, Serialize};
-use tokio::{sync::mpsc, time::sleep};
+use tokio::{sync::mpsc, task::JoinHandle, time::sleep};
 
 use crate::{
     logger::{LogMessage, send_log_message},
     status::InstrumentStatus,
 };
+
+mod client;
+
+use client::ControllerClient;
 
 pub enum ControllerCommands {
     Light(LightState),
@@ -28,8 +26,56 @@ pub enum ControllerCommands {
     VctHandshake(VctHandshake),
 }
 
+/// Start the controller tasks
+///
+/// Starts the two controller tasks:
+/// - Listen to commands.
+/// - Listen to broadcasts and react on them.
+///
+/// # Arguments
+/// - `config`: Configuration for the controller.
+/// - `inst_status`: Shared instrument status to update from broadcasts.
+/// - `rx_ctrl`: Receiver for controller commands.
+///
+/// # Returns
+/// Tuple of joint handles for the two async tasks, which we will await later in main.
+pub async fn start_controller_tasks(
+    config: ControllerConfig,
+    inst_status: Arc<Mutex<InstrumentStatus>>,
+    rx_ctrl: mpsc::Receiver<ControllerCommands>,
+) -> (JoinHandle<()>, JoinHandle<()>) {
+    let ps_client = connect(config.address)
+        .await
+        .expect("Poststation connection must work. Is poststation running?");
+
+    let serial = if let Some(device) = ps_client
+        .get_devices()
+        .await
+        .expect("Poststation must return list of devices")
+        .iter()
+        .find(|d| d.product == Some(config.product_name.clone()))
+    {
+        device.serial
+    } else {
+        panic!("No '{}' device found in poststation.", config.product_name);
+    };
+
+    // Controller command task
+    let cntrl_client = ControllerClient::new(ps_client.clone(), serial);
+    let cntrl_task = tokio::spawn(controller_task(cntrl_client, rx_ctrl));
+
+    // Broadcast listener task.
+    let cntrl_bc_task = tokio::spawn(controller_broadcast_listener(
+        ps_client,
+        serial,
+        inst_status,
+    ));
+
+    (cntrl_task, cntrl_bc_task)
+}
+
 /// Task that communicates with the controller firmware via poststation.
-pub async fn controller_task(cntrl: Controller, mut rx: mpsc::Receiver<ControllerCommands>) {
+pub async fn controller_task(cntrl: ControllerClient, mut rx: mpsc::Receiver<ControllerCommands>) {
     let mut rx_shutdown = crate::HALT_SENDER.get().unwrap().subscribe();
 
     loop {
@@ -122,112 +168,6 @@ pub async fn controller_broadcast_listener(
     }
 }
 
-/// Holds the controller communication functions.
-pub struct Controller {
-    serial: u64,
-    client: PoststationClient,
-    ctr: AtomicU32,
-}
-
-impl Controller {
-    pub fn new(client: PoststationClient, serial: u64) -> Self {
-        Self {
-            client,
-            serial,
-            ctr: AtomicU32::new(0),
-        }
-    }
-
-    #[inline(always)]
-    fn ctr(&self) -> u32 {
-        self.ctr.fetch_add(1, Ordering::Relaxed)
-    }
-
-    pub async fn keep_alive(&self) {
-        if self
-            .client
-            .proxy_endpoint::<GetUniqueIdEndpoint>(self.serial, self.ctr(), &())
-            .await
-            .is_err()
-        {
-            send_log_message(LogMessage::new_error(
-                "Failed to send keep-alive to controller",
-            ))
-            .await;
-        }
-    }
-
-    pub async fn baking(&self, baking_state: BakingState) {
-        if self
-            .client
-            .proxy_endpoint::<icd::SetBakingEndpoint>(self.serial, self.ctr(), &baking_state)
-            .await
-            .is_err()
-        {
-            send_log_message(LogMessage::new_error(
-                "Failed to send new baking state to controller",
-            ))
-            .await;
-        }
-    }
-
-    pub async fn light(&self, light_state: LightState) {
-        if self
-            .client
-            .proxy_endpoint::<SetLightEndpoint>(self.serial, self.ctr(), &light_state)
-            .await
-            .is_err()
-        {
-            send_log_message(LogMessage::new_error(
-                "Failed to send new light state to controller",
-            ))
-            .await;
-        }
-    }
-
-    pub async fn pump_valve(&self, valve_state: ValveState) {
-        if self
-            .client
-            .proxy_endpoint::<SetPumpValveEndpoint>(self.serial, self.ctr(), &valve_state)
-            .await
-            .is_err()
-        {
-            send_log_message(LogMessage::new_error(
-                "Failed to send new pump valve state to controller",
-            ))
-            .await;
-        }
-    }
-
-    pub async fn transfer_valve(&self, valve_state: ValveState) {
-        if self
-            .client
-            .proxy_endpoint::<SetTransferValveEndpoint>(self.serial, self.ctr(), &valve_state)
-            .await
-            .is_err()
-        {
-            send_log_message(LogMessage::new_error(
-                "Failed to send new transfer valve state to controller",
-            ))
-            .await;
-        }
-    }
-
-    pub async fn vct_handshake(&self, handshake: VctHandshake) {
-        if self
-            .client
-            .proxy_endpoint::<SetVctHandshakeEndpoint>(self.serial, self.ctr(), &handshake)
-            .await
-            .is_err()
-        {
-            send_log_message(LogMessage::new_error(
-                "Failed to send new VCT handshake to controller",
-            ))
-            .await;
-        }
-    }
-}
-
 /// Get a clone of the controller command sender.
 fn get_cntrl_cmd_sender() -> mpsc::Sender<ControllerCommands> {
     crate::CONTROLLER_COMMAND_SENDER
@@ -261,8 +201,8 @@ pub fn send_cntrl_cmd_now(cmd: ControllerCommands) {
 /// A structure that holds the configuration for the controller.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ControllerConfig {
-    /// The serial number of the controller -> get form poststation.
-    pub serial: u64,
+    /// The product name that is displayed in poststation.
+    pub product_name: String,
     /// Address and port of the poststation serve.
     pub address: String,
 }
@@ -270,7 +210,7 @@ pub struct ControllerConfig {
 impl Default for ControllerConfig {
     fn default() -> Self {
         Self {
-            serial: 123456789,
+            product_name: String::from("Cryostorage Controller"),
             address: String::from("127.0.0.1:51837"),
         }
     }
