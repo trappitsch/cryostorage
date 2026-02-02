@@ -19,6 +19,7 @@
 //! something. This is acceptable for our use case. Worse case scenario will be that the interface
 //! freezes until a timeout is hit. 
 
+mod lakeshore_temp;
 
 const POLLING_INTERVAL_SECS: u64 = 10;
 
