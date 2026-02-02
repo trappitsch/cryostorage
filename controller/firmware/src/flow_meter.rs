@@ -20,7 +20,7 @@ impl FlowMeter {
     ///
     /// If the flow is okay, this signal is low.
     pub fn get_state(&self) -> FlowMeterState {
-        match self.pin_signal.is_low() {
+        match self.pin_signal.is_high() {
             true => FlowMeterState::Ok,
             false => FlowMeterState::FlowError,
         }

@@ -53,7 +53,7 @@ pub async fn start_controller_tasks(
         .await
         .expect("Poststation must return list of devices")
         .iter()
-        .find(|d| d.product == Some(config.product_name.clone()))
+        .find(|d| d.product == Some(config.product_name.clone()) && d.is_connected )
     {
         device.serial
     } else {

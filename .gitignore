@@ -70,3 +70,6 @@ target/*
 
 ## Project
 sandbox/
+**/cryotelgt/*
+**/instrumentrs/*
+**/lakeshore_336/*
