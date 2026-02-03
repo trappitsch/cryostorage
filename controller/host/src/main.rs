@@ -6,9 +6,7 @@ use std::{
 use tokio::sync::{OnceCell, broadcast, mpsc, oneshot};
 
 use crate::{
-    controller::{ControllerCommands, start_controller_tasks},
-    logger::{LogHandler, LogMessage},
-    status::InstrumentStatus,
+    controller::{ControllerCommands, start_controller_tasks}, instruments::instruments_task, logger::{LogHandler, LogMessage}, status::InstrumentStatus
 };
 
 mod app;
@@ -69,11 +67,14 @@ async fn main() {
     let (cntrl_tsk, cntrl_bc_listen) =
         start_controller_tasks(controller_config, Arc::clone(&inst_status), rx_ctrl).await;
 
+    // instruments monitoring task
+    let instr_tsk = tokio::spawn(instruments_task(Arc::clone(&conf), Arc::clone(&inst_status)));
+
     // start the app
     match app::app_main(Arc::clone(&conf), Arc::clone(&inst_status), tx_ui_set) {
         Ok(_) => {
             tx_halt.send(()).unwrap();
-            let _ = tokio::join!(cntrl_tsk, cntrl_bc_listen, log_handler_listen);
+            let _ = tokio::join!(cntrl_tsk, cntrl_bc_listen, instr_tsk, log_handler_listen);
             println!("App exited normally");
         }
         Err(e) => eprintln!("App exited with error: {}", e),

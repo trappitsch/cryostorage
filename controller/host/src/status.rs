@@ -3,6 +3,7 @@
 use anyhow::{Result, bail};
 
 use icd::{BakingState, FlowMeterState, InstrumentState, ValveState, VctState};
+use measurements::Temperature;
 use slint::{ComponentHandle, Weak};
 
 use crate::app::{AppWindow, BakingTime, Logic, ValveOrPumpState};
@@ -12,6 +13,9 @@ pub struct InstrumentStatus {
     baking_call: BakingState,
     baking_curr: BakingState,
     flow_meter_curr: FlowMeterState,
+    temperature_bridge: Temperature,
+    temperature_cooler: Temperature,
+    temperature_sample: Temperature,
     valve_pump_call: ValveState,
     valve_pump_curr: ValveState,
     valve_transfer_call: ValveState,
@@ -27,6 +31,9 @@ impl InstrumentStatus {
             baking_call: BakingState::default(),
             baking_curr: BakingState::default(),
             flow_meter_curr: FlowMeterState::default(),
+            temperature_bridge: Temperature::default(), // 0.0 K
+            temperature_cooler: Temperature::default(), // 0.0 K
+            temperature_sample: Temperature::default(), // 0.0 K
             valve_pump_call: ValveState::default(),
             valve_pump_curr: ValveState::default(),
             valve_transfer_call: ValveState::default(),
@@ -65,6 +72,24 @@ impl InstrumentStatus {
     /// Can be set later such that the new can initialize it as `None`.
     pub fn set_ui(&mut self, ui: Weak<AppWindow>) {
         self.ui = Some(ui);
+    }
+
+    /// Set temperature values from instrument status.
+    pub fn set_temperatures(
+        &mut self,
+        bridge: Temperature,
+        cooler: Temperature,
+        sample: Temperature,
+    ) {
+        self.temperature_bridge = bridge;
+        self.temperature_cooler = cooler;
+        self.temperature_sample = sample;
+
+        // TODO: Continue here with setting the UI with the new temperatures. 
+        println!(
+            "Bridge: {} K, Cooler: {} K, Sample: {} K",
+            self.temperature_bridge, self.temperature_cooler, self.temperature_sample
+        );
     }
 
     /// Set valve pump called state.

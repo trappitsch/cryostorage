@@ -25,6 +25,7 @@ tokio           = { version = "1.47.1", features = ["macros", "rt"] }
 sunpower_cryotelgt = { path = "../cryotelgt", version = "0.1.0" }
 lakeshore_336     = { path = "../lakeshore_336", version = "0.1.0" }
 instrumentrs    = { path = "../instrumentRs", version = "0.1.0" }
+serialport = "4.8.1"
 
 
 [build-dependencies]

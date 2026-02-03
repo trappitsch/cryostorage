@@ -22,11 +22,20 @@ impl TcpIpAdapter {
     }
 }
 
+impl Default for TcpIpAdapter {
+    fn default() -> Self {
+        Self {
+            ip: Ipv4Addr::new(192, 168, 1, 2),
+            port: 4001,
+        }
+    }
+}
+
 /// A serial adapter that connects to the instrument via a local serial port.
 ///
 /// Here, we only need a port name as baud rate and other instrument specific settings are handled
 /// in Instrumentrs.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct SerialAdapter {
     pub port_name: String,
 }
@@ -41,7 +50,7 @@ impl SerialAdapter {
 /// The adapter for connecting to the poststation server.
 ///
 /// A combination of the TCP/IP adapter and a serial number of the device.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct PoststationAdapter {
     pub serial_number: u64,
     pub tcp_ip: TcpIpAdapter,

@@ -2126,6 +2126,7 @@ dependencies = [
  "ron",
  "serde",
  "serde-hex",
+ "serialport",
  "slint",
  "slint-build",
  "sunpower_cryotelgt",
