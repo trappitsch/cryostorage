@@ -1,5 +1,7 @@
 //! Handle the instrument status and, when status changes, update UI.
 
+use anyhow::{Result, bail};
+
 use icd::{BakingState, FlowMeterState, InstrumentState, ValveState, VctState};
 use slint::{ComponentHandle, Weak};
 
@@ -36,11 +38,26 @@ impl InstrumentStatus {
     /// Initialize the call states to the current states.
     ///
     /// This is used at startup to avoid false error states.
-    /// FIXME: This is currently not used anywhere. Needs to be fixed.
-    pub fn initialize_call_states(&mut self) {
+    /// If the status is set properly, this will return an `Ok(())`, otherwise an error.
+    pub fn initialize_call_states_from_bc(&mut self) -> Result<()> {
         self.baking_call = self.baking_curr.clone();
         self.valve_pump_call = self.valve_pump_curr.clone();
         self.valve_transfer_call = self.valve_transfer_curr.clone();
+
+        // set UI with buttons (baking is set from broadcast)
+        let valve_pump_is_open = self.valve_pump_call.is_open();
+        let valve_transfer_is_open = self.valve_transfer_call.is_open();
+        if let Some(ui) = &self.ui {
+            ui.upgrade_in_event_loop(move |ui| {
+                ui.global::<Logic>()
+                    .set_pump_valve_is_open(valve_pump_is_open);
+                ui.global::<Logic>()
+                    .set_transfer_valve_is_open(valve_transfer_is_open);
+            })?;
+            Ok(())
+        } else {
+            bail!("UI not set");
+        }
     }
 
     /// Set the UI component of this class.

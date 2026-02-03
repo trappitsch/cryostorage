@@ -53,7 +53,7 @@ pub async fn start_controller_tasks(
         .await
         .expect("Poststation must return list of devices")
         .iter()
-        .find(|d| d.product == Some(config.product_name.clone()) && d.is_connected )
+        .find(|d| d.product == Some(config.product_name.clone()) && d.is_connected)
     {
         device.serial
     } else {
@@ -62,7 +62,11 @@ pub async fn start_controller_tasks(
 
     // Controller command task
     let cntrl_client = ControllerClient::new(ps_client.clone(), serial);
-    let cntrl_task = tokio::spawn(controller_task(cntrl_client, rx_ctrl));
+    let cntrl_task = tokio::spawn(controller_task(
+        cntrl_client,
+        rx_ctrl,
+        Arc::clone(&inst_status),
+    ));
 
     // Broadcast listener task.
     let cntrl_bc_task = tokio::spawn(controller_broadcast_listener(
@@ -75,7 +79,11 @@ pub async fn start_controller_tasks(
 }
 
 /// Task that communicates with the controller firmware via poststation.
-pub async fn controller_task(cntrl: ControllerClient, mut rx: mpsc::Receiver<ControllerCommands>) {
+pub async fn controller_task(
+    cntrl: ControllerClient,
+    mut rx: mpsc::Receiver<ControllerCommands>,
+    inst_status: Arc<Mutex<InstrumentStatus>>,
+) {
     let mut rx_shutdown = crate::HALT_SENDER.get().unwrap().subscribe();
 
     loop {
@@ -90,9 +98,11 @@ pub async fn controller_task(cntrl: ControllerClient, mut rx: mpsc::Receiver<Con
                             cntrl.baking(state).await;
                         }
                         ControllerCommands::PumpValve(state) => {
+                            inst_status.lock().expect("Poisoned").set_valve_pump_call(state.clone());
                             cntrl.pump_valve(state).await;
                         }
                         ControllerCommands::TransferValve(state) => {
+                            inst_status.lock().expect("Poisoned").set_valve_transfer_call(state.clone());
                             cntrl.transfer_valve(state).await;
                         }
                         ControllerCommands::VctHandshake(handshake) => {
@@ -125,6 +135,8 @@ pub async fn controller_broadcast_listener(
 
     let listener_wait_time = Duration::from_millis(icd::BROADCAST_INTERVAL_MS * 2);
 
+    let mut run_initialize = true; // If true, runs initialize after broadcast
+
     loop {
         tokio::select! {
             stream_result = client.stream_topic::<BcInstStatus>(serial) => {
@@ -135,6 +147,11 @@ pub async fn controller_broadcast_listener(
                             msg = listener.recv() => {
                                 if let Some(status) = msg {
                                     inst_status.lock().expect("Poisoned").update_from_controller_broadcast(status);
+
+                                    // initialization on first start, only if UI is set
+                                    if run_initialize && inst_status.lock().expect("Poisoned").initialize_call_states_from_bc().is_ok() {
+                                            run_initialize = false;
+                                        };
                                 } else {
                                     send_log_message(LogMessage::new_error("Poststation broadcast stream closed unexpectedly.")).await;
                                 }

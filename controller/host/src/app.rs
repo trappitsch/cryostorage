@@ -131,6 +131,7 @@ impl ControllerCommandHandler {
 
     fn pump_valve_set_open(&self) {
         let ui = self.ui.as_weak();
+        let conf = Arc::clone(&self.conf);
         self.ui.global::<Logic>().on_pump_valve_set_open({
             move |val| {
                 let vst = match val {
@@ -145,6 +146,7 @@ impl ControllerCommandHandler {
 
     fn transfer_valve_set_open(&self) {
         let ui = self.ui.as_weak();
+        let conf = Arc::clone(&self.conf);
         self.ui.global::<Logic>().on_transfer_valve_set_open({
             move |val| {
                 let vst = match val {

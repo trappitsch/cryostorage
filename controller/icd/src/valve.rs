@@ -15,3 +15,10 @@ pub enum ValveState {
     #[default]
     Undefined,
 }
+
+impl ValveState {
+    /// Get a bool representing whether the valve is open or not.
+    pub fn is_open(&self) -> bool {
+        matches!(self, ValveState::Open)
+    }
+}
