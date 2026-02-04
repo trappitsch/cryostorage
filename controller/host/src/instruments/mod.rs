@@ -24,6 +24,7 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use measurements::{Power, Temperature};
+use sunpower_cryotelgt::CoolerState;
 use tokio::sync::mpsc;
 
 use crate::instruments::cryocooler::CryoCoolerInst;
@@ -41,6 +42,7 @@ const POLLING_INTERVAL: Duration = Duration::from_secs(5);
 pub enum InstrumentCommands {
     /// Set temperature of the cryocooler.
     CryoCoolerSetpoint(Temperature),
+    CryoCoolerState(CoolerState),
 }
 
 /// Monitoring task that polls the instruments periodically.
@@ -78,50 +80,50 @@ pub async fn instruments_task(
         tokio::time::sleep(Duration::from_millis(100)).await;
     }
 
-    // Set the cryocooler set temperature (not necessary in loop!)
-    let mut cnt = 0;
-    let max_retries = 3;
-    let res = loop {
-        let temp = match cryocooler_inst.get_setpoint_temperature() {
-            Ok(t) => t,
-            Err(_) => {
-                send_log_message(LogMessage::new_warning(
-                    "Failed to read cryocooler set temperature, retrying...",
-                ))
-                .await;
-                cryocooler_inst.reset_instrument();
-                cnt += 1;
-                Temperature::default()
-            }
-        };
-
-        if temp != Temperature::default() {
-            // Valid temperature read
-            match inst_status
-                .lock()
-                .expect("InstrumentStatus lock poisoned")
-                .set_temperature_setpoint_and_ui(temp)
-            {
-                Ok(_) => break Ok(()),
-                Err(e) => {
-                    send_log_message_now(LogMessage::new_warning(&format!(
-                        "Failed to set cryocooler set temperature in status: {}, retrying...",
-                        e
-                    )));
-                    cnt += 1;
-                }
-            }
-        }
-        if cnt >= max_retries {
-            break Err(());
+    // Set the instrument initial states
+    // cryocooler
+    let cooler_setpoint_temperature = match cryocooler_inst.get_setpoint_temperature() {
+        Ok(t) => t,
+        Err(e) => {
+            send_log_message(LogMessage::new_error(&format!(
+                "Failed to set initial cryocooler setpoint temperature: {}",
+                e,
+            )))
+            .await;
+            cryocooler_inst.reset_instrument();
+            Temperature::default()
         }
     };
-    if res.is_err() {
-        send_log_message(LogMessage::new_error(
-            "Failed to initialize cryocooler set temperature after multiple retries.",
-        ))
-        .await;
-    }
+
+    let cooler_state = match cryocooler_inst.get_state() {
+        Ok(s) => s,
+        Err(e) => {
+            send_log_message(LogMessage::new_error(&format!(
+                "Failed to set initial cryocooler state: {}",
+                e,
+            )))
+            .await;
+            cryocooler_inst.reset_instrument();
+            CoolerState::Disabled
+        }
+    };
+
+    // set all initial statuses of various instruments
+    {
+        let mut inst_status = inst_status.lock().expect("InstrumentStatus lock poisoned");
+
+        if inst_status.set_temperature_setpoint_and_ui(cooler_setpoint_temperature).is_err() {
+            send_log_message_now(LogMessage::new_error(
+                "Failed to set initial cryocooler setpoint temperature in UI",
+            ));
+        }
+
+        if inst_status.set_cooler_state_and_ui(cooler_state).is_err() {
+            send_log_message_now(LogMessage::new_error(
+                "Failed to set initial cryocooler state in UI",
+            ));
+        }
+    } // drop lock
 
     let mut polling_interval = Duration::from_millis(1);
 
@@ -194,12 +196,28 @@ pub async fn instruments_task(
                             Ok(_) => {
                                 inst_status.lock().expect("InstrumentStatus lock poisoned")
                                     .set_temperature_setpoint_and_ui(temperature)
-                                    .unwrap();
+                                    .expect("UI set before this loop started.");
                             },
                             Err(e) => {
                                 send_log_message(LogMessage::new_error(
                                     &format!(
                                         "Failed to set cryocooler setpoint temperature: {}", e)
+                                    )
+                                ).await;
+                            }
+                        }
+                    }
+                    InstrumentCommands::CryoCoolerState(state) => {
+                        match cryocooler_inst.set_state(state.clone()) {
+                            Ok(_) => {
+                                inst_status.lock().expect("InstrumentStatus lock poisoned")
+                                    .set_cooler_state_and_ui(state)
+                                    .expect("UI set before this loop started.");
+                            },
+                            Err(e) => {
+                                send_log_message(LogMessage::new_error(
+                                    &format!(
+                                        "Failed to set cryocooler state: {}", e)
                                     )
                                 ).await;
                             }
@@ -231,9 +249,10 @@ fn get_instr_cmd_sender() -> mpsc::Sender<InstrumentCommands> {
 pub async fn send_instr_cmd(cmd: InstrumentCommands) {
     let sender = get_instr_cmd_sender();
     if let Err(e) = sender.send(cmd).await {
-        send_log_message_now(LogMessage::new_error(
-            &format!("Failed to send instrument command: {}", e),
-        ));
+        send_log_message_now(LogMessage::new_error(&format!(
+            "Failed to send instrument command: {}",
+            e
+        )));
     }
 }
 
@@ -244,8 +263,9 @@ pub async fn send_instr_cmd(cmd: InstrumentCommands) {
 pub fn send_instr_cmd_now(cmd: InstrumentCommands) {
     let sender = get_instr_cmd_sender();
     if let Err(e) = sender.try_send(cmd) {
-        send_log_message_now(LogMessage::new_error(
-            &format!("Failed to send instrument command now: {}", e),
-        ));
+        send_log_message_now(LogMessage::new_error(&format!(
+            "Failed to send instrument command now: {}",
+            e
+        )));
     }
 }

@@ -5,6 +5,7 @@ use anyhow::{Result, bail};
 use icd::{BakingState, FlowMeterState, InstrumentState, ValveState, VctState};
 use measurements::{Power, Temperature};
 use slint::{ComponentHandle, Weak};
+use sunpower_cryotelgt::CoolerState;
 
 use crate::app::{AppWindow, BakingTime, Logic, ValveOrPumpState};
 
@@ -12,6 +13,7 @@ pub struct InstrumentStatus {
     ui: Option<Weak<AppWindow>>,
     baking_call: BakingState,
     baking_curr: BakingState,
+    cooler_state: CoolerState,
     flow_meter_curr: FlowMeterState,
     power_cooler_current: Power,
     temperature_bridge: Temperature,
@@ -32,6 +34,7 @@ impl InstrumentStatus {
             ui: None,
             baking_call: BakingState::default(),
             baking_curr: BakingState::default(),
+            cooler_state: CoolerState::Disabled,
             flow_meter_curr: FlowMeterState::default(),
             power_cooler_current: Power::default(), // 0.0 W
             temperature_bridge: Temperature::default(), // 0.0 K
@@ -98,6 +101,17 @@ impl InstrumentStatus {
                 .set_target_temp(setpoint.as_kelvin().round() as i32);
         })?;
 
+        Ok(())
+    }
+
+    /// Set the cooler state and the UI.
+    pub fn set_cooler_state_and_ui(&mut self, state: CoolerState) -> Result<()> {
+        self.cooler_state = state.clone();
+
+        let ui = self.ui.as_ref().ok_or_else(|| anyhow::anyhow!("UI not set"))?.clone();
+        ui.upgrade_in_event_loop(move |ui| {
+            ui.global::<Logic>().set_cryocooler_is_on(matches!(state, CoolerState::Enabled));
+        })?;
         Ok(())
     }
 

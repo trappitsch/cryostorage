@@ -14,7 +14,8 @@ use anyhow::{Result, anyhow, bail};
 use instrumentrs::{Instrument, TcpIpInterface};
 use measurements::{Power, Temperature};
 use serde::{Deserialize, Serialize};
-use sunpower_cryotelgt::CryoTelGt;
+use sunpower_cryotelgt::{CryoTelGt, StopMode};
+pub use sunpower_cryotelgt::CoolerState;
 
 use crate::connections::{TCP_IP_TIMEOUT, TcpIpAdapter};
 
@@ -92,10 +93,46 @@ impl CryoCoolerInst {
 
         self.check_connection()?;
 
-        if let Some(inst)  = &mut self.instrument {
+        if let Some(inst) = &mut self.instrument {
             inst.set_temperature_setpoint(temperature)?;
         }
         Ok(())
+    }
+
+    /// Get the current state of the cryocooler.
+    pub fn get_state(&mut self) -> Result<CoolerState> {
+        self.check_connection()?;
+
+        if let Some(inst) = &mut self.instrument {
+            let state = inst.get_state()?;
+            return Ok(state);
+        }
+
+        bail!("Cryocooler not connected (should be unreachable)");
+    }
+
+    /// Set the cryocooler state.
+    ///
+    /// If the connection is lost when turning the cryocooler off, it will stay on digital input
+    /// mode, thus guaranteeing the safety of the cryocooler.
+    pub fn set_state(&mut self, state: CoolerState) -> Result<()> {
+        self.check_connection()?;
+
+        if let Some(inst) = &mut self.instrument {
+            match state {
+                CoolerState::Enabled => {
+                    inst.set_stop_mode(StopMode::DigitalInput)?; // external control
+                }
+                CoolerState::Disabled => {
+                    // FIXME: what to do if the first transfer fails?
+                    inst.set_stop_mode(StopMode::Remote)?; // computer control
+                    inst.set_state(state)?;
+                }
+            }
+            return Ok(());
+        }
+
+        bail!("Cryocooler not connected (should be unreachable)");
     }
 
     /// Get the name of the temperature probe connected to the cryocooler and its temperature.

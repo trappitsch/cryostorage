@@ -8,6 +8,7 @@ use std::{
 use icd::{BakingState, LightState, ValveState, VctHandshake};
 use measurements::Temperature;
 use slint::{Model, SharedString, Weak};
+use sunpower_cryotelgt::CoolerState;
 use tokio::sync::{mpsc, oneshot};
 
 use crate::{
@@ -132,7 +133,6 @@ impl ControllerCommandHandler {
 
     fn pump_valve_set_open(&self) {
         let ui = self.ui.as_weak();
-        let conf = Arc::clone(&self.conf);
         self.ui.global::<Logic>().on_pump_valve_set_open({
             move |val| {
                 let vst = match val {
@@ -147,7 +147,6 @@ impl ControllerCommandHandler {
 
     fn transfer_valve_set_open(&self) {
         let ui = self.ui.as_weak();
-        let conf = Arc::clone(&self.conf);
         self.ui.global::<Logic>().on_transfer_valve_set_open({
             move |val| {
                 let vst = match val {
@@ -360,10 +359,15 @@ impl InstrumentCommandHandler {
         });
     }
 
+    // Toggle cooler state. UI is updated after command to instrument succeeded.
     fn cryocooler_set_on(&self) {
         self.ui.global::<Logic>().on_cryocooler_set_on({
             move |val| {
-                println!("Cryocooler on: {}", val); // TODO:
+                let state = match val {
+                    true => CoolerState::Enabled,
+                    false => CoolerState::Disabled,
+                };
+                send_instr_cmd_now(InstrumentCommands::CryoCoolerState(state));
             }
         });
     }
