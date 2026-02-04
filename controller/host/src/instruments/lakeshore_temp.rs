@@ -2,7 +2,9 @@
 //!
 //! This module provides the interface for all the things we want to do with the Lakeshore
 //! temperature controller from the GUI. These tasks are:
+//! - Autodetect the serial port the Lakeshore is connected to and use it.
 //! - Reading the temperatures of two channels and returning the channel names and temperatures.
+//! - Error handling in case the device is lost, etc.
 
 use std::collections::HashMap;
 
@@ -30,6 +32,17 @@ impl LakeshoreTempInst {
         }
     }
 
+    // Check the connection and if it's none, connect.
+    //
+    // If the connection fails, the stored connection simply remains None.
+    fn check_connection(&mut self) -> Result<()> {
+        if self.instrument.is_none() {
+            self.connect() 
+        } else {
+            Ok(())
+        }
+    }
+
     // Connect to the Lakeshore temperature controller and store the interface in self.
     fn connect(&mut self) -> Result<()> {
         let product_expected = match &self.config.usb_prod_info {
@@ -52,9 +65,7 @@ impl LakeshoreTempInst {
     /// An error is returned if the we cannot read the temperatures for any reason.
     pub fn get_status_measurements(&mut self) -> Result<HashMap<String, Temperature>> {
         // Do we need to connect again?
-        if self.instrument.is_none() {
-            let _ = self.connect(); // if fails, instrument stays None
-        }
+        self.check_connection()?;
 
         if let Some(inst) = self.instrument.as_mut() {
             let mut ret_map = HashMap::new();
@@ -70,7 +81,7 @@ impl LakeshoreTempInst {
             return Ok(ret_map);
         }
 
-        bail!("Lakeshore temperature controller not connected");
+        bail!("Lakeshore temperature controller not connected (should be unreachable)");
     }
 
     /// Reset the instrument to None, so that it reconnects on the next read.

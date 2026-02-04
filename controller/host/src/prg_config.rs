@@ -10,7 +10,12 @@ use std::{
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
-use crate::{CONFIG_FOLDER, controller::ControllerConfig, instruments::lakeshore_temp::LakeshoreTempConfig, samples::Samples};
+use crate::{
+    CONFIG_FOLDER,
+    controller::ControllerConfig,
+    instruments::{cryocooler::CryoCoolerConfig, lakeshore_temp::LakeshoreTempConfig},
+    samples::Samples,
+};
 
 pub const CONFIG_FNAME: &str = "cryostorage_config.ron";
 
@@ -21,7 +26,8 @@ pub struct PrgConfig {
     controller_config: ControllerConfig,
     samples: Samples,
     limits: InstrumentLimits,
-    lakeshore_temperature: LakeshoreTempConfig
+    lakeshore_temperature: LakeshoreTempConfig,
+    suntel_cryocooler: CryoCoolerConfig,
 }
 
 impl PrgConfig {
@@ -41,6 +47,7 @@ impl PrgConfig {
             samples: Samples::new(),
             limits: InstrumentLimits::default(),
             lakeshore_temperature: LakeshoreTempConfig::default(),
+            suntel_cryocooler: CryoCoolerConfig::default(),
         };
 
         ret_self.load_from_file();
@@ -77,6 +84,11 @@ impl PrgConfig {
     /// Get a clone of the controller configuration.
     pub fn get_controller_config(&self) -> ControllerConfig {
         self.controller_config.clone()
+    }
+
+    /// Get a clone of the cryocooler configuration.
+    pub fn get_cryocooler_config(&self) -> CryoCoolerConfig {
+        self.suntel_cryocooler.clone()
     }
 
     /// Get a clone of the lakeshore temperature configuration.

@@ -27,11 +27,13 @@ use measurements::Temperature;
 use slint::Weak;
 
 use crate::app::AppWindow;
+use crate::instruments::cryocooler::CryoCoolerInst;
 use crate::instruments::lakeshore_temp::LakeshoreTempInst;
 use crate::logger::{LogMessage, send_log_message};
 use crate::prg_config::PrgConfig;
 use crate::status::InstrumentStatus;
 
+pub mod cryocooler;
 pub mod lakeshore_temp;
 
 const POLLING_INTERVAL_SECS: u64 = 10;
@@ -50,6 +52,14 @@ pub async fn instruments_task(
         LakeshoreTempInst::new(conf)
     };
 
+    let mut cryocooler_inst = {
+        let conf = prg_conf
+            .lock()
+            .expect("PrgConfig lock poisoned")
+            .get_cryocooler_config();
+        CryoCoolerInst::new(conf)
+    };
+
     // Get shutdown receiver
     let mut rx_shutdown = crate::HALT_SENDER.get().unwrap().subscribe();
 
@@ -58,7 +68,7 @@ pub async fn instruments_task(
             // Loop that polls all instruments
             _ = tokio::time::sleep(Duration::from_secs(POLLING_INTERVAL_SECS)) => {
                 // Temperatures
-                let temperatures = match lakeshore_temp_inst.get_status_measurements() {
+                let mut temperatures = match lakeshore_temp_inst.get_status_measurements() {
                     Ok(temps) => temps,
                     Err(e) => {
                         send_log_message( LogMessage::new_error(
@@ -68,7 +78,20 @@ pub async fn instruments_task(
                         HashMap::new()
                     }
                 };
-                // TODO: get temperature from cryocooler thermocouple and add to temperatures map
+
+                let temperature_cooler = match cryocooler_inst.get_status_measurement() {
+                    Ok(temps) => temps,
+                    Err(e) => {
+                        send_log_message( LogMessage::new_error(
+                            &format!("Failed to read temperature from Cryocooler: {}", e)
+                        )).await;
+                        cryocooler_inst.reset_instrument();
+                        HashMap::new()
+                    }
+                };
+
+                temperatures.extend(temperature_cooler);
+
                 inst_status
                     .lock()
                     .expect("InstrumentStatus lock poisoned")

@@ -2,9 +2,12 @@
 //!
 //! All adapters must be ser/de compliant to be saved in the program config file.
 
-use std::net::Ipv4Addr;
+use std::{net::Ipv4Addr, time::Duration};
 
 use serde::{Deserialize, Serialize};
+
+/// Timeout for TCP/IP connections
+pub const TCP_IP_TIMEOUT: Duration = Duration::from_millis(500);
 
 /// A TCP/IP adapter that connects to instruments via the Moxa serial device server.
 ///
@@ -16,6 +19,22 @@ pub struct TcpIpAdapter {
 }
 
 impl TcpIpAdapter {
+    /// Create a new TCP/IP adapter from IP and port given in one string.
+    ///
+    /// If invalid format is provided, the default adapter is returned.
+    pub fn new_from_str(addr: &str) -> Self {
+        let parts = addr.split(':').collect::<Vec<&str>>();
+        if parts.len() != 2 {
+            return Self::default();
+        }
+
+        let ip = parts[0]
+            .parse::<Ipv4Addr>()
+            .unwrap_or(Ipv4Addr::new(192, 168, 1, 2));
+        let port = parts[1].parse::<u16>().unwrap_or(4001);
+
+        Self { ip, port }
+    }
     /// Get the simple address string to use with `InstrumentRs`.
     pub fn get_address(&self) -> String {
         format!("{}:{}", self.ip, self.port)
