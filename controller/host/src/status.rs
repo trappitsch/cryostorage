@@ -3,7 +3,7 @@
 use anyhow::{Result, bail};
 
 use icd::{BakingState, FlowMeterState, InstrumentState, ValveState, VctState};
-use measurements::Temperature;
+use measurements::{Power, Temperature};
 use slint::{ComponentHandle, Weak};
 
 use crate::app::{AppWindow, BakingTime, Logic, ValveOrPumpState};
@@ -13,9 +13,11 @@ pub struct InstrumentStatus {
     baking_call: BakingState,
     baking_curr: BakingState,
     flow_meter_curr: FlowMeterState,
+    power_cooler_current: Power,
     temperature_bridge: Temperature,
     temperature_cooler: Temperature,
     temperature_sample: Temperature,
+    temperature_setpoint: Temperature,
     valve_pump_call: ValveState,
     valve_pump_curr: ValveState,
     valve_transfer_call: ValveState,
@@ -31,9 +33,11 @@ impl InstrumentStatus {
             baking_call: BakingState::default(),
             baking_curr: BakingState::default(),
             flow_meter_curr: FlowMeterState::default(),
+            power_cooler_current: Power::default(), // 0.0 W
             temperature_bridge: Temperature::default(), // 0.0 K
             temperature_cooler: Temperature::default(), // 0.0 K
             temperature_sample: Temperature::default(), // 0.0 K
+            temperature_setpoint: Temperature::default(), // 0.0 K
             valve_pump_call: ValveState::default(),
             valve_pump_curr: ValveState::default(),
             valve_transfer_call: ValveState::default(),
@@ -67,11 +71,39 @@ impl InstrumentStatus {
         }
     }
 
+    /// Get if the UI is set.
+    pub fn get_ui_is_set(&self) -> bool {
+        self.ui.is_some()
+    }
+
     /// Set the UI component of this class.
     ///
     /// Can be set later such that the new can initialize it as `None`.
     pub fn set_ui(&mut self, ui: Weak<AppWindow>) {
         self.ui = Some(ui);
+    }
+
+
+    /// Set the setpoint temperature for the cooler and update UI.
+    pub fn set_temperature_setpoint_and_ui(&mut self, setpoint: Temperature) -> Result<()> {
+        self.temperature_setpoint = setpoint;
+
+        let ui = self
+            .ui
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("UI not set"))?
+            .clone();
+        ui.upgrade_in_event_loop(move |ui| {
+            ui.global::<Logic>()
+                .set_target_temp(setpoint.as_kelvin().round() as i32);
+        })?;
+
+        Ok(())
+    }
+
+    /// Set the current power of the cooler.
+    pub fn set_power_cooler_current(&mut self, power: Power) {
+        self.power_cooler_current = power;
     }
 
     /// Set temperature values from instrument status.
@@ -85,7 +117,7 @@ impl InstrumentStatus {
         self.temperature_cooler = cooler;
         self.temperature_sample = sample;
 
-        // TODO: Continue here with setting the UI with the new temperatures. 
+        // TODO: Continue here with setting the UI with the new temperatures.
         println!(
             "Bridge: {} K, Cooler: {} K, Sample: {} K",
             self.temperature_bridge, self.temperature_cooler, self.temperature_sample
@@ -172,6 +204,23 @@ impl InstrumentStatus {
                 ui.global::<Logic>().set_pump_valve_state(valve_pump_state);
                 ui.global::<Logic>()
                     .set_transfer_valve_state(valve_transfer_state);
+            })
+            .unwrap();
+        }
+    }
+
+    pub fn update_ui_instrument_status(&self) {
+        if let Some(ui) = &self.ui {
+            let sample_temp = self.temperature_sample.as_kelvin().round() as i32;
+            let bridge_temp = self.temperature_bridge.as_kelvin().round() as i32;
+            let cooler_temp = self.temperature_cooler.as_kelvin().round() as i32;
+            let cooler_current_power = self.power_cooler_current.as_watts().round() as i32;
+
+            ui.upgrade_in_event_loop(move |ui| {
+                ui.global::<Logic>().set_sample_temp(sample_temp);
+                ui.global::<Logic>().set_bridge_temp(bridge_temp);
+                ui.global::<Logic>().set_cooler_temp(cooler_temp);
+                ui.global::<Logic>().set_current_power(cooler_current_power);
             })
             .unwrap();
         }

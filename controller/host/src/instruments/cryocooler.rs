@@ -12,7 +12,7 @@ use std::{
 
 use anyhow::{Result, anyhow, bail};
 use instrumentrs::{Instrument, TcpIpInterface};
-use measurements::Temperature;
+use measurements::{Power, Temperature};
 use serde::{Deserialize, Serialize};
 use sunpower_cryotelgt::CryoTelGt;
 
@@ -56,6 +56,30 @@ impl CryoCoolerInst {
         let instrument = CryoTelGt::try_new(interface)?;
         self.instrument = Some(instrument);
         Ok(())
+    }
+
+    /// Get the current power of the cryocooler cold head.
+    pub fn get_current_power(&mut self) -> Result<Power> {
+        self.check_connection()?;
+
+        if let Some(inst) = &mut self.instrument {
+            let power = inst.get_power()?;
+            return Ok(power);
+        }
+
+        bail!("Cryocooler not connected (should be unreachable)");
+    }
+
+    /// Get the set temperature of the cryocooler cold head.
+    pub fn get_set_temperature(&mut self) -> Result<Temperature> {
+        self.check_connection()?;
+
+        if let Some(inst) = &mut self.instrument {
+            let set_temp = inst.get_temperature_setpoint()?;
+            return Ok(set_temp);
+        }
+
+        bail!("Cryocooler not connected (should be unreachable)");
     }
 
     /// Get the name of the temperature probe connected to the cryocooler and its temperature.

@@ -1,7 +1,19 @@
 import { MyWindow } from "elements.slint";
 
 import { Const } from "consts.slint";
-import { BigSwitch, NormalText, LongButton, LightSwitch, SmallSwitch, InfoArea, PictogramButton, StatusOkErr, InfoAreaSmall, MyVerticalLayout, MyHorizontalLayout } from "elements.slint";
+import {
+    BigSwitch,
+    NormalText,
+    LongButton,
+    LightSwitch,
+    SmallSwitch,
+    InfoArea,
+    PictogramButton,
+    StatusOkErr,
+    InfoAreaSmall,
+    MyVerticalLayout,
+    MyHorizontalLayout,
+} from "elements.slint";
 import { Palette } from "palette.slint";
 import { Samples } from "samples.slint";
 import { Logic } from "logic.slint";
@@ -13,10 +25,10 @@ export component HomeScreen inherits MyWindow {
 
         MyHorizontalLayout {
 
-            InfoAreaSmall {
+            InfoArea{
                 title: "Sample temperature";
-                text_color: (Logic.sample_temp < 120) ? Palette.blue : Palette.red;
-                text: Logic.sample_temp + " K";
+                text_color: (Logic.sample_temp > 0 && Logic.sample_temp < 120) ? Palette.blue : Palette.red;
+                text: (Logic.sample_temp == 0) ? "Error" : Logic.sample_temp + " K";
             }
 
             InfoAreaSmall {
@@ -44,7 +56,7 @@ export component HomeScreen inherits MyWindow {
                     right_text: "On";
                     switched(right_side_active) => {
                         Logic.cryocooler_set_on(right_side_active);  // bool
-                }
+                    }
                 }
 
                 BigSwitch {
@@ -65,7 +77,6 @@ export component HomeScreen inherits MyWindow {
             }
         }
 
-        Samples {
-        }
+        Samples { }
     }
 }

@@ -130,6 +130,13 @@ export component InfoAreaSmall inherits InfoArea {
     width: Const.element_width_short;
 }
 
+export component TemperatureArea inherits InfoAreaSmall {
+    in property <int> temperature: 0;
+
+    text_color: (Logic.sample_temp > 0 && Logic.sample_temp < 120) ? Palette.blue : Palette.red;
+    text: (temperature == 0) ? "Error" : temperature + " K";
+}
+
 export component StatusOkErr inherits Rectangle {
     in property <string> title: "StatusOkErr Field";
     in-out property <bool> ok: true;
@@ -183,6 +190,10 @@ export component LongButton inherits Rectangle {
         vertical-alignment: center;
         color: enabled ? Palette.text : Palette.button_inactive_text;
     }
+}
+
+export component ShortButton inherits LongButton {
+    width: Const.element_width_short;
 }
 
 export component RegularButton inherits Rectangle {
@@ -271,7 +282,7 @@ export component BigSwitch inherits Rectangle {
                 TouchArea {
                     clicked => {
                         if (root.enabled) {
-                        root.switched(true);
+                            root.switched(true);
                         }
                     }
                 }

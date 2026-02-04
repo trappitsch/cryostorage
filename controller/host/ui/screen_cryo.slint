@@ -1,13 +1,83 @@
 import { MyWindow } from "elements.slint";
 
+import { Const } from "consts.slint";
+import { Palette } from "palette.slint";
+
 import { Logic } from "logic.slint";
-import { NormalText, StatusOkErr } from "elements.slint";
+import {
+    NormalText,
+    StatusOkErr,
+    MyVerticalLayout,
+    MyHorizontalLayout,
+    TemperatureArea,
+    BigSwitch,
+    InfoAreaSmall, RegularButton, ShortButton,
+} from "elements.slint";
 
 export component CryoScreen inherits MyWindow {
     index: 1;
 
-    StatusOkErr {
-        title: "Water flow";
-        ok: Logic.water_flow_ok;
+    MyVerticalLayout {
+        MyHorizontalLayout {
+            TemperatureArea {
+                width: (Const.useable_width - 4 * Const.border_spacing) / 3;
+                title: "Sample temperature";
+                temperature: Logic.sample_temp;
+            }
+
+            TemperatureArea {
+                width: (Const.useable_width - 4 * Const.border_spacing) / 3;
+                title: "Bridge temperature";
+                temperature: Logic.bridge_temp;
+            }
+
+            TemperatureArea {
+                width: (Const.useable_width - 4 * Const.border_spacing) / 3;
+                title: "Cooler temperature";
+                temperature: Logic.cooler_temp;
+            }
+        }
+
+        MyHorizontalLayout {
+
+            BigSwitch {
+                title: "Cryocooler";
+                right_side: Logic.cryocooler_is_on;
+                left_text: "Off";
+                right_text: "On";
+                switched(right_side_active) => {
+                    Logic.cryocooler_set_on(right_side_active);  // bool
+                }
+            }
+
+            StatusOkErr {
+                title: "Water flow";
+                ok: Logic.water_flow_ok;
+            }
+        }
+
+        MyHorizontalLayout {
+            Image {
+                source: Logic.vacuum_plot;
+                // y: Const.screen_height / 4;
+            }
+
+            MyVerticalLayout {
+                InfoAreaSmall {
+                    title: "Target temperature";
+                    text_color: (Logic.target_temp == 0) ? Palette.red : Palette.text;
+                    text: (Logic.target_temp == 0) ? "Error": Logic.target_temp + " K";
+                }
+
+                InfoAreaSmall {
+                    title: "Current power";
+                    text: Logic.current_power + " W";
+                }
+
+                ShortButton{
+                    text: "Set target temperature";
+                }
+            }
+        }
     }
 }

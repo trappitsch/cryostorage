@@ -23,20 +23,20 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-use measurements::Temperature;
+use measurements::{Power, Temperature};
 use slint::Weak;
 
 use crate::app::AppWindow;
 use crate::instruments::cryocooler::CryoCoolerInst;
 use crate::instruments::lakeshore_temp::LakeshoreTempInst;
-use crate::logger::{LogMessage, send_log_message};
+use crate::logger::{LogMessage, send_log_message, send_log_message_now};
 use crate::prg_config::PrgConfig;
 use crate::status::InstrumentStatus;
 
 pub mod cryocooler;
 pub mod lakeshore_temp;
 
-const POLLING_INTERVAL_SECS: u64 = 10;
+const POLLING_INTERVAL: Duration = Duration::from_secs(5);
 
 /// Monitoring task that polls the instruments periodically.
 pub async fn instruments_task(
@@ -63,10 +63,66 @@ pub async fn instruments_task(
     // Get shutdown receiver
     let mut rx_shutdown = crate::HALT_SENDER.get().unwrap().subscribe();
 
+    // Wait for UI to be set in InstrumentStatus
+    while !inst_status
+        .lock()
+        .expect("InstrumentStatus lock poisoned")
+        .get_ui_is_set()
+    {
+        tokio::time::sleep(Duration::from_millis(100)).await;
+    }
+
+    // Set the cryocooler set temperature (not necessary in loop!)
+    let mut cnt = 0;
+    let max_retries = 3;
+    let res = loop {
+        let temp = match cryocooler_inst.get_set_temperature() {
+            Ok(t) => t,
+            Err(_) => {
+                send_log_message(LogMessage::new_warning(
+                    "Failed to read cryocooler set temperature, retrying...",
+                ))
+                .await;
+                cryocooler_inst.reset_instrument();
+                cnt += 1;
+                Temperature::default()
+            }
+        };
+
+        if temp != Temperature::default() {
+            // Valid temperature read
+            match inst_status
+                .lock()
+                .expect("InstrumentStatus lock poisoned")
+                .set_temperature_setpoint_and_ui(temp)
+            {
+                Ok(_) => break Ok(()),
+                Err(e) => {
+                    send_log_message_now(LogMessage::new_warning(&format!(
+                        "Failed to set cryocooler set temperature in status: {}, retrying...",
+                        e
+                    )));
+                    cnt += 1;
+                }
+            }
+        }
+        if cnt >= max_retries {
+            break Err(());
+        }
+    };
+    if res.is_err() {
+        send_log_message(LogMessage::new_error(
+            "Failed to initialize cryocooler set temperature after multiple retries.",
+        ))
+        .await;
+    }
+
+    let mut polling_interval = Duration::from_millis(1);
+
     loop {
         tokio::select! {
             // Loop that polls all instruments
-            _ = tokio::time::sleep(Duration::from_secs(POLLING_INTERVAL_SECS)) => {
+            _ = tokio::time::sleep(polling_interval) => {
                 // Temperatures
                 let mut temperatures = match lakeshore_temp_inst.get_status_measurements() {
                     Ok(temps) => temps,
@@ -99,7 +155,30 @@ pub async fn instruments_task(
                         *temperatures.get("Bridge").unwrap_or(&Temperature::default()),
                         *temperatures.get("Cooler").unwrap_or(&Temperature::default()),
                         *temperatures.get("Sample").unwrap_or(&Temperature::default())
-                    )
+                    );
+
+                // Cryocooler current power
+                let current_power = match cryocooler_inst.get_current_power() {
+                    Ok(p) => p,
+                    Err(e) => {
+                        send_log_message( LogMessage::new_error(
+                            &format!("Failed to read current power from Cryocooler: {}", e)
+                        )).await;
+                        cryocooler_inst.reset_instrument();
+                        Power::default()
+                    }
+                };
+                inst_status.lock().expect("InstrumentStatus lock poisoned")
+                    .set_power_cooler_current(current_power);
+
+                // Update UI
+                inst_status.lock().expect("InstrumentStatus lock poisoned")
+                    .update_ui_instrument_status();
+
+                // after init, set polling interval to normal value
+                if polling_interval != POLLING_INTERVAL {
+                    polling_interval = POLLING_INTERVAL;
+                }
             }
             // Shutdown signal received
             _ = rx_shutdown.recv() => {
@@ -108,8 +187,3 @@ pub async fn instruments_task(
         }
     }
 }
-
-/// Update the UI with the latest instrument status.
-///
-/// This is called
-fn update_ui_instrument_status(ui: Weak<AppWindow>) {}

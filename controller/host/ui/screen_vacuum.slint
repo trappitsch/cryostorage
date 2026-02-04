@@ -78,7 +78,7 @@ export component VacuumScreen inherits MyWindow {
 
         Image {
             source: Logic.vacuum_plot;
-            y: Const.screen_height / 4;
+            y: Const.screen_height / 4 - 12.5px; // empirical...
         }
 
         MyVerticalLayout {
