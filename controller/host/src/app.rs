@@ -6,10 +6,16 @@ use std::{
 };
 
 use icd::{BakingState, LightState, ValveState, VctHandshake};
+use measurements::Temperature;
 use slint::{Model, SharedString, Weak};
 use tokio::sync::{mpsc, oneshot};
 
-use crate::{controller::{ControllerCommands, send_cntrl_cmd_now}, prg_config::PrgConfig, status::InstrumentStatus};
+use crate::{
+    controller::{ControllerCommands, send_cntrl_cmd_now},
+    instruments::{InstrumentCommands, send_instr_cmd_now},
+    prg_config::PrgConfig,
+    status::InstrumentStatus,
+};
 
 slint::include_modules!();
 
@@ -25,11 +31,9 @@ pub fn app_main(
     };
 
     // initialize the various GUI handlers
-    let _controller_cmd_handler =
-        ControllerCommandHandler::new(ui.as_weak(), Arc::clone(&conf));
+    let _controller_cmd_handler = ControllerCommandHandler::new(ui.as_weak(), Arc::clone(&conf));
     let _gui_cmd_handler = GuiCommandHandler::new(ui.as_weak(), Arc::clone(&conf));
-    let _instrument_cmd_handler =
-        InstrumentCommandHandler::new(ui.as_weak(), Arc::clone(&conf));
+    let _instrument_cmd_handler = InstrumentCommandHandler::new(ui.as_weak(), Arc::clone(&conf));
 
     // pass the ui to the instrument status handler
     inst_status.lock().expect("Poisoned").set_ui(ui.as_weak());
@@ -69,10 +73,7 @@ struct ControllerCommandHandler {
 
 impl ControllerCommandHandler {
     /// Initialize all switches
-    fn new(
-        ui: Weak<AppWindow>,
-        conf: Arc<Mutex<PrgConfig>>,
-    ) -> Self {
+    fn new(ui: Weak<AppWindow>, conf: Arc<Mutex<PrgConfig>>) -> Self {
         let sf = Self {
             ui: ui.unwrap(),
             conf,
@@ -171,10 +172,7 @@ struct GuiCommandHandler {
 }
 
 impl GuiCommandHandler {
-    fn new(
-        ui: Weak<AppWindow>,
-        conf: Arc<Mutex<PrgConfig>>,
-    ) -> Self {
+    fn new(ui: Weak<AppWindow>, conf: Arc<Mutex<PrgConfig>>) -> Self {
         let sf = Self {
             ui: ui.unwrap(),
             conf,
@@ -186,13 +184,10 @@ impl GuiCommandHandler {
     fn init(&self) {
         // set the sample names from config
         let model = self.ui.global::<Logic>().get_sample_model();
-        let curr_samples = {
-            self.conf.lock().expect("Poisoned").get_samples()
-        };
+        let curr_samples = { self.conf.lock().expect("Poisoned").get_samples() };
         for (idx, (pos, name)) in curr_samples.into_iter().enumerate() {
             model.set_row_data(idx, (name.into(), pos.into()));
         }
-
 
         // buttons
         self.test_button(); // FIXME: Delete
@@ -232,6 +227,7 @@ impl GuiCommandHandler {
                     ui.global::<Logic>().set_admin_mode(false);
                 } else {
                     let keypad = Keypad::new().unwrap();
+                    keypad.set_keypad_title("Enter PIN".into());
                     keypad.show().unwrap();
 
                     keypad.global::<KeypadLogic>().on_cancel_pressed({
@@ -307,10 +303,7 @@ struct InstrumentCommandHandler {
 }
 
 impl InstrumentCommandHandler {
-    fn new(
-        ui: Weak<AppWindow>,
-        conf: Arc<Mutex<PrgConfig>>,
-    ) -> Self {
+    fn new(ui: Weak<AppWindow>, conf: Arc<Mutex<PrgConfig>>) -> Self {
         let sf = Self {
             ui: ui.unwrap(),
             conf,
@@ -321,6 +314,7 @@ impl InstrumentCommandHandler {
 
     fn init(&self) {
         self.cryocooler_set_on();
+        self.cryocooler_set_setpoint();
 
         // FIXME: bogus inits below
         self.ui
@@ -331,6 +325,39 @@ impl InstrumentCommandHandler {
             .global::<Logic>()
             .set_chamber_pressure(format!("{:.2E} mbar", 0.0001234).into());
         self.ui.global::<Logic>().set_cryocooler_is_on(false);
+    }
+
+    fn cryocooler_set_setpoint(&self) {
+        self.ui.global::<Logic>().on_set_setpoint_temp({
+            let ui = self.ui.as_weak();
+            move || {
+                let ui = ui.unwrap();
+                let keypad = Keypad::new().unwrap();
+                keypad.set_keypad_title("New Setpoint Temperature (K)".into());
+                keypad.set_spread_out_entry(false);
+                keypad.show().unwrap();
+
+                keypad.global::<KeypadLogic>().on_cancel_pressed({
+                    let keypad = keypad.as_weak();
+                    move || {
+                        keypad.unwrap().hide().unwrap();
+                    }
+                });
+
+                keypad.global::<KeypadLogic>().on_ok_pressed({
+                    let keypad = keypad.as_weak();
+                    let ui = ui.as_weak();
+                    move |setpoint| {
+                        if let Ok(new_setpoint) = setpoint.as_str().parse::<f64>() {
+                            send_instr_cmd_now(InstrumentCommands::CryoCoolerSetpoint(
+                                Temperature::from_kelvin(new_setpoint),
+                            ));
+                        }
+                        keypad.unwrap().hide().unwrap();
+                    }
+                });
+            }
+        });
     }
 
     fn cryocooler_set_on(&self) {

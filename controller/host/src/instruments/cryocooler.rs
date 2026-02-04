@@ -3,7 +3,7 @@
 //! This module provides the interface for all the things we want to do with the cryocooler.
 //! These tasks are:
 //! - Manage connection to the cryocooler over TCP/IP (Moxa) and auto-reconnect if needed.
-//! - Read temperature of the cold head.
+//! - Read temperature of the cryocooler.
 
 use std::{
     collections::HashMap,
@@ -58,7 +58,7 @@ impl CryoCoolerInst {
         Ok(())
     }
 
-    /// Get the current power of the cryocooler cold head.
+    /// Get the current power of the cryocooler.
     pub fn get_current_power(&mut self) -> Result<Power> {
         self.check_connection()?;
 
@@ -70,8 +70,8 @@ impl CryoCoolerInst {
         bail!("Cryocooler not connected (should be unreachable)");
     }
 
-    /// Get the set temperature of the cryocooler cold head.
-    pub fn get_set_temperature(&mut self) -> Result<Temperature> {
+    /// Get the setpoint temperature of the cryocooler.
+    pub fn get_setpoint_temperature(&mut self) -> Result<Temperature> {
         self.check_connection()?;
 
         if let Some(inst) = &mut self.instrument {
@@ -80,6 +80,22 @@ impl CryoCoolerInst {
         }
 
         bail!("Cryocooler not connected (should be unreachable)");
+    }
+
+    /// Set the setpoint temperature of the cryocooler.
+    ///
+    /// This errors out if the temperature is < 50 K or > 200 K.
+    pub fn set_setpoint_temperature(&mut self, temperature: Temperature) -> Result<()> {
+        if temperature.as_kelvin() < 50.0 || temperature.as_kelvin() > 200.0 {
+            bail!("Setpoint temperature must be between 50 K and 200 K");
+        }
+
+        self.check_connection()?;
+
+        if let Some(inst)  = &mut self.instrument {
+            inst.set_temperature_setpoint(temperature)?;
+        }
+        Ok(())
     }
 
     /// Get the name of the temperature probe connected to the cryocooler and its temperature.
@@ -117,7 +133,7 @@ impl CryoCoolerInst {
 pub struct CryoCoolerConfig {
     /// The TCP/IP adapter of the cryocooler (connected via Moxa).
     pub tcp_ip_adapter: TcpIpAdapter,
-    /// Name of the temperature channel that is connected to the cold head.
+    /// Name of the temperature channel that is connected to the cryocooler.
     channel_name: Option<String>,
 }
 

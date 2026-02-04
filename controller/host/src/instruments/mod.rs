@@ -24,9 +24,8 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use measurements::{Power, Temperature};
-use slint::Weak;
+use tokio::sync::mpsc;
 
-use crate::app::AppWindow;
 use crate::instruments::cryocooler::CryoCoolerInst;
 use crate::instruments::lakeshore_temp::LakeshoreTempInst;
 use crate::logger::{LogMessage, send_log_message, send_log_message_now};
@@ -38,10 +37,17 @@ pub mod lakeshore_temp;
 
 const POLLING_INTERVAL: Duration = Duration::from_secs(5);
 
+/// Commands that can be sent to instruments.
+pub enum InstrumentCommands {
+    /// Set temperature of the cryocooler.
+    CryoCoolerSetpoint(Temperature),
+}
+
 /// Monitoring task that polls the instruments periodically.
 pub async fn instruments_task(
     prg_conf: Arc<Mutex<PrgConfig>>,
     inst_status: Arc<Mutex<InstrumentStatus>>,
+    mut rx_instr: mpsc::Receiver<InstrumentCommands>,
 ) {
     // Get all the instruments
     let mut lakeshore_temp_inst = {
@@ -76,7 +82,7 @@ pub async fn instruments_task(
     let mut cnt = 0;
     let max_retries = 3;
     let res = loop {
-        let temp = match cryocooler_inst.get_set_temperature() {
+        let temp = match cryocooler_inst.get_setpoint_temperature() {
             Ok(t) => t,
             Err(_) => {
                 send_log_message(LogMessage::new_warning(
@@ -180,10 +186,66 @@ pub async fn instruments_task(
                     polling_interval = POLLING_INTERVAL;
                 }
             }
+            // Instrument command received
+            Some(cmd) = rx_instr.recv() => {
+                match cmd {
+                    InstrumentCommands::CryoCoolerSetpoint(temperature) => {
+                        match cryocooler_inst.set_setpoint_temperature(temperature) {
+                            Ok(_) => {
+                                inst_status.lock().expect("InstrumentStatus lock poisoned")
+                                    .set_temperature_setpoint_and_ui(temperature)
+                                    .unwrap();
+                            },
+                            Err(e) => {
+                                send_log_message(LogMessage::new_error(
+                                    &format!(
+                                        "Failed to set cryocooler setpoint temperature: {}", e)
+                                    )
+                                ).await;
+                            }
+                        }
+                    }
+                    // next match here
+                }
+            }
             // Shutdown signal received
             _ = rx_shutdown.recv() => {
                 break;
             }
         }
+    }
+}
+
+/// Get a clone of the instrument command sender.
+fn get_instr_cmd_sender() -> mpsc::Sender<InstrumentCommands> {
+    crate::INSTRUMENT_COMMAND_SENDER
+        .get()
+        .expect("Uninitialized")
+        .clone()
+}
+
+/// Convenience function to await sending an instrument command.
+///
+/// If an error occurs, this error is logged. Otherwise, the program will continue
+/// as normal.
+pub async fn send_instr_cmd(cmd: InstrumentCommands) {
+    let sender = get_instr_cmd_sender();
+    if let Err(e) = sender.send(cmd).await {
+        send_log_message_now(LogMessage::new_error(
+            &format!("Failed to send instrument command: {}", e),
+        ));
+    }
+}
+
+/// Convenience function to send an instrument command without awaiting.
+///
+/// If an error occurs, this error is logged. Otherwise, the program will continue
+/// as normal.
+pub fn send_instr_cmd_now(cmd: InstrumentCommands) {
+    let sender = get_instr_cmd_sender();
+    if let Err(e) = sender.try_send(cmd) {
+        send_log_message_now(LogMessage::new_error(
+            &format!("Failed to send instrument command now: {}", e),
+        ));
     }
 }

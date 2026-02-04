@@ -1,6 +1,13 @@
 import { Const } from "consts.slint";
-import { MyVerticalLayout, NormalText, H2Text, RegularButton } from "elements.slint";
+import {
+    MyVerticalLayout,
+    NormalText,
+    H2Text,
+    RegularButton,
+    MyHorizontalLayout,
+} from "elements.slint";
 import { Palette } from "palette.slint";
+import { Logic } from "logic.slint";
 
 export global KeypadLogic {
     pure callback cancel_pressed();
@@ -15,7 +22,6 @@ component ButtonStyle inherits Rectangle {
     border-radius: Const.border_radius_small;
     border-width: 2px;
     border-color: Palette.overlay2;
-
 }
 
 component NumberButton inherits ButtonStyle {
@@ -53,17 +59,22 @@ component ClearButton inherits ButtonStyle {
 }
 
 export component Keypad inherits Window {
+    in-out property <string> keypad_title;
+    in-out property <bool> spread_out_entry: true;
+
     y: 20px;
-
     height: 760px;
-
     background: Palette.bg;
 
     MyVerticalLayout {
 
-        H2Text {
-            text: "Enter PIN";
-            horizontal-alignment: center;
+        MyHorizontalLayout {
+            alignment: center;
+
+            H2Text {
+                text: root.keypad_title;
+                horizontal-alignment: center;
+            }
         }
 
         Rectangle {
@@ -75,10 +86,9 @@ export component Keypad inherits Window {
             border-color: Palette.overlay2;
             border-radius: Const.border_radius_large;
 
-
             H2Text {
                 text: KeypadLogic.pin_entered;
-                letter-spacing: 15px;
+                letter-spacing: root.spread_out_entry ? 15px : 0px;
             }
         }
 
@@ -136,7 +146,7 @@ export component Keypad inherits Window {
                         value: 0;
                     }
 
-                    ClearButton{
+                    ClearButton {
                         col: 2;
                         width: kb.width;
                         height: kb.height;

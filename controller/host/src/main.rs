@@ -6,7 +6,10 @@ use std::{
 use tokio::sync::{OnceCell, broadcast, mpsc, oneshot};
 
 use crate::{
-    controller::{ControllerCommands, start_controller_tasks}, instruments::instruments_task, logger::{LogHandler, LogMessage}, status::InstrumentStatus
+    controller::{ControllerCommands, start_controller_tasks},
+    instruments::{InstrumentCommands, instruments_task},
+    logger::{LogHandler, LogMessage},
+    status::InstrumentStatus,
 };
 
 mod app;
@@ -25,6 +28,8 @@ pub const LOG_LEVEL_DISPLAY: logger::Level = logger::Level::Warning;
 pub static HALT_SENDER: OnceCell<broadcast::Sender<()>> = OnceCell::const_new();
 pub static LOG_SENDER: OnceCell<mpsc::Sender<LogMessage>> = OnceCell::const_new();
 pub static CONTROLLER_COMMAND_SENDER: OnceCell<mpsc::Sender<ControllerCommands>> =
+    OnceCell::const_new();
+pub static INSTRUMENT_COMMAND_SENDER: OnceCell<mpsc::Sender<InstrumentCommands>> =
     OnceCell::const_new();
 
 #[tokio::main]
@@ -68,7 +73,15 @@ async fn main() {
         start_controller_tasks(controller_config, Arc::clone(&inst_status), rx_ctrl).await;
 
     // instruments monitoring task
-    let instr_tsk = tokio::spawn(instruments_task(Arc::clone(&conf), Arc::clone(&inst_status)));
+    let (tx_instr, rx_instr) = mpsc::channel(32);
+    INSTRUMENT_COMMAND_SENDER
+        .set(tx_instr.clone())
+        .expect("Uninitialized");
+    let instr_tsk = tokio::spawn(instruments_task(
+        Arc::clone(&conf),
+        Arc::clone(&inst_status),
+        rx_instr,
+    ));
 
     // start the app
     match app::app_main(Arc::clone(&conf), Arc::clone(&inst_status), tx_ui_set) {

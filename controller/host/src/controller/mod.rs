@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 use tokio::{sync::mpsc, task::JoinHandle, time::sleep};
 
 use crate::{
-    logger::{LogMessage, send_log_message},
+    logger::{LogMessage, send_log_message, send_log_message_now},
     status::InstrumentStatus,
 };
 
@@ -88,26 +88,24 @@ pub async fn controller_task(
 
     loop {
         tokio::select! {
-            command_result = rx.recv() => {
-                if let Some(cmd) = command_result {
-                    match cmd {
-                        ControllerCommands::Light(state) => {
-                            cntrl.light(state).await;
-                        }
-                        ControllerCommands::Baking(state) => {
-                            cntrl.baking(state).await;
-                        }
-                        ControllerCommands::PumpValve(state) => {
-                            inst_status.lock().expect("Poisoned").set_valve_pump_call(state.clone());
-                            cntrl.pump_valve(state).await;
-                        }
-                        ControllerCommands::TransferValve(state) => {
-                            inst_status.lock().expect("Poisoned").set_valve_transfer_call(state.clone());
-                            cntrl.transfer_valve(state).await;
-                        }
-                        ControllerCommands::VctHandshake(handshake) => {
-                            cntrl.vct_handshake(handshake).await;
-                        }
+            Some(cmd) = rx.recv() => {
+                match cmd {
+                    ControllerCommands::Light(state) => {
+                        cntrl.light(state).await;
+                    }
+                    ControllerCommands::Baking(state) => {
+                        cntrl.baking(state).await;
+                    }
+                    ControllerCommands::PumpValve(state) => {
+                        inst_status.lock().expect("Poisoned").set_valve_pump_call(state.clone());
+                        cntrl.pump_valve(state).await;
+                    }
+                    ControllerCommands::TransferValve(state) => {
+                        inst_status.lock().expect("Poisoned").set_valve_transfer_call(state.clone());
+                        cntrl.transfer_valve(state).await;
+                    }
+                    ControllerCommands::VctHandshake(handshake) => {
+                        cntrl.vct_handshake(handshake).await;
                     }
                 }
             }
@@ -195,23 +193,27 @@ fn get_cntrl_cmd_sender() -> mpsc::Sender<ControllerCommands> {
 
 /// Convenience function to await sending a controller command.
 ///
-/// If an error occurs, this error is printed to stderr. Otherwise, the program will continue
+/// If an error occurs, this error is logged. Otherwise, the program will continue
 /// as normal.
 pub async fn send_cntrl_cmd(cmd: ControllerCommands) {
     let sender = get_cntrl_cmd_sender();
     if let Err(e) = sender.send(cmd).await {
-        eprintln!("Could not send controller command: {}", e);
+        send_log_message_now(LogMessage::new_error(
+            &format!("Failed to send controller command: {}", e),
+        ));
     }
 }
 
 /// Convenience function to send a controller command without awaiting.
 ///
-/// If an error occurs, this error is printed to stderr. Otherwise, the program will continue
+/// If an error occurs, this error is logged. Otherwise, the program will continue
 /// as normal.
 pub fn send_cntrl_cmd_now(cmd: ControllerCommands) {
     let sender = get_cntrl_cmd_sender();
     if let Err(e) = sender.try_send(cmd) {
-        eprintln!("Could not send controller command now: {}", e);
+        send_log_message_now(LogMessage::new_error(
+            &format!("Failed to send controller command now: {}", e),
+        ));
     }
 }
 

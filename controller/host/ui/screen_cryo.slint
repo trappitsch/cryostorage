@@ -59,7 +59,6 @@ export component CryoScreen inherits MyWindow {
         MyHorizontalLayout {
             Image {
                 source: Logic.vacuum_plot;
-                // y: Const.screen_height / 4;
             }
 
             MyVerticalLayout {
@@ -76,6 +75,9 @@ export component CryoScreen inherits MyWindow {
 
                 ShortButton{
                     text: "Set target temperature";
+                    clicked => {
+                        Logic.set_setpoint_temp();
+                    }
                 }
             }
         }
