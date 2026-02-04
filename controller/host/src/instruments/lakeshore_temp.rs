@@ -13,9 +13,7 @@ use lakeshore_336::{Lakeshore336, SerialInterfaceLakeshore};
 
 use measurements::Temperature;
 use serde::{Deserialize, Serialize};
-use serialport::SerialPort;
-
-use crate::connections::SerialAdapter;
+use serialport::{SerialPort, SerialPortType};
 
 /// Cryostorage chamber's way of looking at a Lakeshore temperature controller.
 pub struct LakeshoreTempInst {
@@ -34,7 +32,14 @@ impl LakeshoreTempInst {
 
     // Connect to the Lakeshore temperature controller and store the interface in self.
     fn connect(&mut self) -> Result<()> {
-        let interface = SerialInterfaceLakeshore::simple(&self.config.adapter.get_address())?;
+        let product_expected = match &self.config.usb_prod_info {
+            Some(s) => s.clone(),
+            None => bail!("No USB product info string provided for Lakeshore temp controller"),
+        };
+        let port = find_port_by_product(&product_expected)?;
+        println!("Port: {}", port);
+
+        let interface = SerialInterfaceLakeshore::simple(&port)?;
         let instrument = Lakeshore336::try_new(interface)?;
         self.instrument = Some(instrument);
         Ok(())
@@ -43,7 +48,7 @@ impl LakeshoreTempInst {
     /// Read the temperatures and return them.
     ///
     /// We return a HashMap with the name of the channel as the key and the temperature as the
-    /// value. 
+    /// value.
     /// An error is returned if the we cannot read the temperatures for any reason.
     pub fn get_status_measurements(&mut self) -> Result<HashMap<String, Temperature>> {
         // Do we need to connect again?
@@ -57,24 +62,28 @@ impl LakeshoreTempInst {
             for (idx, name) in self.config.channel_iter().enumerate() {
                 // for each populated channel, get the temperature
                 if let Some(ch_name) = name {
-                    let temp_k = inst
-                        .get_channel(idx)?
-                        .get_temperature()?;
+                    let temp_k = inst.get_channel(idx)?.get_temperature()?;
                     ret_map.insert(ch_name.clone(), temp_k);
                 }
             }
 
             return Ok(ret_map);
         }
+
         bail!("Lakeshore temperature controller not connected");
+    }
+
+    /// Reset the instrument to None, so that it reconnects on the next read.
+    pub fn reset_instrument(&mut self) {
+        self.instrument = None;
     }
 }
 
 /// Configuration to store for the Lakeshore temperature controller.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct LakeshoreTempConfig {
-    /// Adapter configuration.
-    pub adapter: SerialAdapter,
+    /// USB product info string to identify the device for automatic port detection.
+    pub usb_prod_info: Option<String>,
     /// Channel 1/A name, or None if not present.
     pub channel_a_name: Option<String>,
     /// Channel 2/B name, or None if not present.
@@ -106,13 +115,37 @@ impl LakeshoreTempConfig {
 impl Default for LakeshoreTempConfig {
     fn default() -> Self {
         Self {
-            adapter: SerialAdapter {
-                port_name: String::from("/dev/ttyUSB0"),
-            },
+            usb_prod_info: Some(String::from("Model 336 Temperature Controller")),
             channel_a_name: Some(String::from("Cooler")),
             channel_b_name: Some(String::from("Sample")),
             channel_c_name: None,
             channel_d_name: None,
         }
+    }
+}
+
+/// Find the first serial port whose USB product name contains `needle`.
+///
+/// # Errors
+///
+/// Returns an error if no matching Lakeshore 336 controller is detected.
+pub fn find_port_by_product(needle: &str) -> Result<String> {
+    let ports = serialport::available_ports()?;
+
+    let port_name = ports.iter().find_map(|info| {
+        if let SerialPortType::UsbPort(usb) = &info.port_type {
+            // `product` is an `Option<String>`.
+            usb.product
+                .as_ref()
+                .filter(|prod| prod.contains(needle))
+                .map(|_| info.port_name.clone())
+        } else {
+            None
+        }
+    });
+
+    match port_name {
+        Some(name) => Ok(name),
+        None => bail!("Lakeshore 336 not found. Is it connected?"),
     }
 }

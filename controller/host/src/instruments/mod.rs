@@ -64,6 +64,7 @@ pub async fn instruments_task(
                         send_log_message( LogMessage::new_error(
                             &format!("Failed to read temperatures from Lakeshore336: {}", e)
                         )).await;
+                        lakeshore_temp_inst.reset_instrument();
                         HashMap::new()
                     }
                 };

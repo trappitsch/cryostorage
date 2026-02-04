@@ -75,7 +75,7 @@ async fn main() {
         Ok(_) => {
             tx_halt.send(()).unwrap();
             let _ = tokio::join!(cntrl_tsk, cntrl_bc_listen, instr_tsk, log_handler_listen);
-            println!("App exited normally");
+            println!("App exited normally")
         }
         Err(e) => eprintln!("App exited with error: {}", e),
     }
