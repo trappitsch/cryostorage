@@ -22,9 +22,11 @@ use opcua::{
 use tokio::sync::mpsc;
 
 mod pump_commands;
-pub use pump_commands::{PumpStandState, Variables, VentState};
+pub use pump_commands::{PumpStandState, PumpState, Variables, VentState};
 
-use crate::pump_commands::VENT_STRING;
+use crate::pump_commands::{
+    PUMP_STAND_STRING, ROUGHING_PUMP_STRING, TURBO_PUMP_STRING, VENT_STRING,
+};
 
 const SUBSCRIPTION_PUBLISH_INTERVAL_MS: u64 = 1000;
 
@@ -41,10 +43,9 @@ impl HiCubeClient {
     /// fails, it will return an error.
     ///
     /// # Arguments
-    /// * `ip_address` - The IP address of the pump stand.
-    /// * `port` - The port of the OPC UA server on the pump stand, usually 4840.
-    pub async fn try_new_and_connect(ip_address: std::net::IpAddr, port: u16) -> Result<Self> {
-        let endpoint_url = format!("opc.tcp://{}:{}", ip_address, port);
+    /// * `ip` - The IP address of the pump stand and its port, e.g., "192.168.1.100:4840".
+    pub async fn try_new_and_connect(ip: &str) -> Result<Self> {
+        let endpoint_url = format!("opc.tcp://{ip}");
 
         let mut client = ClientBuilder::new()
             .application_name("Cryostorage HiCube Client")
@@ -131,10 +132,15 @@ impl HiCubeClient {
             .await?;
 
         // Create the monitored items
-        let items_to_create: Vec<MonitoredItemCreateRequest> = [VENT_STRING]
-            .iter()
-            .map(|v| NodeId::new(1, *v).into())
-            .collect();
+        let items_to_create: Vec<MonitoredItemCreateRequest> = [
+            PUMP_STAND_STRING.clone(),
+            ROUGHING_PUMP_STRING.clone(),
+            TURBO_PUMP_STRING.clone(),
+            VENT_STRING.clone(),
+        ]
+        .iter()
+        .map(|v| NodeId::new(1, v.clone()).into())
+        .collect();
         let _ = self
             .session
             .create_monitored_items(subscription_id, TimestampsToReturn::Both, items_to_create)

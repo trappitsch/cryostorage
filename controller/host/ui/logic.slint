@@ -46,6 +46,8 @@ export global Logic {
     // Pumps
     in-out property <bool> ion_pump_is_on;
     pure callback ion_pump_set_on(bool);
+    in-out property <bool> pump_stand_is_on;
+    pure callback pump_stand_set_on(bool);
 
     // Samples
     pure callback edit_sample_name(string, string);
@@ -84,11 +86,13 @@ export global Logic {
     in-out property <bool> transfer_valve_is_open;
     pure callback pump_valve_set_open(bool);
     in-out property <bool> pump_valve_is_open;
+    pure callback vent_valve_set_open(bool);
+    in-out property <bool> vent_valve_is_open;
 
     // Valve and pump states: for status indicator
     in-out property <ValveOrPumpState> transfer_valve_state: ValveOrPumpState.UndefinedOrError;
     in-out property <ValveOrPumpState> pump_valve_state: ValveOrPumpState.UndefinedOrError;
-    in-out property <ValveOrPumpState> turbo_pump_state: ValveOrPumpState.UndefinedOrError;
+    in-out property <ValveOrPumpState> pump_stand_state: ValveOrPumpState.UndefinedOrError;
     in-out property <ValveOrPumpState> vent_valve_state: ValveOrPumpState.UndefinedOrError;
     in-out property <ValveOrPumpState> ion_pump_state: ValveOrPumpState.UndefinedOrError;
 

@@ -19,10 +19,9 @@ use tokio::{
 
 #[tokio::main]
 async fn main() {
-    let ip_address = IpAddr::from([192, 168, 1, 100]);
-    let port = 4840;
+    let ip = "192.168.1.100:4840";
 
-    let mut hicube = HiCubeClient::try_new_and_connect(ip_address, port)
+    let mut hicube = HiCubeClient::try_new_and_connect(ip)
         .await
         .expect("Failed to create HiCubeClient");
 

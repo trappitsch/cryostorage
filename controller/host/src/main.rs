@@ -7,7 +7,11 @@ use tokio::sync::{OnceCell, broadcast, mpsc, oneshot};
 
 use crate::{
     controller::{ControllerCommands, start_controller_tasks},
-    instruments::{InstrumentCommands, instruments_task},
+    instruments::{
+        InstrumentCommands,
+        hi_cube::{HiCubeCommands, pfeiffer_hicube_task},
+        instruments_task,
+    },
     logger::{LogHandler, LogMessage},
     status::InstrumentStatus,
 };
@@ -31,6 +35,7 @@ pub static CONTROLLER_COMMAND_SENDER: OnceCell<mpsc::Sender<ControllerCommands>>
     OnceCell::const_new();
 pub static INSTRUMENT_COMMAND_SENDER: OnceCell<mpsc::Sender<InstrumentCommands>> =
     OnceCell::const_new();
+pub static HICUBE_COMMAND_SENDER: OnceCell<mpsc::Sender<HiCubeCommands>> = OnceCell::const_new();
 
 #[tokio::main]
 async fn main() {
@@ -83,11 +88,28 @@ async fn main() {
         rx_instr,
     ));
 
+    // HiCube task
+    let (tx_hicube, rx_hicube) = mpsc::channel(32);
+    HICUBE_COMMAND_SENDER
+        .set(tx_hicube.clone())
+        .expect("Uninitialized");
+    let hicube_conf = conf
+        .lock()
+        .expect("Locking config must work")
+        .get_pfeiffer_hicube_config();
+    let hicube_task = tokio::spawn(pfeiffer_hicube_task(hicube_conf, Arc::clone(&inst_status), rx_hicube));
+
     // start the app
     match app::app_main(Arc::clone(&conf), Arc::clone(&inst_status), tx_ui_set) {
         Ok(_) => {
             tx_halt.send(()).unwrap();
-            let _ = tokio::join!(cntrl_tsk, cntrl_bc_listen, instr_tsk, log_handler_listen);
+            let _ = tokio::join!(
+                cntrl_tsk,
+                cntrl_bc_listen,
+                hicube_task,
+                instr_tsk,
+                log_handler_listen
+            );
             println!("App exited normally")
         }
         Err(e) => eprintln!("App exited with error: {}", e),

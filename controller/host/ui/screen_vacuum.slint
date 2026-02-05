@@ -23,7 +23,7 @@ export component VacuumScreen inherits MyWindow {
     }
 
     VacuumStateCircle {
-        state: Logic.turbo_pump_state;
+        state: Logic.pump_stand_state;
         x: vi.x + 689.798px; // turbo
         y: vi.y + 76px; // turbo
     }
@@ -150,9 +150,13 @@ export component VacuumScreen inherits MyWindow {
 
         MyVerticalLayout {
             SmallSwitch {
-                title: "Turbo pump";
+                title: "Pump stand";
+                right_side: Logic.pump_stand_is_on;
                 left_text: "Off";
                 right_text: "On";
+                switched(set_on) => {
+                    Logic.pump_stand_set_on(set_on);  // bool
+                }
             }
 
             SmallSwitch {
@@ -199,8 +203,12 @@ export component VacuumScreen inherits MyWindow {
 
             SmallSwitch {
                 title: "Valve vent";
+                right_side: Logic.vent_valve_is_open;
                 left_text: "Close";
                 right_text: "Open";
+                switched(set_open) => {
+                    Logic.vent_valve_set_open(set_open);  // bool
+                }
             }
         }
     }

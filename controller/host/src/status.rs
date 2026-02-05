@@ -16,6 +16,8 @@ pub struct InstrumentStatus {
     cooler_state: CoolerState,
     flow_meter_curr: FlowMeterState,
     ion_pump_state: ValveOrPumpState,
+    hi_cube_pump_stand_state: ValveOrPumpState,
+    hi_cube_venting_valve: ValveOrPumpState,
     power_cooler_current: Power,
     temperature_bridge: Temperature,
     temperature_cooler: Temperature,
@@ -37,6 +39,8 @@ impl InstrumentStatus {
             baking_curr: BakingState::default(),
             cooler_state: CoolerState::Disabled,
             flow_meter_curr: FlowMeterState::default(),
+            hi_cube_pump_stand_state: ValveOrPumpState::UndefinedOrError,
+            hi_cube_venting_valve: ValveOrPumpState::UndefinedOrError,
             ion_pump_state: ValveOrPumpState::UndefinedOrError,
             power_cooler_current: Power::default(), // 0.0 W
             temperature_bridge: Temperature::default(), // 0.0 K
@@ -88,6 +92,49 @@ impl InstrumentStatus {
         self.ui = Some(ui);
     }
 
+    /// Set the Pfeiffer HiCube pump stand state and update the UI.
+    ///
+    /// Note that we only call the pump in an ON state when the whole pump stand is on!
+    pub fn set_hicube_pump_stand_state_and_ui(
+        &mut self,
+        state: ValveOrPumpState,
+    ) -> Result<()> {
+        self.hi_cube_pump_stand_state = state.clone();
+
+        let pump_stand_is_on = matches!(state, ValveOrPumpState::OpenOrOn);
+        let ui = self
+            .ui
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("UI not set"))?
+            .clone();
+        ui.upgrade_in_event_loop(move |ui| {
+            ui.global::<Logic>()
+                .set_pump_stand_state(state);
+            ui.global::<Logic>()
+                .set_pump_stand_is_on(pump_stand_is_on);
+        })?;
+
+        Ok(())
+    }
+
+    /// Set the Pfeiffer HiCube vent valve state and update UI.
+    pub fn set_hicube_vent_valve_state_and_ui(&mut self, state: ValveOrPumpState) -> Result<()> {
+        self.hi_cube_venting_valve = state;
+        let valve_is_open = matches!(state, ValveOrPumpState::OpenOrOn);
+
+        let ui = self
+            .ui
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("UI not set"))?
+            .clone();
+        ui.upgrade_in_event_loop(move |ui| {
+            ui.global::<Logic>().set_vent_valve_state(state);
+            ui.global::<Logic>().set_vent_valve_is_open(valve_is_open);
+        })?;
+
+        Ok(())
+    }
+
     /// Set ion pump state and update UI.
     pub fn set_ion_pump_state_and_ui(&mut self, state: ValveOrPumpState) -> Result<()> {
         self.ion_pump_state = state.clone();
@@ -100,7 +147,8 @@ impl InstrumentStatus {
             .clone();
         ui.upgrade_in_event_loop(move |ui| {
             ui.global::<Logic>().set_ion_pump_state(state);
-            ui.global::<Logic>().set_ion_pump_is_on(ion_pump_switch_state);
+            ui.global::<Logic>()
+                .set_ion_pump_is_on(ion_pump_switch_state);
         })?;
 
         Ok(())

@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     CONFIG_FOLDER,
     controller::ControllerConfig,
-    instruments::{cryocooler::CryoCoolerConfig, ion_pump::IonPumpConfig, lakeshore_temp::LakeshoreTempConfig},
+    instruments::{cryocooler::CryoCoolerConfig, hi_cube::PfeifferHiCubeConf, ion_pump::IonPumpConfig, lakeshore_temp::LakeshoreTempConfig},
     samples::Samples,
 };
 
@@ -25,6 +25,7 @@ pub struct PrgConfig {
     admin_pin: String,
     agilent_ion_pump: IonPumpConfig,
     controller_config: ControllerConfig,
+    pfeiffer_hicube: PfeifferHiCubeConf,
     samples: Samples,
     limits: InstrumentLimits,
     lakeshore_temperature: LakeshoreTempConfig,
@@ -46,6 +47,7 @@ impl PrgConfig {
             admin_pin: String::from("1234"),
             agilent_ion_pump: IonPumpConfig::default(),
             controller_config: ControllerConfig::default(),
+            pfeiffer_hicube: PfeifferHiCubeConf::default(),
             samples: Samples::new(),
             limits: InstrumentLimits::default(),
             lakeshore_temperature: LakeshoreTempConfig::default(),
@@ -101,6 +103,11 @@ impl PrgConfig {
     /// Get a clone of the lakeshore temperature configuration.
     pub fn get_lakeshore_temp_config(&self) -> LakeshoreTempConfig {
         self.lakeshore_temperature.clone()
+    }
+
+    /// Get a clone of the HiCube configuration.
+    pub fn get_pfeiffer_hicube_config(&self) -> PfeifferHiCubeConf {
+        self.pfeiffer_hicube.clone()
     }
 
     /// Get a clone of the samples.

@@ -14,7 +14,7 @@ use tokio::sync::{mpsc, oneshot};
 
 use crate::{
     controller::{ControllerCommands, send_cntrl_cmd_now},
-    instruments::{InstrumentCommands, send_instr_cmd_now},
+    instruments::{InstrumentCommands, hi_cube::{HiCubeCommands, send_hicube_command_now}, send_instr_cmd_now},
     prg_config::PrgConfig,
     status::InstrumentStatus,
 };
@@ -316,6 +316,8 @@ impl InstrumentCommandHandler {
         self.cryocooler_set_on();
         self.cryocooler_set_setpoint();
         self.ion_pump_set_on();
+        self.pump_stand_set_on();
+        self.vent_valve_set_on();
 
         // FIXME: bogus inits below
         self.ui
@@ -383,6 +385,36 @@ impl InstrumentCommandHandler {
                     false => HvState::Off,
                 };
                 send_instr_cmd_now(InstrumentCommands::IonPumpState(state));
+            }
+        });
+    }
+
+    // Turn the pump stand on/off. UI is updated from readback from instrument.
+    fn pump_stand_set_on(&self) {
+        let ui = self.ui.as_weak();
+        self.ui.global::<Logic>().on_pump_stand_set_on({
+            move |val| {
+                let state = match val {
+                    true => ValveOrPumpState::OpenOrOn,
+                    false => ValveOrPumpState::ClosedOrOff,
+                };
+                send_hicube_command_now(HiCubeCommands::SetPumpStandState(state));
+                ui.unwrap().global::<Logic>().set_pump_stand_is_on(val);
+            }
+        });
+    }
+
+    // Turn on/off the venting process (open/close vent valve).
+    fn vent_valve_set_on(&self) {
+        let ui = self.ui.as_weak();
+        self.ui.global::<Logic>().on_vent_valve_set_open({
+            move |val| {
+                let state = match val {
+                    true => ValveOrPumpState::OpenOrOn,
+                    false => ValveOrPumpState::ClosedOrOff,
+                };
+                send_hicube_command_now(HiCubeCommands::SetVentingValveState(state));
+                ui.unwrap().global::<Logic>().set_vent_valve_is_open(val);
             }
         });
     }

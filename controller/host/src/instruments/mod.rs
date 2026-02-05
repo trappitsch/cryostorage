@@ -38,6 +38,7 @@ use crate::prg_config::PrgConfig;
 use crate::status::InstrumentStatus;
 
 pub mod cryocooler;
+pub mod hi_cube;
 pub mod ion_pump;
 pub mod lakeshore_temp;
 pub mod utils;
