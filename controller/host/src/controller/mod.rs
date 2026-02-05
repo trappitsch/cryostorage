@@ -109,10 +109,6 @@ pub async fn controller_task(
                     }
                 }
             }
-            _ = sleep(Duration::from_secs(10)) => {
-                // keep alive task, query unique ID every minute to keep stuff alive
-                cntrl.keep_alive().await;
-            }
             _ = rx_shutdown.recv() => {
                 println!("Controller command handling task shutting down");
                 break;
@@ -135,45 +131,44 @@ pub async fn controller_broadcast_listener(
 
     let mut run_initialize = true; // If true, runs initialize after broadcast
 
+    // subscription to broadcast
+    let mut sub = match client.stream_topic::<BcInstStatus>(serial).await {
+        Ok(s) => s,
+        Err(e) => {
+            send_log_message(LogMessage::new_error(&format!(
+                "Broadcast subscription failed. Restart the program. Error: {}",
+                e
+            )))
+            .await;
+            return;
+        }
+    };
+
     loop {
         tokio::select! {
-            stream_result = client.stream_topic::<BcInstStatus>(serial) => {
+            msg = sub.recv() => {
+                if let Some(status) = msg {
+                    inst_status.lock().expect("Poisoned").update_from_controller_broadcast(status);
 
-                match stream_result {
-                    Ok(mut listener) => {
-                        tokio::select! {
-                            msg = listener.recv() => {
-                                if let Some(status) = msg {
-                                    inst_status.lock().expect("Poisoned").update_from_controller_broadcast(status);
-
-                                    // initialization on first start, only if UI is set
-                                    if run_initialize && inst_status.lock().expect("Poisoned").initialize_call_states_from_bc().is_ok() {
-                                            run_initialize = false;
-                                        };
-                                } else {
-                                    send_log_message(LogMessage::new_error("Poststation broadcast stream closed unexpectedly.")).await;
-                                }
-                            }
-                            _ = sleep(listener_wait_time) => {
-                                    send_log_message(LogMessage::new_warning("Poststation listener timed out while waiting for broadcast message.")).await;
-                            }
-                        }
-                    }
-                    Err(e) => {
-                        if e.to_string().contains("Device Disconnected") {
-                            send_log_message(LogMessage::new_error(&format!(
-                                "Controller is disconnected: Please check the connection. Retry in {} ms.", icd::BROADCAST_INTERVAL_MS
-                            )))
-                            .await;
-                        } else {
-                            send_log_message(LogMessage::new_error(
-                                "Connection to poststation lost. Ensure poststation is running and restart this program."
-                            )).await;
-                            break;
-                        }
-                        sleep(Duration::from_millis(icd::BROADCAST_INTERVAL_MS)).await;
-                    }
+                    // initialization on first start, only if UI is set
+                    if run_initialize && inst_status.lock().expect("Poisoned").initialize_call_states_from_bc().is_ok() {
+                            run_initialize = false;
+                        };
+                } else {
+                    send_log_message(LogMessage::new_error(
+                        "Poststation broadcast stream closed unexpectedly. Is poststation running? Restart the program."
+                    )).await;
+                    break;
                 }
+            }
+            _ = sleep(listener_wait_time) => {
+                    send_log_message(LogMessage::new_warning(
+                        "Poststation listener timed out while waiting for broadcast message. Trying to reconnect..."
+                    )).await;
+                    if let Ok(s) = client.stream_topic::<BcInstStatus>(serial).await {
+                        sub = s;
+                        send_log_message(LogMessage::new_info("Poststation broadcast listener reconnected successfully.")).await;
+                    }
             }
             _ = rx_shutdown.recv() => {
                 println!("Controller broadcast listener shutting down");
@@ -198,9 +193,10 @@ fn get_cntrl_cmd_sender() -> mpsc::Sender<ControllerCommands> {
 pub async fn send_cntrl_cmd(cmd: ControllerCommands) {
     let sender = get_cntrl_cmd_sender();
     if let Err(e) = sender.send(cmd).await {
-        send_log_message_now(LogMessage::new_error(
-            &format!("Failed to send controller command: {}", e),
-        ));
+        send_log_message_now(LogMessage::new_error(&format!(
+            "Failed to send controller command: {}",
+            e
+        )));
     }
 }
 
@@ -211,9 +207,10 @@ pub async fn send_cntrl_cmd(cmd: ControllerCommands) {
 pub fn send_cntrl_cmd_now(cmd: ControllerCommands) {
     let sender = get_cntrl_cmd_sender();
     if let Err(e) = sender.try_send(cmd) {
-        send_log_message_now(LogMessage::new_error(
-            &format!("Failed to send controller command now: {}", e),
-        ));
+        send_log_message_now(LogMessage::new_error(&format!(
+            "Failed to send controller command now: {}",
+            e
+        )));
     }
 }
 

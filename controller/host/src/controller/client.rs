@@ -33,20 +33,6 @@ impl ControllerClient {
         self.ctr.fetch_add(1, Ordering::Relaxed)
     }
 
-    pub async fn keep_alive(&self) {
-        if self
-            .client
-            .proxy_endpoint::<GetUniqueIdEndpoint>(self.serial, self.ctr(), &())
-            .await
-            .is_err()
-        {
-            send_log_message(LogMessage::new_error(
-                "Failed to send keep-alive to controller",
-            ))
-            .await;
-        }
-    }
-
     pub async fn baking(&self, baking_state: BakingState) {
         if self
             .client
