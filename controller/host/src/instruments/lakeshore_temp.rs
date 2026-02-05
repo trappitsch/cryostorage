@@ -17,6 +17,8 @@ use measurements::Temperature;
 use serde::{Deserialize, Serialize};
 use serialport::{SerialPort, SerialPortType};
 
+use crate::instruments::utils::ThermocoupleChannelName;
+
 /// Cryostorage chamber's way of looking at a Lakeshore temperature controller.
 pub struct LakeshoreTempInst {
     config: LakeshoreTempConfig,
@@ -63,7 +65,7 @@ impl LakeshoreTempInst {
     /// We return a HashMap with the name of the channel as the key and the temperature as the
     /// value.
     /// An error is returned if the we cannot read the temperatures for any reason.
-    pub fn get_status_measurements(&mut self) -> Result<HashMap<String, Temperature>> {
+    pub fn get_status_measurements(&mut self) -> Result<HashMap<ThermocoupleChannelName, Temperature>> {
         // Do we need to connect again?
         self.check_connection()?;
 
@@ -96,18 +98,18 @@ pub struct LakeshoreTempConfig {
     /// USB product info string to identify the device for automatic port detection.
     pub usb_prod_info: Option<String>,
     /// Channel 1/A name, or None if not present.
-    pub channel_a_name: Option<String>,
+    pub channel_a_name: Option<ThermocoupleChannelName>,
     /// Channel 2/B name, or None if not present.
-    pub channel_b_name: Option<String>,
+    pub channel_b_name: Option<ThermocoupleChannelName>,
     /// Channel 3/C name, or None if not present.
-    pub channel_c_name: Option<String>,
+    pub channel_c_name: Option<ThermocoupleChannelName>,
     /// Channel 4/D name, or None if not present.
-    pub channel_d_name: Option<String>,
+    pub channel_d_name: Option<ThermocoupleChannelName>,
 }
 
 impl LakeshoreTempConfig {
     /// Iterator over the four channels, yielding `&Option<String>`.
-    pub fn channel_iter(&self) -> impl Iterator<Item = &Option<String>> {
+    pub fn channel_iter(&self) -> impl Iterator<Item = &Option<ThermocoupleChannelName>> {
         // Build a temporary slice of tuples; the slice lives only for the
         // duration of the call, so returning an `impl Iterator` is safe.
         [
@@ -127,8 +129,8 @@ impl Default for LakeshoreTempConfig {
     fn default() -> Self {
         Self {
             usb_prod_info: Some(String::from("Model 336 Temperature Controller")),
-            channel_a_name: Some(String::from("Cooler")),
-            channel_b_name: Some(String::from("Sample")),
+            channel_a_name: Some(ThermocoupleChannelName::Cooler),
+            channel_b_name: Some(ThermocoupleChannelName::Sample),
             channel_c_name: None,
             channel_d_name: None,
         }

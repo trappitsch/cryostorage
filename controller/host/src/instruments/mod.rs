@@ -29,12 +29,14 @@ use tokio::sync::mpsc;
 
 use crate::instruments::cryocooler::CryoCoolerInst;
 use crate::instruments::lakeshore_temp::LakeshoreTempInst;
+use crate::instruments::utils::ThermocoupleChannelName;
 use crate::logger::{LogMessage, send_log_message, send_log_message_now};
 use crate::prg_config::PrgConfig;
 use crate::status::InstrumentStatus;
 
 pub mod cryocooler;
 pub mod lakeshore_temp;
+pub mod utils;
 
 const POLLING_INTERVAL: Duration = Duration::from_secs(5);
 
@@ -160,9 +162,9 @@ pub async fn instruments_task(
                     .lock()
                     .expect("InstrumentStatus lock poisoned")
                     .set_temperatures(
-                        *temperatures.get("Bridge").unwrap_or(&Temperature::default()),
-                        *temperatures.get("Cooler").unwrap_or(&Temperature::default()),
-                        *temperatures.get("Sample").unwrap_or(&Temperature::default())
+                        *temperatures.get(&ThermocoupleChannelName::Bridge).unwrap_or(&Temperature::default()),
+                        *temperatures.get(&ThermocoupleChannelName::Cooler).unwrap_or(&Temperature::default()),
+                        *temperatures.get(&ThermocoupleChannelName::Sample).unwrap_or(&Temperature::default())
                     );
 
                 // Cryocooler current power
