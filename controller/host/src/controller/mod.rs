@@ -138,7 +138,7 @@ pub async fn controller_broadcast_listener(
     loop {
         tokio::select! {
             stream_result = client.stream_topic::<BcInstStatus>(serial) => {
-                // if let Ok(mut listener) = stream_result {
+
                 match stream_result {
                     Ok(mut listener) => {
                         tokio::select! {

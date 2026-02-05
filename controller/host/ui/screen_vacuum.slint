@@ -4,7 +4,7 @@ import { NormalText, MyHorizontalLayout, MyVerticalLayout, SmallSwitch, VacuumSt
 import { Const } from "consts.slint";
 
 import { Palette } from "palette.slint";
-import { Logic } from "logic.slint";
+import { Logic, ValveOrPumpState } from "logic.slint";
 
 export component VacuumScreen inherits MyWindow {
     index: 2;
@@ -72,6 +72,73 @@ export component VacuumScreen inherits MyWindow {
 
         color: Palette.yellow;
         text: "Transfer\n" + Logic.transfer_pressure;
+    }
+
+    // Legend
+    Rectangle {
+        property<length> spacing: Const.border_spacing / 3 * 2;
+        property<length> text_x_gap: 40px;
+        property<length> text_y_gap: -5px;
+
+        width: longest_text.x + longest_text.width + spacing;
+        height: 5 * Const.border_spacing / 3 * 2 +  4 * on_circ.height;
+
+        border-radius: Const.border_radius_small;
+
+        // calculated from image
+        x: Const.border_spacing + 737.912px - self.width; 
+        y: Const.border_spacing + 336.113px - self.height;
+
+        background: Palette.button_off;
+
+        on_circ := VacuumStateCircle {
+            state: ValveOrPumpState.OpenOrOn;
+            x: spacing;
+            y: spacing;
+        }
+
+
+        NormalText {
+            x: on_circ.x + text_x_gap;
+            y: on_circ.y + text_y_gap;
+            text: "Open/On";
+        }
+
+        off_circ := VacuumStateCircle {
+            state: ValveOrPumpState.ClosedOrOff;
+            x: spacing;
+            y: 2 * spacing + self.height;
+        }
+
+        NormalText {
+            x: off_circ.x + text_x_gap;
+            y: off_circ.y + text_y_gap;
+            text: "Closed/Off";
+        }
+
+        diff_circ := VacuumStateCircle {
+            state: ValveOrPumpState.SetDifferentFromCalled;
+            x: Const.border_spacing / 3 * 2;
+            y: 3 * spacing +  2 * self.height;
+        }
+
+        NormalText {
+            x: diff_circ.x + text_x_gap;
+            y: diff_circ.y + text_y_gap;
+            text: "Set ≠ Actual";
+        }
+
+        err_circ := VacuumStateCircle {
+            state: ValveOrPumpState.UndefinedOrError;
+            x: Const.border_spacing / 3 * 2;
+            y: 4 * spacing +  3 * self.height;
+        }
+
+        longest_text := NormalText {
+            x: err_circ.x + text_x_gap;
+            y: err_circ.y + text_y_gap;
+            text: "Undefined/Error";
+        }
     }
 
     MyHorizontalLayout {

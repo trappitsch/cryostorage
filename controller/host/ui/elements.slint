@@ -414,4 +414,10 @@ export component VacuumStateCircle inherits Rectangle {
     border-width: 0px;
 
     background: state == ValveOrPumpState.OpenOrOn ? Palette.green : (state == ValveOrPumpState.ClosedOrOff ? Palette.blue : (state == ValveOrPumpState.SetDifferentFromCalled ? Palette.peach : Palette.red));
+    Text {
+        font-size: Const.vacuum_image_status_circle_size;
+        font-weight: 600;
+        color: Palette.crust;
+        text: root.state == ValveOrPumpState.OpenOrOn ? "" : (state == ValveOrPumpState.ClosedOrOff ? "X" : (state == ValveOrPumpState.SetDifferentFromCalled ? "D" : "E"));
+    }
 }
