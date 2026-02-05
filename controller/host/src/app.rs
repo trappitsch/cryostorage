@@ -5,6 +5,7 @@ use std::{
     sync::{Arc, Mutex},
 };
 
+use agilent_4uhv::HvState;
 use icd::{BakingState, LightState, ValveState, VctHandshake};
 use measurements::Temperature;
 use slint::{Model, SharedString, Weak};
@@ -314,6 +315,7 @@ impl InstrumentCommandHandler {
     fn init(&self) {
         self.cryocooler_set_on();
         self.cryocooler_set_setpoint();
+        self.ion_pump_set_on();
 
         // FIXME: bogus inits below
         self.ui
@@ -368,6 +370,19 @@ impl InstrumentCommandHandler {
                     false => CoolerState::Disabled,
                 };
                 send_instr_cmd_now(InstrumentCommands::CryoCoolerState(state));
+            }
+        });
+    }
+
+    // Toggle ion pump state. UI is updated after command to instrument succeeded.
+    fn ion_pump_set_on(&self) {
+        self.ui.global::<Logic>().on_ion_pump_set_on({
+            move |val| {
+                let state = match val {
+                    true => HvState::On,
+                    false => HvState::Off,
+                };
+                send_instr_cmd_now(InstrumentCommands::IonPumpState(state));
             }
         });
     }

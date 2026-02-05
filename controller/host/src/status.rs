@@ -15,6 +15,7 @@ pub struct InstrumentStatus {
     baking_curr: BakingState,
     cooler_state: CoolerState,
     flow_meter_curr: FlowMeterState,
+    ion_pump_state: ValveOrPumpState,
     power_cooler_current: Power,
     temperature_bridge: Temperature,
     temperature_cooler: Temperature,
@@ -36,6 +37,7 @@ impl InstrumentStatus {
             baking_curr: BakingState::default(),
             cooler_state: CoolerState::Disabled,
             flow_meter_curr: FlowMeterState::default(),
+            ion_pump_state: ValveOrPumpState::UndefinedOrError,
             power_cooler_current: Power::default(), // 0.0 W
             temperature_bridge: Temperature::default(), // 0.0 K
             temperature_cooler: Temperature::default(), // 0.0 K
@@ -86,6 +88,23 @@ impl InstrumentStatus {
         self.ui = Some(ui);
     }
 
+    /// Set ion pump state and update UI.
+    pub fn set_ion_pump_state_and_ui(&mut self, state: ValveOrPumpState) -> Result<()> {
+        self.ion_pump_state = state.clone();
+
+        let ion_pump_switch_state = matches!(state, ValveOrPumpState::OpenOrOn);
+        let ui = self
+            .ui
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("UI not set"))?
+            .clone();
+        ui.upgrade_in_event_loop(move |ui| {
+            ui.global::<Logic>().set_ion_pump_state(state);
+            ui.global::<Logic>().set_ion_pump_is_on(ion_pump_switch_state);
+        })?;
+
+        Ok(())
+    }
 
     /// Set the setpoint temperature for the cooler and update UI.
     pub fn set_temperature_setpoint_and_ui(&mut self, setpoint: Temperature) -> Result<()> {
@@ -108,9 +127,14 @@ impl InstrumentStatus {
     pub fn set_cooler_state_and_ui(&mut self, state: CoolerState) -> Result<()> {
         self.cooler_state = state.clone();
 
-        let ui = self.ui.as_ref().ok_or_else(|| anyhow::anyhow!("UI not set"))?.clone();
+        let ui = self
+            .ui
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("UI not set"))?
+            .clone();
         ui.upgrade_in_event_loop(move |ui| {
-            ui.global::<Logic>().set_cryocooler_is_on(matches!(state, CoolerState::Enabled));
+            ui.global::<Logic>()
+                .set_cryocooler_is_on(matches!(state, CoolerState::Enabled));
         })?;
         Ok(())
     }
@@ -130,12 +154,6 @@ impl InstrumentStatus {
         self.temperature_bridge = bridge;
         self.temperature_cooler = cooler;
         self.temperature_sample = sample;
-
-        // TODO: Continue here with setting the UI with the new temperatures.
-        println!(
-            "Bridge: {} K, Cooler: {} K, Sample: {} K",
-            self.temperature_bridge, self.temperature_cooler, self.temperature_sample
-        );
     }
 
     /// Set valve pump called state.

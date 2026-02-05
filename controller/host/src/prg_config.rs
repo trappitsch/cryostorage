@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     CONFIG_FOLDER,
     controller::ControllerConfig,
-    instruments::{cryocooler::CryoCoolerConfig, lakeshore_temp::LakeshoreTempConfig},
+    instruments::{cryocooler::CryoCoolerConfig, ion_pump::IonPumpConfig, lakeshore_temp::LakeshoreTempConfig},
     samples::Samples,
 };
 
@@ -23,6 +23,7 @@ pub const CONFIG_FNAME: &str = "cryostorage_config.ron";
 pub struct PrgConfig {
     fname: PathBuf,
     admin_pin: String,
+    agilent_ion_pump: IonPumpConfig,
     controller_config: ControllerConfig,
     samples: Samples,
     limits: InstrumentLimits,
@@ -43,6 +44,7 @@ impl PrgConfig {
         let mut ret_self = Self {
             fname,
             admin_pin: String::from("1234"),
+            agilent_ion_pump: IonPumpConfig::default(),
             controller_config: ControllerConfig::default(),
             samples: Samples::new(),
             limits: InstrumentLimits::default(),
@@ -89,6 +91,11 @@ impl PrgConfig {
     /// Get a clone of the cryocooler configuration.
     pub fn get_cryocooler_config(&self) -> CryoCoolerConfig {
         self.suntel_cryocooler.clone()
+    }
+
+    /// Get a clone of the ion pump configuration.
+    pub fn get_ion_pump_config(&self) -> IonPumpConfig {
+        self.agilent_ion_pump.clone()
     }
 
     /// Get a clone of the lakeshore temperature configuration.

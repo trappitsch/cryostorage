@@ -52,8 +52,6 @@ impl LakeshoreTempInst {
             None => bail!("No USB product info string provided for Lakeshore temp controller"),
         };
         let port = find_port_by_product(&product_expected)?;
-        println!("Port: {}", port);
-
         let interface = SerialInterfaceLakeshore::simple(&port)?;
         let instrument = Lakeshore336::try_new(interface)?;
         self.instrument = Some(instrument);

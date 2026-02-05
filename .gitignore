@@ -70,6 +70,7 @@ target/*
 
 ## Project
 sandbox/
+**/agilent_4uhv/*
 **/cryotelgt/*
 **/instrumentRs/*
 **/lakeshore_336/*

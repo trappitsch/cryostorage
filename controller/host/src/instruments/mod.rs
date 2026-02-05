@@ -23,11 +23,14 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
+use agilent_4uhv::HvState;
 use measurements::{Power, Temperature};
 use sunpower_cryotelgt::CoolerState;
 use tokio::sync::mpsc;
 
+use crate::app::ValveOrPumpState;
 use crate::instruments::cryocooler::CryoCoolerInst;
+use crate::instruments::ion_pump::IonPumpInst;
 use crate::instruments::lakeshore_temp::LakeshoreTempInst;
 use crate::instruments::utils::ThermocoupleChannelName;
 use crate::logger::{LogMessage, send_log_message, send_log_message_now};
@@ -35,6 +38,7 @@ use crate::prg_config::PrgConfig;
 use crate::status::InstrumentStatus;
 
 pub mod cryocooler;
+pub mod ion_pump;
 pub mod lakeshore_temp;
 pub mod utils;
 
@@ -45,6 +49,7 @@ pub enum InstrumentCommands {
     /// Set temperature of the cryocooler.
     CryoCoolerSetpoint(Temperature),
     CryoCoolerState(CoolerState),
+    IonPumpState(HvState),
 }
 
 /// Monitoring task that polls the instruments periodically.
@@ -70,6 +75,13 @@ pub async fn instruments_task(
         CryoCoolerInst::new(conf)
     };
 
+    let mut ion_pump_inst = {
+        let conf = prg_conf
+            .lock()
+            .expect("PrgConfig lock poisoned")
+            .get_ion_pump_config();
+        IonPumpInst::new(conf)
+    };
     // Get shutdown receiver
     let mut rx_shutdown = crate::HALT_SENDER.get().unwrap().subscribe();
 
@@ -110,11 +122,20 @@ pub async fn instruments_task(
         }
     };
 
+    let ion_pump_state = match ion_pump_inst.get_high_voltage() {
+        Ok(HvState::On) => ValveOrPumpState::OpenOrOn,
+        Ok(HvState::Off) => ValveOrPumpState::ClosedOrOff,
+        Err(_) => ValveOrPumpState::UndefinedOrError,
+    };
+
     // set all initial statuses of various instruments
     {
         let mut inst_status = inst_status.lock().expect("InstrumentStatus lock poisoned");
 
-        if inst_status.set_temperature_setpoint_and_ui(cooler_setpoint_temperature).is_err() {
+        if inst_status
+            .set_temperature_setpoint_and_ui(cooler_setpoint_temperature)
+            .is_err()
+        {
             send_log_message_now(LogMessage::new_error(
                 "Failed to set initial cryocooler setpoint temperature in UI",
             ));
@@ -123,6 +144,12 @@ pub async fn instruments_task(
         if inst_status.set_cooler_state_and_ui(cooler_state).is_err() {
             send_log_message_now(LogMessage::new_error(
                 "Failed to set initial cryocooler state in UI",
+            ));
+        }
+
+        if inst_status.set_ion_pump_state_and_ui(ion_pump_state).is_err() {
+            send_log_message_now(LogMessage::new_error(
+                "Failed to set initial ion pump state in UI",
             ));
         }
     } // drop lock
@@ -225,7 +252,27 @@ pub async fn instruments_task(
                             }
                         }
                     }
-                    // next match here
+                    InstrumentCommands::IonPumpState(state) => {
+                        let st = match ion_pump_inst.set_high_voltage(state.clone()) {
+                            Ok(_) => {
+                                match state {
+                                    HvState::On => ValveOrPumpState::OpenOrOn,
+                                    HvState::Off => ValveOrPumpState::ClosedOrOff,
+                                }
+                            },
+                            Err(e) => {
+                                send_log_message(LogMessage::new_error(
+                                    &format!(
+                                        "Failed to set ion pump state: {}", e)
+                                    )
+                                ).await;
+                                ValveOrPumpState::UndefinedOrError
+                            }
+                        };
+                        inst_status.lock().expect("InstrumentStatus lock poisoned")
+                            .set_ion_pump_state_and_ui(st)
+                            .expect("UI set before this loop started.");
+                    }
                 }
             }
             // Shutdown signal received

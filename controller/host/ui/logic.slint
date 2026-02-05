@@ -43,6 +43,10 @@ export global Logic {
     in-out property <bool> admin_mode: false;
     pure callback enter_admin_mode();
 
+    // Pumps
+    in-out property <bool> ion_pump_is_on;
+    pure callback ion_pump_set_on(bool);
+
     // Samples
     pure callback edit_sample_name(string, string);
     in-out property <[{pos: string, name: string}]> sample_model: [
@@ -62,12 +66,12 @@ export global Logic {
     out property <length> border_width: 2px;
 
     // Temperature: Note: A temperature of 0 represents an ERROR state
-    in-out property<int> sample_temp; // K
-    in-out property<int> bridge_temp; // K
-    in-out property<int> cooler_temp; // K
-    in property<image> temp_plot;
-    in property<int> target_temp; // K
-    in property<int> current_power; // W
+    in-out property <int> sample_temp; // K
+    in-out property <int> bridge_temp; // K
+    in-out property <int> cooler_temp; // K
+    in property <image> temp_plot;
+    in property <int> target_temp; // K
+    in property <int> current_power; // W
     pure callback set_setpoint_temp();
 
     // Vacuum
@@ -83,10 +87,10 @@ export global Logic {
 
     // Valve and pump states: for status indicator
     in-out property <ValveOrPumpState> transfer_valve_state: ValveOrPumpState.UndefinedOrError;
-    in-out property <ValveOrPumpState> pump_valve_state: ValveOrPumpState.OpenOrOn;
-    in-out property <ValveOrPumpState> turbo_pump_state: ValveOrPumpState.OpenOrOn;
-    in-out property <ValveOrPumpState> vent_valve_state: ValveOrPumpState.SetDifferentFromCalled;
-    in-out property <ValveOrPumpState> ion_pump_state: ValveOrPumpState.ClosedOrOff;
+    in-out property <ValveOrPumpState> pump_valve_state: ValveOrPumpState.UndefinedOrError;
+    in-out property <ValveOrPumpState> turbo_pump_state: ValveOrPumpState.UndefinedOrError;
+    in-out property <ValveOrPumpState> vent_valve_state: ValveOrPumpState.UndefinedOrError;
+    in-out property <ValveOrPumpState> ion_pump_state: ValveOrPumpState.UndefinedOrError;
 
     // Logging
     in-out property <[string]> log_messages: [];

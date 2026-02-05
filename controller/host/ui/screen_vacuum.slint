@@ -157,8 +157,12 @@ export component VacuumScreen inherits MyWindow {
 
             SmallSwitch {
                 title: "Ion pump";
+                right_side: Logic.ion_pump_is_on;
                 left_text: "Off";
                 right_text: "On";
+                switched(set_on) => {
+                    Logic.ion_pump_set_on(set_on);  // bool
+                }
             }
 
             SmallSwitch {
