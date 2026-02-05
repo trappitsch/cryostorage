@@ -24,26 +24,26 @@ export component VacuumScreen inherits MyWindow {
 
     VacuumStateCircle {
         state: Logic.turbo_pump_state;
-        x: vi.x + 269px;
-        y: vi.y + 288px;
+        x: vi.x + 689.798px; // turbo
+        y: vi.y + 76px; // turbo
     }
 
     VacuumStateCircle {
         state: Logic.pump_valve_state;
-        x: vi.x + 269px;
-        y: vi.y + 201px;
+        x: vi.x + 484px; // pump valve
+        y: vi.y + 76px; // pump valve
     }
 
     VacuumStateCircle {
         state: Logic.transfer_valve_state;
-        x: vi.x + 484px;
-        y: vi.y + 76px;
+        x: vi.x + 269px; // transfer valve
+        y: vi.y + 201px; // transfer valve
     }
 
     VacuumStateCircle {
         state: Logic.vent_valve_state;
-        x: vi.x + 348px;
-        y: vi.y + 288px;
+        x: vi.x + 689.798px; // vent valve
+        y: vi.y + 136.587px; // vent valve
     }
 
     NormalText {
@@ -61,14 +61,14 @@ export component VacuumScreen inherits MyWindow {
     }
 
     NormalText {
-        x: vi.x + 515px;  // position of pipe between valve and dock in inkscape
-        y: vi.y;
+        x: vi.x + 279.039px - self.width;  // position of pipe between valve and dock in inkscape
+        y: vi.y + 272.102px - self.height / 2;
 
-        width: 207px;  // length of pipe in inkscape
-        height: 80px;  // y position of pipe in inkscape
+        width: 160px;  // empirical...
+        height: 80px;  // empirical...
 
         horizontal-alignment: center;
-        vertical-alignment: bottom;
+        vertical-alignment: center;
 
         color: Palette.yellow;
         text: "Transfer\n" + Logic.transfer_pressure;
