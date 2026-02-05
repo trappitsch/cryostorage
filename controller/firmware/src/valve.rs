@@ -10,7 +10,7 @@ static PUMP_VALVE_STATE_SIGNAL: Signal<ThreadModeRawMutex, ValveState> = Signal:
 static TRANSFER_VALVE_SIGNAL: Signal<ThreadModeRawMutex, ValveCommand> = Signal::new();
 static TRANSFER_VALVE_STATE_SIGNAL: Signal<ThreadModeRawMutex, ValveState> = Signal::new();
 
-static VALVE_PULSE_TIME_MS: usize = 200;
+static VALVE_PULSE_TIME: Duration = Duration::from_millis(500);
 
 /// Selector for the different valves.
 ///
@@ -49,14 +49,14 @@ impl Valve {
     /// Close the valve.
     pub async fn close(&mut self) {
         self.pin_ctrl_close.set_high();
-        Timer::after(Duration::from_millis(VALVE_PULSE_TIME_MS as u64)).await;
+        Timer::after(VALVE_PULSE_TIME).await;
         self.pin_ctrl_close.set_low();
     }
 
     /// Open the valve.
     pub async fn open(&mut self) {
         self.pin_ctrl_open.set_high();
-        Timer::after(Duration::from_millis(VALVE_PULSE_TIME_MS as u64)).await;
+        Timer::after(VALVE_PULSE_TIME).await;
         self.pin_ctrl_open.set_low();
     }
 
