@@ -1,6 +1,6 @@
 import { MyWindow } from "elements.slint";
 
-import { NormalText, MyHorizontalLayout, MyVerticalLayout, SmallSwitch, VacuumStateCircle } from "elements.slint";
+import { NormalText, MyHorizontalLayout, MyVerticalLayout, SmallSwitch, VacuumStateCircle, PumpStandStateCircle } from "elements.slint";
 import { Const } from "consts.slint";
 
 import { Palette } from "palette.slint";
@@ -22,7 +22,7 @@ export component VacuumScreen inherits MyWindow {
         y: vi.y + 76px;
     }
 
-    VacuumStateCircle {
+    PumpStandStateCircle {
         state: Logic.pump_stand_state;
         x: vi.x + 689.798px; // turbo
         y: vi.y + 76px; // turbo

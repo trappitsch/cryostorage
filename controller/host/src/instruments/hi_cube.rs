@@ -54,14 +54,9 @@ pub async fn pfeiffer_hicube_task(
             Some(message) = sub.recv() => {
                 match message {
                     HiCubeVariables::PumpStand(state) => {
-                        let st = match state {
-                            PumpStandState::On => ValveOrPumpState::OpenOrOn,
-                            PumpStandState::Off => ValveOrPumpState::ClosedOrOff,
-                            PumpStandState::Other => ValveOrPumpState::UndefinedOrError,
-                        };
                         if inst_status                            .lock()
                             .expect("Locking InstrumentStatus must work")
-                            .set_hicube_pump_stand_state_and_ui(st)
+                            .set_hicube_pump_stand_state_and_ui(state)
                             .is_err() {
                                 send_log_message_now(LogMessage::new_error(
                                 "Could not set HiCube pump stand state to instrument status."

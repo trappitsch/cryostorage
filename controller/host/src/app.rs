@@ -86,11 +86,6 @@ impl ControllerCommandHandler {
 
     /// Initialize the controller command handler with the current and saved values.
     fn init(&self) {
-        // FIXME: bogus inits below
-        self.ui.global::<Logic>().set_cryocooler_is_on(false);
-        self.ui.global::<Logic>().set_transfer_valve_is_open(true);
-        self.ui.global::<Logic>().set_pump_valve_is_open(false);
-
         // init buttons
         self.baking();
         self.light_switch();

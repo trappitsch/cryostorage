@@ -1,7 +1,7 @@
 import { Const } from "consts.slint";
 import { Palette } from "palette.slint";
 import { LineEdit } from "std-widgets.slint";
-import { Logic, ValveOrPumpState } from "logic.slint";
+import { Logic, ValveOrPumpState, PumpStandStateGUI } from "logic.slint";
 
 export component NormalText inherits Text {
     font-size: 20px;
@@ -419,5 +419,22 @@ export component VacuumStateCircle inherits Rectangle {
         font-weight: 600;
         color: Palette.crust;
         text: root.state == ValveOrPumpState.OpenOrOn ? "" : (state == ValveOrPumpState.ClosedOrOff ? "X" : (state == ValveOrPumpState.SetDifferentFromCalled ? "D" : "E"));
+    }
+}
+
+export component PumpStandStateCircle inherits Rectangle {
+    in property <PumpStandStateGUI> state: PumpStandStateGUI.Error;
+
+    width: Const.vacuum_image_status_circle_size;
+    height: Const.vacuum_image_status_circle_size;
+    border-radius: self.width / 2;
+    border-width: 0px;
+
+    background: state == PumpStandStateGUI.On ? Palette.green : (state == PumpStandStateGUI.Off ? Palette.blue : ((state == PumpStandStateGUI.SpinningUp || state == PumpStandStateGUI.SpinningDown) ? Palette.peach : Palette.red));
+    Text {
+        font-size: Const.vacuum_image_status_circle_size;
+        font-weight: 600;
+        color: Palette.crust;
+        text: root.state == PumpStandStateGUI.On ? "" : (state == PumpStandStateGUI.Off ? "X" : (state == PumpStandStateGUI.SpinningDown ? "v" : (state == PumpStandStateGUI.SpinningUp ? "^" : "E")));
     }
 }

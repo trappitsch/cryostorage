@@ -55,10 +55,14 @@ pub enum VentState {
 /// This is the state of the overall pump state, set as a float
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PumpStandState {
+    /// The pumps are off (float val 0.0).
+    Off,
     /// The pumps are on (float val 1.0).
     On,
-    /// The pumps are off (float val 4.0).
-    Off,
+    /// Spinning down state (float val 4.0).
+    SpinningDown,
+    /// Spinning up state (float val 5.0).
+    SpinningUp,
     /// Other states, that we don't know about.
     Other,
 }
@@ -97,8 +101,10 @@ impl From<Variables> for WriteValue {
                 let index_range = NumericRange::default();
                 let mut value = DataValue::null();
                 let float_val = match state {
+                    PumpStandState::Off => 0.0,
                     PumpStandState::On => 1.0,
-                    PumpStandState::Off => 4.0,
+                    PumpStandState::SpinningDown => 4.0,
+                    PumpStandState::SpinningUp => 5.0,
                     PumpStandState::Other => panic!("Cannot write _Other state to pump stand."),
                 };
                 value.value = Some(Variant::Float(float_val));
@@ -162,8 +168,10 @@ impl Variables {
         match &node_id.identifier {
             Identifier::String(s) if s == &*PUMP_STAND_STRING => match dv.value {
                 Some(Variant::Float(f)) => match f {
+                    0.0 => Ok(Variables::PumpStand(PumpStandState::Off)),
                     1.0 => Ok(Variables::PumpStand(PumpStandState::On)),
-                    4.0 => Ok(Variables::PumpStand(PumpStandState::Off)),
+                    4.0 => Ok(Variables::PumpStand(PumpStandState::SpinningDown)),
+                    5.0 => Ok(Variables::PumpStand(PumpStandState::SpinningUp)),
                     _ => Ok(Variables::PumpStand(PumpStandState::Other)),
                 },
                 _ => bail!("Unexpected variant type for turbo pump state."),

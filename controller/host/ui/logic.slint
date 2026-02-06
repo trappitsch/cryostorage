@@ -17,6 +17,15 @@ export enum ValveOrPumpState {
     SetDifferentFromCalled
 }
 
+// Pump stand states
+export enum PumpStandStateGUI {
+    Off,
+    On,
+    SpinningUp,
+    SpinningDown,
+    Error,
+}
+
 // Logic
 export global Logic {
     // Baking
@@ -93,7 +102,7 @@ export global Logic {
     // Valve and pump states: for status indicator
     in-out property <ValveOrPumpState> transfer_valve_state: ValveOrPumpState.UndefinedOrError;
     in-out property <ValveOrPumpState> pump_valve_state: ValveOrPumpState.UndefinedOrError;
-    in-out property <ValveOrPumpState> pump_stand_state: ValveOrPumpState.UndefinedOrError;
+    in-out property <PumpStandStateGUI> pump_stand_state: PumpStandStateGUI.Error;
     in-out property <ValveOrPumpState> vent_valve_state: ValveOrPumpState.UndefinedOrError;
     in-out property <ValveOrPumpState> ion_pump_state: ValveOrPumpState.UndefinedOrError;
 

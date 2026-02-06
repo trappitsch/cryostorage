@@ -4,10 +4,11 @@ use anyhow::{Result, bail};
 
 use icd::{BakingState, FlowMeterState, InstrumentState, LightState, ValveState, VctState};
 use measurements::{Power, Temperature};
+use pfeiffer_hicube::PumpStandState;
 use slint::{ComponentHandle, Weak};
 use sunpower_cryotelgt::CoolerState;
 
-use crate::app::{AppWindow, BakingTime, Logic, ValveOrPumpState};
+use crate::app::{AppWindow, BakingTime, Logic, ValveOrPumpState, PumpStandStateGUI};
 
 pub struct InstrumentStatus {
     ui: Option<Weak<AppWindow>>,
@@ -17,7 +18,7 @@ pub struct InstrumentStatus {
     cooler_state: CoolerState,
     flow_meter_curr: FlowMeterState,
     ion_pump_state: ValveOrPumpState,
-    hi_cube_pump_stand_state: ValveOrPumpState,
+    hi_cube_pump_stand_state: PumpStandState,
     hi_cube_venting_valve: ValveOrPumpState,
     power_cooler_current: Power,
     temperature_bridge: Temperature,
@@ -41,7 +42,7 @@ impl InstrumentStatus {
             chamber_light: LightState::Off,
             cooler_state: CoolerState::Disabled,
             flow_meter_curr: FlowMeterState::default(),
-            hi_cube_pump_stand_state: ValveOrPumpState::UndefinedOrError,
+            hi_cube_pump_stand_state: PumpStandState::Other,
             hi_cube_venting_valve: ValveOrPumpState::UndefinedOrError,
             ion_pump_state: ValveOrPumpState::UndefinedOrError,
             power_cooler_current: Power::default(), // 0.0 W
@@ -121,11 +122,25 @@ impl InstrumentStatus {
     /// Note that we only call the pump in an ON state when the whole pump stand is on!
     pub fn set_hicube_pump_stand_state_and_ui(
         &mut self,
-        state: ValveOrPumpState,
+        state: PumpStandState,
     ) -> Result<()> {
         self.hi_cube_pump_stand_state = state.clone();
 
-        let pump_stand_is_on = matches!(state, ValveOrPumpState::OpenOrOn);
+        let gui_state = match state {
+            PumpStandState::On => PumpStandStateGUI::On,
+            PumpStandState::Off => PumpStandStateGUI::Off,
+            PumpStandState::SpinningUp => PumpStandStateGUI::SpinningUp,
+            PumpStandState::SpinningDown => PumpStandStateGUI::SpinningDown,
+            PumpStandState::Other => PumpStandStateGUI::Error,
+        };
+
+        let pump_stand_is_on = match gui_state {
+            PumpStandStateGUI::On => true,
+            PumpStandStateGUI::Off => false,
+            PumpStandStateGUI::SpinningUp => true,
+            PumpStandStateGUI::SpinningDown => false,
+            PumpStandStateGUI::Error => false,
+        };
         let ui = self
             .ui
             .as_ref()
@@ -133,7 +148,7 @@ impl InstrumentStatus {
             .clone();
         ui.upgrade_in_event_loop(move |ui| {
             ui.global::<Logic>()
-                .set_pump_stand_state(state);
+                .set_pump_stand_state(gui_state);
             ui.global::<Logic>()
                 .set_pump_stand_is_on(pump_stand_is_on);
         })?;
