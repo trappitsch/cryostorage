@@ -121,7 +121,6 @@ pub async fn pfeiffer_hicube_writing_task(
                     }
                     HiCubeCommands::SetPumpStandState(state) => {
                         match state {
-                            // turn pump stand on by setting pump status to `1.0`.
                             ValveOrPumpState::OpenOrOn => {
                                 let to_send = HiCubeVariables::PumpStand(PumpStandState::On);
                                 if hicube.write(to_send).await.is_err() {
@@ -132,16 +131,10 @@ pub async fn pfeiffer_hicube_writing_task(
                             }
                             // turn pump stand off by turning roughing and turbo pump to `false`.
                             ValveOrPumpState::ClosedOrOff => {
-                                let to_send_0 = HiCubeVariables::TurboPump(PumpState::Off);
-                                let to_send_1 = HiCubeVariables::RoughingPump(PumpState::Off);
-                                if hicube.write(to_send_0).await.is_err() {
+                                let to_send = HiCubeVariables::PumpStand(PumpStandState::Off);
+                                if hicube.write(to_send).await.is_err() {
                                     send_log_message(LogMessage::new_error(
-                                        "Failed to turning off turbo pump."
-                                    )).await;
-                                };
-                                if hicube.write(to_send_1).await.is_err() {
-                                    send_log_message(LogMessage::new_error(
-                                        "Failed to turning off roughing pump."
+                                        "Failed to write pump stand state to HiCube."
                                     )).await;
                                 };
                             }
