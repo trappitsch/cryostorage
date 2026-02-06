@@ -71,6 +71,7 @@ export component HomeScreen inherits MyWindow {
             }
 
             LightSwitch {
+                activated: Logic.light_is_on;
                 clicked(val) => {
                     Logic.light_switch(val);
                 }

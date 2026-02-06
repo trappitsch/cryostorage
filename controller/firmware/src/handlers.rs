@@ -30,6 +30,14 @@ pub fn baking_set_handler(_context: &mut Context, _header: VarHeader, arg: Bakin
 }
 
 /// Set the light state.
+pub fn light_get_handler(context: &mut Context, _header: VarHeader, _arg: ()) -> LightState {
+    match context.light_output.is_set_high() {
+        true => LightState::On,
+        false => LightState::Off,
+    }
+}
+
+/// Set the light state.
 pub fn light_set_handler(context: &mut Context, _header: VarHeader, arg: LightState) {
     match arg {
         LightState::Off => context.light_output.set_low(),

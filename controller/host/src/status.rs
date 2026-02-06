@@ -2,7 +2,7 @@
 
 use anyhow::{Result, bail};
 
-use icd::{BakingState, FlowMeterState, InstrumentState, ValveState, VctState};
+use icd::{BakingState, FlowMeterState, InstrumentState, LightState, ValveState, VctState};
 use measurements::{Power, Temperature};
 use slint::{ComponentHandle, Weak};
 use sunpower_cryotelgt::CoolerState;
@@ -13,6 +13,7 @@ pub struct InstrumentStatus {
     ui: Option<Weak<AppWindow>>,
     baking_call: BakingState,
     baking_curr: BakingState,
+    chamber_light: LightState,
     cooler_state: CoolerState,
     flow_meter_curr: FlowMeterState,
     ion_pump_state: ValveOrPumpState,
@@ -37,6 +38,7 @@ impl InstrumentStatus {
             ui: None,
             baking_call: BakingState::default(),
             baking_curr: BakingState::default(),
+            chamber_light: LightState::Off,
             cooler_state: CoolerState::Disabled,
             flow_meter_curr: FlowMeterState::default(),
             hi_cube_pump_stand_state: ValveOrPumpState::UndefinedOrError,
@@ -90,6 +92,28 @@ impl InstrumentStatus {
     /// Can be set later such that the new can initialize it as `None`.
     pub fn set_ui(&mut self, ui: Weak<AppWindow>) {
         self.ui = Some(ui);
+    }
+
+    /// Set the state of the light.
+    pub fn set_chamber_light(&mut self, state: LightState) {
+        self.chamber_light = state;
+    }
+
+    /// Set the state of the light and update UI.
+    pub fn set_chamber_light_and_ui(&mut self, state: LightState) -> Result<()> {
+        self.chamber_light = state.clone();
+
+        let light_is_on = matches!(state, LightState::On);
+        let ui = self
+            .ui
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("UI not set"))?
+            .clone();
+        ui.upgrade_in_event_loop(move |ui| {
+            ui.global::<Logic>().set_light_is_on(light_is_on);
+        })?;
+
+        Ok(())
     }
 
     /// Set the Pfeiffer HiCube pump stand state and update the UI.

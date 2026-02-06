@@ -19,6 +19,7 @@ mod client;
 use client::ControllerClient;
 
 pub enum ControllerCommands {
+    InitializeLight(),
     Light(LightState),
     Baking(BakingState),
     TransferValve(ValveState),
@@ -60,8 +61,10 @@ pub async fn start_controller_tasks(
         panic!("No '{}' device found in poststation.", config.product_name);
     };
 
-    // Controller command task
+    // Get a new controller client.
     let cntrl_client = ControllerClient::new(ps_client.clone(), serial);
+
+    // Spawn the cntroller command handling task.
     let cntrl_task = tokio::spawn(controller_task(
         cntrl_client,
         rx_ctrl,
@@ -90,8 +93,25 @@ pub async fn controller_task(
         tokio::select! {
             Some(cmd) = rx.recv() => {
                 match cmd {
+                    ControllerCommands::InitializeLight() => {
+                        match cntrl.get_light().await {
+                            Ok(st) => {
+                                if inst_status.lock().expect("Poisoned").set_chamber_light_and_ui(st).is_err() {
+                                    send_log_message_now(LogMessage::new_error(
+                                        "Failed to initialize chamber light state on GUI.",
+                                    ));
+                                }
+                            }
+                            Err(e) => {
+                                send_log_message_now(LogMessage::new_error(
+                                    &format!("Failed to get chamber light state from controller: {}", e),
+                                ));
+                            }
+                        };
+                    }
                     ControllerCommands::Light(state) => {
-                        cntrl.light(state).await;
+                        inst_status.lock().expect("Poisoned").set_chamber_light(state.clone());
+                        cntrl.set_light(state).await;
                     }
                     ControllerCommands::Baking(state) => {
                         cntrl.baking(state).await;
@@ -130,6 +150,18 @@ pub async fn controller_broadcast_listener(
     let listener_wait_time = Duration::from_millis(icd::BROADCAST_INTERVAL_MS * 2);
 
     let mut run_initialize = true; // If true, runs initialize after broadcast
+    
+    // Wait for UI to be set in InstrumentStatus
+    while !inst_status
+        .lock()
+        .expect("InstrumentStatus lock poisoned")
+        .get_ui_is_set()
+    {
+        tokio::time::sleep(Duration::from_millis(100)).await;
+    }
+    
+    // Tell the light to initialize itslef :)
+    send_cntrl_cmd(ControllerCommands::InitializeLight()).await;
 
     // subscription to broadcast
     let mut sub = match client.stream_topic::<BcInstStatus>(serial).await {

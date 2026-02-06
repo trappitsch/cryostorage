@@ -38,6 +38,7 @@ endpoints! {
     | ----------                | ---------     | ----------            | ----                          |
     | GetUniqueIdEndpoint       | ()            | u64                   | "poststation/unique_id/get"   |
     | RebootToPicoBoot          | ()            | ()                    | "hw/picoboot/reset"           |
+    | GetLightEndpoint          | ()            | LightState            | "hw/light/get"                |
     | SetLightEndpoint          | LightState    | ()                    | "hw/light/set"                |
     | SetBakingEndpoint         | BakingState   | ()                    | "hw/baking/set"               |
     | SetPumpValveEndpoint      | ValveState    | ()                    | "hw/valve/pump/set"           |

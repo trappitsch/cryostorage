@@ -1,8 +1,8 @@
 //! A basic postcard-rpc/poststation-compatible application
 
 use crate::handlers::{
-    baking_set_handler, light_set_handler, picoboot_reset, pump_valve_set_handler,
-    transfer_valve_set_handler, unique_id, vct_handshake_set_handler,
+    baking_set_handler, light_get_handler, light_set_handler, picoboot_reset,
+    pump_valve_set_handler, transfer_valve_set_handler, unique_id, vct_handshake_set_handler,
 };
 use embassy_rp::gpio::Output;
 use embassy_rp::{peripherals::USB, usb};
@@ -10,7 +10,7 @@ use embassy_sync::blocking_mutex::raw::ThreadModeRawMutex;
 
 use icd::{ENDPOINT_LIST, TOPICS_IN_LIST, TOPICS_OUT_LIST};
 use icd::{
-    GetUniqueIdEndpoint, RebootToPicoBoot, SetBakingEndpoint, SetLightEndpoint,
+    GetLightEndpoint, GetUniqueIdEndpoint, RebootToPicoBoot, SetBakingEndpoint, SetLightEndpoint,
     SetPumpValveEndpoint, SetTransferValveEndpoint, SetVctHandshakeEndpoint,
 };
 
@@ -93,6 +93,7 @@ define_dispatch! {
         | GetUniqueIdEndpoint       | blocking  | unique_id                     |
         | RebootToPicoBoot          | blocking  | picoboot_reset                |
         | SetBakingEndpoint         | blocking  | baking_set_handler            |
+        | GetLightEndpoint          | blocking  | light_get_handler             |
         | SetLightEndpoint          | blocking  | light_set_handler             |
         | SetPumpValveEndpoint      | blocking  | pump_valve_set_handler        |
         | SetTransferValveEndpoint  | blocking  | transfer_valve_set_handler    |

@@ -4,8 +4,10 @@
 //!
 use std::sync::atomic::{AtomicU32, Ordering};
 
+use anyhow::Result;
+
 use icd::{
-    BakingState, GetUniqueIdEndpoint, LightState, SetLightEndpoint, SetPumpValveEndpoint,
+    BakingState, LightState, SetLightEndpoint, SetPumpValveEndpoint,
     SetTransferValveEndpoint, SetVctHandshakeEndpoint, ValveState, VctHandshake,
 };
 use poststation_sdk::PoststationClient;
@@ -47,7 +49,16 @@ impl ControllerClient {
         }
     }
 
-    pub async fn light(&self, light_state: LightState) {
+    /// Get the current status of the light from the controller, or an error.
+    pub async fn get_light(&self) -> Result<LightState> {
+        let curr = self
+            .client
+            .proxy_endpoint::<icd::GetLightEndpoint>(self.serial, self.ctr(), &())
+            .await?;
+        Ok(curr)
+    }
+
+    pub async fn set_light(&self, light_state: LightState) {
         if self
             .client
             .proxy_endpoint::<SetLightEndpoint>(self.serial, self.ctr(), &light_state)
