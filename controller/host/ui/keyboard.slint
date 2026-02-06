@@ -1,5 +1,11 @@
 import { Const } from "consts.slint";
-import { MyVerticalLayout, NormalText, H2Text, RegularButton, H3Text } from "elements.slint";
+import {
+    MyVerticalLayout,
+    NormalText,
+    H2Text,
+    RegularButton,
+    H3Text,
+} from "elements.slint";
 import { Palette } from "palette.slint";
 
 export global KeyboardLogic {
@@ -109,6 +115,7 @@ export component Keyboard inherits Window {
     width: 1170px;
 
     background: Palette.bg;
+    no-frame: true;
 
     MyVerticalLayout {
 
