@@ -333,7 +333,12 @@ impl InstrumentStatus {
             let sample_temp = self.temperature_sample.as_kelvin().round() as i32;
             let bridge_temp = self.temperature_bridge.as_kelvin().round() as i32;
             let cooler_temp = self.temperature_cooler.as_kelvin().round() as i32;
-            let cooler_current_power = self.power_cooler_current.as_watts().round() as i32;
+
+            let cooler_current_power = if self.cooler_state == CoolerState::Enabled {
+                self.power_cooler_current.as_watts().round() as i32 
+            } else {
+                0
+            };
 
             ui.upgrade_in_event_loop(move |ui| {
                 ui.global::<Logic>().set_sample_temp(sample_temp);

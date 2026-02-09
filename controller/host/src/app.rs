@@ -317,11 +317,11 @@ impl InstrumentCommandHandler {
         // FIXME: bogus inits below
         self.ui
             .global::<Logic>()
-            .set_transfer_pressure(format!("{:.2E} mbar", 0.3).into());
+            .set_transfer_pressure("Not connected".into());
         // set chamber pressure scientifically formatted
         self.ui
             .global::<Logic>()
-            .set_chamber_pressure(format!("{:.2E} mbar", 0.0001234).into());
+            .set_chamber_pressure("Not connected".into());
         self.ui.global::<Logic>().set_cryocooler_is_on(false);
     }
 
