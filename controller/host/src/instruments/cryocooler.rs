@@ -178,7 +178,7 @@ impl Default for CryoCoolerConfig {
     fn default() -> Self {
         Self {
             tcp_ip_adapter: TcpIpAdapter::new_from_str("192.168.1.2:4003"),
-            channel_name: Some(ThermocoupleChannelName::Bridge),
+            channel_name: Some(ThermocoupleChannelName::Cooler),
         }
     }
 }

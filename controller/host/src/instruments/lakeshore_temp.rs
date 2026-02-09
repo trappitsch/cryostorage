@@ -127,8 +127,8 @@ impl Default for LakeshoreTempConfig {
     fn default() -> Self {
         Self {
             usb_prod_info: Some(String::from("Model 336 Temperature Controller")),
-            channel_a_name: Some(ThermocoupleChannelName::Cooler),
-            channel_b_name: Some(ThermocoupleChannelName::Sample),
+            channel_a_name: Some(ThermocoupleChannelName::Sample),
+            channel_b_name: Some(ThermocoupleChannelName::Bridge),
             channel_c_name: None,
             channel_d_name: None,
         }
