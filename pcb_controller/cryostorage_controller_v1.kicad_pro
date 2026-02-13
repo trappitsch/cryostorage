@@ -246,7 +246,16 @@
     "equivalence_files": []
   },
   "erc": {
-    "erc_exclusions": [],
+    "erc_exclusions": [
+      [
+        "pin_to_pin|635000|927100|cf5ecb3f-7e7a-455f-bd69-f7a09fd14bca|48ed81cd-7ab2-480a-8b44-19b5fd8dce5e|/65dfcb21-5bed-4c8b-b45c-eae336c9e929|/65dfcb21-5bed-4c8b-b45c-eae336c9e929|/65dfcb21-5bed-4c8b-b45c-eae336c9e929",
+        ""
+      ],
+      [
+        "power_pin_not_driven|584200|190500|70971377-bfee-4753-b56e-d9b48194d69b|00000000-0000-0000-0000-000000000000|/65dfcb21-5bed-4c8b-b45c-eae336c9e929|/65dfcb21-5bed-4c8b-b45c-eae336c9e929|",
+        "Rpi"
+      ]
+    ],
     "meta": {
       "version": 0
     },
@@ -807,6 +816,10 @@
     [
       "183a83e0-1898-47e5-9bd2-f52204230e65",
       "gate_valves"
+    ],
+    [
+      "1a88630b-1692-44c1-bfd4-1763ccc9c6a0",
+      "cryocooler_safety"
     ]
   ],
   "text_variables": {}
