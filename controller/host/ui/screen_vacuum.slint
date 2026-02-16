@@ -171,14 +171,22 @@ export component VacuumScreen inherits MyWindow {
 
             SmallSwitch {
                 title: "Gauge chamber";
+                right_side: Logic.chamber_gauge_is_on;
                 left_text: "Off";
                 right_text: "On";
+                switched(set_on) => {
+                    Logic.chamber_gauge_set_on(set_on);  // bool
+                }
             }
 
             SmallSwitch {
                 title: "Gauge transfer";
+                right_side: Logic.transfer_gauge_is_on;
                 left_text: "Off";
                 right_text: "On";
+                switched(set_on) => {
+                    Logic.transfer_gauge_set_on(set_on);  // bool
+                }
             }
 
             SmallSwitch {

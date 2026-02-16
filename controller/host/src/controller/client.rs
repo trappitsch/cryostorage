@@ -7,8 +7,8 @@ use std::sync::atomic::{AtomicU32, Ordering};
 use anyhow::Result;
 
 use icd::{
-    BakingState, LightState, SetLightEndpoint, SetPumpValveEndpoint,
-    SetTransferValveEndpoint, SetVctHandshakeEndpoint, ValveState, VctHandshake,
+    BakingState, LightState, SetLightEndpoint, SetPumpValveEndpoint, SetTransferValveEndpoint,
+    SetVctHandshakeEndpoint, ValveState, VctHandshake,
 };
 use poststation_sdk::PoststationClient;
 

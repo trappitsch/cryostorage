@@ -161,12 +161,9 @@ pub trait InstrumentInterface {
             if let Ok(val) = str::from_utf8(&single_buf) {
                 response.push_str(val);
             } else {
-                // It can occur that the instruments sends a non-UTF-8 byte, e.g., 0xFF (no data)
-                // for some reason. In this case, we just skip the byte and continue, but print an
-                // error to `stderr` to inform the user about this.
-                // This is fair as if the whole response is bad in the end, the instrument driver
-                // should check this by itself, depending on the expected response, i.e., with a
-                // CRC check or similar.
+                // This should be impossible, however, can happen in various cases, e.g., when
+                // pull-up resistors on an RS-485 line are not set correctly. Here, we want to
+                // print an error, but continue deciphering the package as it might be valid. 
                 eprintln!("Received non-UTF-8 byte from instrument: 0x{:02X}. Skipping byte.", single_buf[0]);
                 continue;
             }

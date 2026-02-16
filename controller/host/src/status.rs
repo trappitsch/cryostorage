@@ -1,14 +1,19 @@
 //! Handle the instrument status and, when status changes, update UI.
 
+use std::collections::HashMap;
+
 use anyhow::{Result, bail};
 
 use icd::{BakingState, FlowMeterState, InstrumentState, LightState, ValveState, VctState};
-use measurements::{Power, Temperature};
+use measurements::{Power, Pressure, Temperature};
 use pfeiffer_hicube::PumpStandState;
 use slint::{ComponentHandle, Weak};
 use sunpower_cryotelgt::CoolerState;
 
-use crate::app::{AppWindow, BakingTime, Logic, ValveOrPumpState, PumpStandStateGUI};
+use crate::{
+    app::{AppWindow, BakingTime, Logic, PumpStandStateGUI, ValveOrPumpState},
+    instruments::omnicontrol::{Gauge, GaugeStatus},
+};
 
 pub struct InstrumentStatus {
     ui: Option<Weak<AppWindow>>,
@@ -21,6 +26,10 @@ pub struct InstrumentStatus {
     hi_cube_pump_stand_state: PumpStandState,
     hi_cube_venting_valve: ValveOrPumpState,
     power_cooler_current: Power,
+    pressure_chamber_current: PressureReading,
+    pressure_chamber_gauge: GaugeStatus,
+    pressure_transfer_current: PressureReading,
+    pressure_transfer_gauge: GaugeStatus,
     temperature_bridge: Temperature,
     temperature_cooler: Temperature,
     temperature_sample: Temperature,
@@ -46,6 +55,10 @@ impl InstrumentStatus {
             hi_cube_venting_valve: ValveOrPumpState::UndefinedOrError,
             ion_pump_state: ValveOrPumpState::UndefinedOrError,
             power_cooler_current: Power::default(), // 0.0 W
+            pressure_chamber_current: PressureReading::default(), // Off
+            pressure_chamber_gauge: GaugeStatus::Off,
+            pressure_transfer_current: PressureReading::default(), // Off
+            pressure_transfer_gauge: GaugeStatus::Off,
             temperature_bridge: Temperature::default(), // 0.0 K
             temperature_cooler: Temperature::default(), // 0.0 K
             temperature_sample: Temperature::default(), // 0.0 K
@@ -120,10 +133,7 @@ impl InstrumentStatus {
     /// Set the Pfeiffer HiCube pump stand state and update the UI.
     ///
     /// Note that we only call the pump in an ON state when the whole pump stand is on!
-    pub fn set_hicube_pump_stand_state_and_ui(
-        &mut self,
-        state: PumpStandState,
-    ) -> Result<()> {
+    pub fn set_hicube_pump_stand_state_and_ui(&mut self, state: PumpStandState) -> Result<()> {
         self.hi_cube_pump_stand_state = state.clone();
 
         let gui_state = match state {
@@ -147,10 +157,8 @@ impl InstrumentStatus {
             .ok_or_else(|| anyhow::anyhow!("UI not set"))?
             .clone();
         ui.upgrade_in_event_loop(move |ui| {
-            ui.global::<Logic>()
-                .set_pump_stand_state(gui_state);
-            ui.global::<Logic>()
-                .set_pump_stand_is_on(pump_stand_is_on);
+            ui.global::<Logic>().set_pump_stand_state(gui_state);
+            ui.global::<Logic>().set_pump_stand_is_on(pump_stand_is_on);
         })?;
 
         Ok(())
@@ -229,6 +237,33 @@ impl InstrumentStatus {
     /// Set the current power of the cooler.
     pub fn set_power_cooler_current(&mut self, power: Power) {
         self.power_cooler_current = power;
+    }
+
+    /// Set the current pressures and gauge statuses.
+    pub fn set_pressures(&mut self, pressure_hm: HashMap<Gauge, Option<Pressure>>) {
+        // pressures
+        self.pressure_chamber_current = match pressure_hm.get(&Gauge::Chamber) {
+            Some(Some(p)) => PressureReading::Value(*p),
+            Some(None) => PressureReading::Off,
+            None => PressureReading::Error,
+        };
+        self.pressure_transfer_current = match pressure_hm.get(&Gauge::Transfer) {
+            Some(Some(p)) => PressureReading::Value(*p),
+            Some(None) => PressureReading::Off,
+            None => PressureReading::Error,
+        };
+
+        // gauge statuses
+        match self.pressure_chamber_current {
+            PressureReading::Off => self.pressure_chamber_gauge = GaugeStatus::Off,
+            PressureReading::Value(_) => self.pressure_chamber_gauge = GaugeStatus::On,
+            _ => {}
+        }
+        match self.pressure_transfer_current {
+            PressureReading::Off => self.pressure_transfer_gauge = GaugeStatus::Off,
+            PressureReading::Value(_) => self.pressure_transfer_gauge = GaugeStatus::On,
+            _ => {}
+        }
     }
 
     /// Set temperature values from instrument status.
@@ -335,18 +370,55 @@ impl InstrumentStatus {
             let cooler_temp = self.temperature_cooler.as_kelvin().round() as i32;
 
             let cooler_current_power = if self.cooler_state == CoolerState::Enabled {
-                self.power_cooler_current.as_watts().round() as i32 
+                self.power_cooler_current.as_watts().round() as i32
             } else {
                 0
             };
+
+            let pressure_chamber_display = self.pressure_chamber_current.as_shared_string();
+            let pressure_chamber_gauge_is_on: bool = self.pressure_chamber_gauge.into();
+            let pressure_transfer_display = self.pressure_transfer_current.as_shared_string();
+            let pressure_transfer_gauge_is_on: bool = self.pressure_transfer_gauge.into();
 
             ui.upgrade_in_event_loop(move |ui| {
                 ui.global::<Logic>().set_sample_temp(sample_temp);
                 ui.global::<Logic>().set_bridge_temp(bridge_temp);
                 ui.global::<Logic>().set_cooler_temp(cooler_temp);
                 ui.global::<Logic>().set_current_power(cooler_current_power);
+                ui.global::<Logic>()
+                    .set_chamber_pressure(pressure_chamber_display);
+                ui.global::<Logic>()
+                    .set_chamber_gauge_is_on(pressure_chamber_gauge_is_on);
+                ui.global::<Logic>()
+                    .set_transfer_pressure(pressure_transfer_display);
+                ui.global::<Logic>()
+                    .set_transfer_gauge_is_on(pressure_transfer_gauge_is_on);
             })
             .unwrap();
         }
+    }
+}
+
+/// Pressure reading of a givne gauge.
+#[derive(Debug, Default, Copy, Clone)]
+pub enum PressureReading {
+    /// Valid pressure reading.
+    Value(Pressure),
+    /// Gauge is off.
+    #[default]
+    Off,
+    /// Error occured.
+    Error,
+}
+
+impl PressureReading {
+    /// Get a string to directly display on the UI.
+    pub fn as_shared_string(&self) -> slint::SharedString {
+        let display_str = match self {
+            PressureReading::Value(p) => &format!("{:.2E} mbar", p.as_millibars()),
+            PressureReading::Off => "Off",
+            PressureReading::Error => "Error",
+        };
+        display_str.into()
     }
 }

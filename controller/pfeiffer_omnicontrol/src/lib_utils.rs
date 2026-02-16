@@ -7,7 +7,7 @@ use std::fmt::{Display, Formatter};
 use instrumentrs::InstrumentError;
 
 /// RS-485 base address of the controller.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum BaseAddress {
     /// Address 0
     Zero = 0,

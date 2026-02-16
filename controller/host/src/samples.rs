@@ -52,7 +52,7 @@ impl Samples {
     }
 }
 
-// Implement Iterator trait for owned value of Samples. 
+// Implement Iterator trait for owned value of Samples.
 //
 // It returns a tuple of (position, sample_name) for each iteration, until depleted.
 // Position come from SMP_POSITIONS, and sample_name from the BTreeMap.
@@ -70,7 +70,6 @@ impl IntoIterator for Samples {
         items.into_iter()
     }
 }
-
 
 // tests
 #[cfg(test)]

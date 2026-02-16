@@ -39,7 +39,7 @@ impl LakeshoreTempInst {
     // If the connection fails, the stored connection simply remains None.
     fn check_connection(&mut self) -> Result<()> {
         if self.instrument.is_none() {
-            self.connect() 
+            self.connect()
         } else {
             Ok(())
         }
@@ -63,7 +63,9 @@ impl LakeshoreTempInst {
     /// We return a HashMap with the name of the channel as the key and the temperature as the
     /// value.
     /// An error is returned if the we cannot read the temperatures for any reason.
-    pub fn get_status_measurements(&mut self) -> Result<HashMap<ThermocoupleChannelName, Temperature>> {
+    pub fn get_status_measurements(
+        &mut self,
+    ) -> Result<HashMap<ThermocoupleChannelName, Temperature>> {
         // Do we need to connect again?
         self.check_connection()?;
 

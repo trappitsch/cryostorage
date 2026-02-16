@@ -14,10 +14,13 @@ use anyhow::{Result, anyhow, bail};
 use instrumentrs::{Instrument, TcpIpInterface};
 use measurements::{Power, Temperature};
 use serde::{Deserialize, Serialize};
-use sunpower_cryotelgt::{CryoTelGt, StopMode};
 pub use sunpower_cryotelgt::CoolerState;
+use sunpower_cryotelgt::{CryoTelGt, StopMode};
 
-use crate::{connections::{TCP_IP_TIMEOUT, TcpIpAdapter}, instruments::utils::ThermocoupleChannelName};
+use crate::{
+    connections::{TCP_IP_TIMEOUT, TcpIpAdapter},
+    instruments::utils::ThermocoupleChannelName,
+};
 
 pub struct CryoCoolerInst {
     /// Configuration of the cryocooler.
@@ -141,7 +144,9 @@ impl CryoCoolerInst {
     /// and the temperature as the value.
     /// An error is returned if we cannot read the temperature for any reason, an error is
     /// returned.
-    pub fn get_status_measurement(&mut self) -> Result<HashMap<ThermocoupleChannelName, Temperature>> {
+    pub fn get_status_measurement(
+        &mut self,
+    ) -> Result<HashMap<ThermocoupleChannelName, Temperature>> {
         self.check_connection()?;
 
         if let Some(inst) = &mut self.instrument {

@@ -97,7 +97,11 @@ async fn main() {
         .lock()
         .expect("Locking config must work")
         .get_pfeiffer_hicube_config();
-    let hicube_task = tokio::spawn(pfeiffer_hicube_task(hicube_conf, Arc::clone(&inst_status), rx_hicube));
+    let hicube_task = tokio::spawn(pfeiffer_hicube_task(
+        hicube_conf,
+        Arc::clone(&inst_status),
+        rx_hicube,
+    ));
 
     // start the app
     match app::app_main(Arc::clone(&conf), Arc::clone(&inst_status), tx_ui_set) {

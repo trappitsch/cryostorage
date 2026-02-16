@@ -168,7 +168,7 @@ impl<T: InstrumentInterface> Channel<T> {
         let base_device = (self.idx + 1) * 10 + 2;
         let cmd =
             CommandPackage::get_write_pkg(self.base_address, base_device, 41, status.as_str());
-        let anaswer = self.query(&cmd)?;
+        let _ = self.query(&cmd)?; // FIXME: Should check received command!
         Ok(())
     }
 

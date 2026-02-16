@@ -14,7 +14,12 @@ use tokio::sync::{mpsc, oneshot};
 
 use crate::{
     controller::{ControllerCommands, send_cntrl_cmd_now},
-    instruments::{InstrumentCommands, hi_cube::{HiCubeCommands, send_hicube_command_now}, send_instr_cmd_now},
+    instruments::{
+        InstrumentCommands,
+        hi_cube::{HiCubeCommands, send_hicube_command_now},
+        omnicontrol::Gauge,
+        send_instr_cmd_now,
+    },
     prg_config::PrgConfig,
     status::InstrumentStatus,
 };
@@ -311,18 +316,10 @@ impl InstrumentCommandHandler {
         self.cryocooler_set_on();
         self.cryocooler_set_setpoint();
         self.ion_pump_set_on();
+        self.gauge_chamber_set_on();
+        self.gauge_transfer_set_on();
         self.pump_stand_set_on();
         self.vent_valve_set_on();
-
-        // FIXME: bogus inits below
-        self.ui
-            .global::<Logic>()
-            .set_transfer_pressure("Not connected".into());
-        // set chamber pressure scientifically formatted
-        self.ui
-            .global::<Logic>()
-            .set_chamber_pressure("Not connected".into());
-        self.ui.global::<Logic>().set_cryocooler_is_on(false);
     }
 
     fn cryocooler_set_setpoint(&self) {
@@ -380,6 +377,31 @@ impl InstrumentCommandHandler {
                     false => HvState::Off,
                 };
                 send_instr_cmd_now(InstrumentCommands::IonPumpState(state));
+            }
+        });
+    }
+
+    // Toggle chamber gauge state. UI is updated after subsequent pressure read.
+    fn gauge_chamber_set_on(&self) {
+        let ui = self.ui.as_weak();
+        self.ui.global::<Logic>().on_chamber_gauge_set_on({
+            move |val| {
+                send_instr_cmd_now(InstrumentCommands::GaugeState((Gauge::Chamber, val.into())));
+                ui.unwrap().global::<Logic>().set_chamber_gauge_is_on(val);
+            }
+        });
+    }
+
+    // Toggle transfer gauge state. UI is updated after subsequent pressure read.
+    fn gauge_transfer_set_on(&self) {
+        let ui = self.ui.as_weak();
+        self.ui.global::<Logic>().on_transfer_gauge_set_on({
+            move |val| {
+                send_instr_cmd_now(InstrumentCommands::GaugeState((
+                    Gauge::Transfer,
+                    val.into(),
+                )));
+                ui.unwrap().global::<Logic>().set_transfer_gauge_is_on(val);
             }
         });
     }

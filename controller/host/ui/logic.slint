@@ -87,8 +87,14 @@ export global Logic {
     pure callback set_setpoint_temp();
 
     // Vacuum
-    in-out property <string> chamber_pressure: "3.20e-10 mbar";
-    in-out property <string> transfer_pressure: "1.30e-7 mbar";
+    pure callback chamber_gauge_set_on(bool);
+    in-out property <bool> chamber_gauge_is_on;
+    in-out property <string> chamber_pressure;
+
+    pure callback transfer_gauge_set_on(bool);
+    in-out property <bool> transfer_gauge_is_on;
+    in-out property <string> transfer_pressure;
+
     in property <image> vacuum_plot;
 
     // Valves: callbacks and button settings indicators

@@ -9,7 +9,8 @@ use slint::{ComponentHandle, Model, Weak};
 use tokio::sync::{mpsc, oneshot};
 
 use crate::{
-    CONFIG_FOLDER, LOG_LEVEL_DISPLAY, LOG_SENDER, app::{AppWindow, Logic}
+    CONFIG_FOLDER, LOG_LEVEL_DISPLAY, LOG_SENDER,
+    app::{AppWindow, Logic},
 };
 
 /// The severity level of a log message.

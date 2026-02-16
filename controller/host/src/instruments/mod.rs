@@ -24,7 +24,7 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use agilent_4uhv::HvState;
-use measurements::{Power, Temperature};
+use measurements::{Power, Pressure, Temperature};
 use sunpower_cryotelgt::CoolerState;
 use tokio::sync::mpsc;
 
@@ -32,6 +32,7 @@ use crate::app::ValveOrPumpState;
 use crate::instruments::cryocooler::CryoCoolerInst;
 use crate::instruments::ion_pump::IonPumpInst;
 use crate::instruments::lakeshore_temp::LakeshoreTempInst;
+use crate::instruments::omnicontrol::{Gauge, GaugeStatus, OmniControlInst};
 use crate::instruments::utils::ThermocoupleChannelName;
 use crate::logger::{LogMessage, send_log_message, send_log_message_now};
 use crate::prg_config::PrgConfig;
@@ -41,6 +42,7 @@ pub mod cryocooler;
 pub mod hi_cube;
 pub mod ion_pump;
 pub mod lakeshore_temp;
+pub mod omnicontrol;
 pub mod utils;
 
 const POLLING_INTERVAL: Duration = Duration::from_secs(5);
@@ -49,7 +51,11 @@ const POLLING_INTERVAL: Duration = Duration::from_secs(5);
 pub enum InstrumentCommands {
     /// Set temperature of the cryocooler.
     CryoCoolerSetpoint(Temperature),
+    /// Turn the cryocooler on or off.
     CryoCoolerState(CoolerState),
+    /// Set the state of the selected gauge to on or off.
+    GaugeState((Gauge, GaugeStatus)),
+    /// Turn the ion pump on or off.
     IonPumpState(HvState),
 }
 
@@ -82,6 +88,13 @@ pub async fn instruments_task(
             .expect("PrgConfig lock poisoned")
             .get_ion_pump_config();
         IonPumpInst::new(conf)
+    };
+    let mut omnicontrol_inst = {
+        let conf = prg_conf
+            .lock()
+            .expect("PrgConfig lock poisoned")
+            .get_omnicontrol_config();
+        OmniControlInst::new(conf)
     };
     // Get shutdown receiver
     let mut rx_shutdown = crate::HALT_SENDER.get().unwrap().subscribe();
@@ -148,7 +161,10 @@ pub async fn instruments_task(
             ));
         }
 
-        if inst_status.set_ion_pump_state_and_ui(ion_pump_state).is_err() {
+        if inst_status
+            .set_ion_pump_state_and_ui(ion_pump_state)
+            .is_err()
+        {
             send_log_message_now(LogMessage::new_error(
                 "Failed to set initial ion pump state in UI",
             ));
@@ -209,6 +225,25 @@ pub async fn instruments_task(
                 inst_status.lock().expect("InstrumentStatus lock poisoned")
                     .set_power_cooler_current(current_power);
 
+                // Pressures read from Omnicontrol
+                let mut pressures = HashMap::new();
+                match omnicontrol_inst.get_pressures() {
+                    Ok(phm) => {
+                        pressures.extend(phm);
+                    }
+                    Err(e) => {
+                        send_log_message(LogMessage::new_error(&format!(
+                            "Failed to read pressures from Omnicontrol: {}",
+                            e
+                        )))
+                        .await;
+                        omnicontrol_inst.reset_instrument();
+                    }
+                };
+
+                inst_status.lock().expect("InstrumentStatus lock poisoned")
+                    .set_pressures(pressures);
+
                 // Update UI
                 inst_status.lock().expect("InstrumentStatus lock poisoned")
                     .update_ui_instrument_status();
@@ -251,6 +286,15 @@ pub async fn instruments_task(
                                     )
                                 ).await;
                             }
+                        }
+                    }
+                    InstrumentCommands::GaugeState((gauge, state)) => {
+                        if omnicontrol_inst.set_status(gauge, state).is_err() {
+                            send_log_message(LogMessage::new_error(
+                                &format!(
+                                    "Failed to set {} gauge to state: {}", gauge, state)
+                                )
+                            ).await;
                         }
                     }
                     InstrumentCommands::IonPumpState(state) => {

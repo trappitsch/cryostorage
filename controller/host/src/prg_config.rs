@@ -13,7 +13,10 @@ use serde::{Deserialize, Serialize};
 use crate::{
     CONFIG_FOLDER,
     controller::ControllerConfig,
-    instruments::{cryocooler::CryoCoolerConfig, hi_cube::PfeifferHiCubeConf, ion_pump::IonPumpConfig, lakeshore_temp::LakeshoreTempConfig},
+    instruments::{
+        cryocooler::CryoCoolerConfig, hi_cube::PfeifferHiCubeConf, ion_pump::IonPumpConfig,
+        lakeshore_temp::LakeshoreTempConfig, omnicontrol::OmniControlConfig,
+    },
     samples::Samples,
 };
 
@@ -26,6 +29,7 @@ pub struct PrgConfig {
     agilent_ion_pump: IonPumpConfig,
     controller_config: ControllerConfig,
     pfeiffer_hicube: PfeifferHiCubeConf,
+    pfeiffer_omnicontrol: OmniControlConfig,
     samples: Samples,
     limits: InstrumentLimits,
     lakeshore_temperature: LakeshoreTempConfig,
@@ -48,6 +52,7 @@ impl PrgConfig {
             agilent_ion_pump: IonPumpConfig::default(),
             controller_config: ControllerConfig::default(),
             pfeiffer_hicube: PfeifferHiCubeConf::default(),
+            pfeiffer_omnicontrol: OmniControlConfig::default(),
             samples: Samples::new(),
             limits: InstrumentLimits::default(),
             lakeshore_temperature: LakeshoreTempConfig::default(),
@@ -98,6 +103,11 @@ impl PrgConfig {
     /// Get a clone of the ion pump configuration.
     pub fn get_ion_pump_config(&self) -> IonPumpConfig {
         self.agilent_ion_pump.clone()
+    }
+
+    /// Get a clone of the Omnicontrol configuration.
+    pub fn get_omnicontrol_config(&self) -> OmniControlConfig {
+        self.pfeiffer_omnicontrol.clone()
     }
 
     /// Get a clone of the lakeshore temperature configuration.

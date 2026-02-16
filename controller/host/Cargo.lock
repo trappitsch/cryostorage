@@ -4174,6 +4174,7 @@ version = "0.1.0"
 dependencies = [
  "instrumentrs",
  "measurements",
+ "serde",
 ]
 
 [[package]]

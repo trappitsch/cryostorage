@@ -10,7 +10,9 @@
 
 use std::sync::{Arc, Mutex};
 
-use pfeiffer_hicube::{HiCubeClient, PumpStandState, Variables as HiCubeVariables, VentState, PumpState};
+use pfeiffer_hicube::{
+    HiCubeClient, PumpStandState, PumpState, Variables as HiCubeVariables, VentState,
+};
 use serde::{Deserialize, Serialize};
 use tokio::sync::mpsc;
 
@@ -202,4 +204,3 @@ pub fn send_hicube_command_now(cmd: HiCubeCommands) {
         )));
     }
 }
-

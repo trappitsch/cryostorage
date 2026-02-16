@@ -150,7 +150,7 @@ pub async fn controller_broadcast_listener(
     let listener_wait_time = Duration::from_millis(icd::BROADCAST_INTERVAL_MS * 2);
 
     let mut run_initialize = true; // If true, runs initialize after broadcast
-    
+
     // Wait for UI to be set in InstrumentStatus
     while !inst_status
         .lock()
@@ -159,7 +159,7 @@ pub async fn controller_broadcast_listener(
     {
         tokio::time::sleep(Duration::from_millis(100)).await;
     }
-    
+
     // Tell the light to initialize itslef :)
     send_cntrl_cmd(ControllerCommands::InitializeLight()).await;
 
