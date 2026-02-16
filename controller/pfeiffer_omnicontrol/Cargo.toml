@@ -1,0 +1,13 @@
+[package]
+name = "pfeiffer-omnicontrol"
+version = "0.1.0"
+authors = ["Reto Trappitsch <reto@galactic-forensics.space>"]
+edition = "2024"
+license = "MIT OR Apache-2.0"
+description = "A library to control the Pfeiffer Omnicontrol from Rust using `instrumentRs`."
+
+[dependencies]
+instrumentrs = { path = "../instrumentRs", version = "0.1.0", features = [
+  "serial"
+] }
+measurements = { version = "0.11.1", features = ["std"] }

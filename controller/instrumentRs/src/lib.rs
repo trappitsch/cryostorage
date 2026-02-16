@@ -161,9 +161,14 @@ pub trait InstrumentInterface {
             if let Ok(val) = str::from_utf8(&single_buf) {
                 response.push_str(val);
             } else {
-                panic!(
-                    "Received invalid UTF-8 data: {single_buf:?}. This should be unreachable, as read exact always returns a `u8`. Please report this as a bug."
-                );
+                // It can occur that the instruments sends a non-UTF-8 byte, e.g., 0xFF (no data)
+                // for some reason. In this case, we just skip the byte and continue, but print an
+                // error to `stderr` to inform the user about this.
+                // This is fair as if the whole response is bad in the end, the instrument driver
+                // should check this by itself, depending on the expected response, i.e., with a
+                // CRC check or similar.
+                eprintln!("Received non-UTF-8 byte from instrument: 0x{:02X}. Skipping byte.", single_buf[0]);
+                continue;
             }
             if response.ends_with(&self.get_terminator()) {
                 timeout_occured = false;
