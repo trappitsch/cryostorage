@@ -27,7 +27,6 @@ mod plots;
 mod prg_config;
 mod samples;
 mod status;
-mod vacuum_history;
 
 pub const CONFIG_FOLDER: &str = ".cryostorage";
 pub const LOG_LEVEL_DISPLAY: logger::Level = logger::Level::Warning;
