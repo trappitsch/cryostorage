@@ -138,7 +138,7 @@ impl InstrumentStatus {
     ///
     /// Note that we only call the pump in an ON state when the whole pump stand is on!
     pub fn set_hicube_pump_stand_state_and_ui(&mut self, state: PumpStandState) -> Result<()> {
-        self.hi_cube_pump_stand_state = state.clone();
+        self.hi_cube_pump_stand_state = state;
 
         let gui_state = match state {
             PumpStandState::On => PumpStandStateGUI::On,
@@ -188,7 +188,7 @@ impl InstrumentStatus {
 
     /// Set ion pump state and update UI.
     pub fn set_ion_pump_state_and_ui(&mut self, state: ValveOrPumpState) -> Result<()> {
-        self.ion_pump_state = state.clone();
+        self.ion_pump_state = state;
 
         let ion_pump_switch_state = matches!(state, ValveOrPumpState::OpenOrOn);
         let ui = self

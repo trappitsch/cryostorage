@@ -7,7 +7,7 @@ use std::{
 use icd::{BakingState, BcInstStatus, LightState, ValveState, VctHandshake};
 use poststation_sdk::{PoststationClient, connect};
 use serde::{Deserialize, Serialize};
-use tokio::{sync::mpsc, task::JoinHandle, time::sleep};
+use tokio::{sync::mpsc, task::JoinHandle};
 
 use crate::{
     logger::{LogMessage, send_log_message, send_log_message_now},

@@ -24,7 +24,7 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use agilent_4uhv::HvState;
-use measurements::{Power, Pressure, Temperature};
+use measurements::{Power, Temperature};
 use sunpower_cryotelgt::CoolerState;
 use tokio::sync::mpsc;
 
@@ -139,7 +139,10 @@ pub async fn instruments_task(
     let ion_pump_state = match ion_pump_inst.get_high_voltage() {
         Ok(HvState::On) => ValveOrPumpState::OpenOrOn,
         Ok(HvState::Off) => ValveOrPumpState::ClosedOrOff,
-        Err(_) => ValveOrPumpState::UndefinedOrError,
+        Err(_) => {
+            ion_pump_inst.reset_instrument();
+            ValveOrPumpState::UndefinedOrError
+        }
     };
 
     // set all initial statuses of various instruments
@@ -306,6 +309,7 @@ pub async fn instruments_task(
                                 }
                             },
                             Err(e) => {
+                                ion_pump_inst.reset_instrument();
                                 send_log_message(LogMessage::new_error(
                                     &format!(
                                         "Failed to set ion pump state: {}", e)
@@ -334,20 +338,6 @@ fn get_instr_cmd_sender() -> mpsc::Sender<InstrumentCommands> {
         .get()
         .expect("Uninitialized")
         .clone()
-}
-
-/// Convenience function to await sending an instrument command.
-///
-/// If an error occurs, this error is logged. Otherwise, the program will continue
-/// as normal.
-pub async fn send_instr_cmd(cmd: InstrumentCommands) {
-    let sender = get_instr_cmd_sender();
-    if let Err(e) = sender.send(cmd).await {
-        send_log_message_now(LogMessage::new_error(&format!(
-            "Failed to send instrument command: {}",
-            e
-        )));
-    }
 }
 
 /// Convenience function to send an instrument command without awaiting.

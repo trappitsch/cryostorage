@@ -185,20 +185,6 @@ fn get_temperature_plot_command_sender() -> mpsc::Sender<TemperaturePlotCommands
         .clone()
 }
 
-/// Convenience function to await sending a temperature plot command.
-///
-/// If an error occurs, this error is logged. Otherwise, the program will continue
-/// as normal.
-pub async fn send_temperature_plot_cmd(cmd: TemperaturePlotCommands) {
-    let sender = get_temperature_plot_command_sender();
-    if let Err(e) = sender.send(cmd).await {
-        send_log_message_now(LogMessage::new_error(&format!(
-            "Failed to send temperature plot command: {}",
-            e
-        )));
-    }
-}
-
 /// Convenience function to send a temperature plot command without awaiting.
 ///
 /// If an error occurs, this error is logged. Otherwise, the program will continue

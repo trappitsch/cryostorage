@@ -20,24 +20,6 @@ impl Samples {
         Self { names }
     }
 
-    /// Get a vector of tuples for the btreemap.
-    /// FIXME: delete?
-    pub fn get_for_slint(&self) -> [(slint::SharedString, slint::SharedString); 8] {
-        let mut model: [(slint::SharedString, slint::SharedString); 8] = Default::default();
-        println!("BTreeMap contents: {:?}", self.names);
-        for (it, (key, value)) in self.names.iter().enumerate() {
-            println!("Key: {}, Value: {}", key, value);
-            model[it].1 = key.into();
-            model[it].0 = value.into();
-        }
-        model
-    }
-
-    /// Get the sample name for a given position.
-    pub fn get_sample_name(&self, pos: &str) -> Option<String> {
-        self.names.get(pos).cloned()
-    }
-
     /// Update the sample name at the given position and return the index of the entry.
     pub fn update_sample(&mut self, pos: &str, value: &str) -> Result<usize> {
         if self.names.contains_key(pos) {

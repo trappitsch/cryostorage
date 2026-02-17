@@ -50,22 +50,6 @@ impl Default for TcpIpAdapter {
     }
 }
 
-/// A serial adapter that connects to the instrument via a local serial port.
-///
-/// Here, we only need a port name as baud rate and other instrument specific settings are handled
-/// in Instrumentrs.
-#[derive(Debug, Default, Clone, Serialize, Deserialize)]
-pub struct SerialAdapter {
-    pub port_name: String,
-}
-
-impl SerialAdapter {
-    /// Get the simple address string to use with `InstrumentRs`.
-    pub fn get_address(&self) -> String {
-        self.port_name.clone()
-    }
-}
-
 /// The adapter for connecting to the poststation server.
 ///
 /// A combination of the TCP/IP adapter and a serial number of the device.

@@ -11,7 +11,7 @@
 use std::sync::{Arc, Mutex};
 
 use pfeiffer_hicube::{
-    HiCubeClient, PumpStandState, PumpState, Variables as HiCubeVariables, VentState,
+    HiCubeClient, PumpStandState, Variables as HiCubeVariables, VentState,
 };
 use serde::{Deserialize, Serialize};
 use tokio::sync::mpsc;
@@ -178,19 +178,6 @@ fn get_hicube_cmd_sender() -> mpsc::Sender<HiCubeCommands> {
         .get()
         .expect("HiCube command sender must be initialized")
         .clone()
-}
-
-/// Convenience function to await sending a hicube command.
-///
-/// If an error occurs, this error is logged.
-pub async fn send_hicube_command(cmd: HiCubeCommands) {
-    let sender = get_hicube_cmd_sender();
-    if let Err(e) = sender.send(cmd).await {
-        send_log_message(LogMessage::new_error(&format!(
-            "Failed to send HiCube command: {e}"
-        )))
-        .await;
-    }
 }
 
 /// Convenience function to send a hicube command without awaiting.

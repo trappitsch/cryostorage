@@ -191,20 +191,6 @@ fn get_pressur_plot_command_sender() -> mpsc::Sender<PressurePlotCommands> {
         .clone()
 }
 
-/// Convenience function to await sending a pressure plot command.
-///
-/// If an error occurs, this error is logged. Otherwise, the program will continue
-/// as normal.
-pub async fn send_pressure_plot_cmd(cmd: PressurePlotCommands) {
-    let sender = get_pressur_plot_command_sender();
-    if let Err(e) = sender.send(cmd).await {
-        send_log_message_now(LogMessage::new_error(&format!(
-            "Failed to send pressure plot command: {}",
-            e
-        )));
-    }
-}
-
 /// Convenience function to send a pressure plot command without awaiting.
 ///
 /// If an error occurs, this error is logged. Otherwise, the program will continue

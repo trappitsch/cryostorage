@@ -128,6 +128,7 @@ async fn main() {
                 instr_tsk,
                 log_handler_listen,
                 p_plot_task,
+                t_plot_task
             );
             println!("App exited normally")
         }

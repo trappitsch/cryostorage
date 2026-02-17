@@ -124,7 +124,7 @@ impl OmniControlInst {
 
         if let Some((ch_opt1, ch_opt2)) = &mut self.channels {
             // detect the correct channel
-            let mut ch = if self.config.gauge_option1 == gauge {
+            let ch = if self.config.gauge_option1 == gauge {
                 ch_opt1
             } else {
                 ch_opt2

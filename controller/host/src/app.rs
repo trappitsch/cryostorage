@@ -42,9 +42,9 @@ pub fn app_main(
     };
 
     // initialize the various GUI handlers
-    let _controller_cmd_handler = ControllerCommandHandler::new(ui.as_weak(), Arc::clone(&conf));
+    let _controller_cmd_handler = ControllerCommandHandler::new(ui.as_weak());
     let _gui_cmd_handler = GuiCommandHandler::new(ui.as_weak(), Arc::clone(&conf));
-    let _instrument_cmd_handler = InstrumentCommandHandler::new(ui.as_weak(), Arc::clone(&conf));
+    let _instrument_cmd_handler = InstrumentCommandHandler::new(ui.as_weak());
 
     // pass the ui to the instrument status handler
     inst_status.lock().expect("Poisoned").set_ui(ui.as_weak());
@@ -69,15 +69,13 @@ pub fn app_main(
 /// GUI and the rest of the logic.
 struct ControllerCommandHandler {
     ui: AppWindow,
-    conf: Arc<Mutex<PrgConfig>>,
 }
 
 impl ControllerCommandHandler {
     /// Initialize all switches
-    fn new(ui: Weak<AppWindow>, conf: Arc<Mutex<PrgConfig>>) -> Self {
+    fn new(ui: Weak<AppWindow>) -> Self {
         let sf = Self {
             ui: ui.unwrap(),
-            conf,
         };
         sf.init();
         sf
@@ -293,14 +291,12 @@ impl GuiCommandHandler {
 /// Command handler for connected instruments.
 struct InstrumentCommandHandler {
     ui: AppWindow,
-    conf: Arc<Mutex<PrgConfig>>,
 }
 
 impl InstrumentCommandHandler {
-    fn new(ui: Weak<AppWindow>, conf: Arc<Mutex<PrgConfig>>) -> Self {
+    fn new(ui: Weak<AppWindow>) -> Self {
         let sf = Self {
             ui: ui.unwrap(),
-            conf,
         };
         sf.init();
         sf
@@ -318,9 +314,7 @@ impl InstrumentCommandHandler {
 
     fn cryocooler_set_setpoint(&self) {
         self.ui.global::<Logic>().on_set_setpoint_temp({
-            let ui = self.ui.as_weak();
             move || {
-                let ui = ui.unwrap();
                 let keypad = Keypad::new().unwrap();
                 keypad.set_keypad_title("New Setpoint Temperature (K)".into());
                 keypad.set_spread_out_entry(false);
@@ -335,7 +329,6 @@ impl InstrumentCommandHandler {
 
                 keypad.global::<KeypadLogic>().on_ok_pressed({
                     let keypad = keypad.as_weak();
-                    let ui = ui.as_weak();
                     move |setpoint| {
                         if let Ok(new_setpoint) = setpoint.as_str().parse::<f64>() {
                             send_instr_cmd_now(InstrumentCommands::CryoCoolerSetpoint(

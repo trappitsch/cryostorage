@@ -1,8 +1,8 @@
 //! Measurements module: Holds the measurements class and the Filtered View
 
-use std::{env, i8::MAX, io::Write, path::PathBuf, time::Duration};
+use std::{env, io::Write, path::PathBuf, time::Duration};
 
-use chrono::{DateTime, Local, TimeDelta};
+use chrono::{DateTime, Local};
 
 use crate::{
     CONFIG_FOLDER, LogMessage,
@@ -177,36 +177,6 @@ impl Measurements {
         self.timestamps.len()
     }
 
-    /// Check if the measurement series is empty.
-    #[inline]
-    pub fn is_empty(&self) -> bool {
-        self.timestamps.is_empty()
-    }
-
-    /// Slice accessors for the timestamp series.
-    #[inline]
-    pub fn timestamps(&self) -> &[DateTime<Local>] {
-        &self.timestamps
-    }
-
-    /// Slice accessors for the first data series.
-    #[inline]
-    pub fn series_1(&self) -> &[f64] {
-        &self.series_1
-    }
-
-    /// Slice accessors for the second data series.
-    #[inline]
-    pub fn series_2(&self) -> &[f64] {
-        &self.series_2
-    }
-
-    /// Slice accessors for the third data series.
-    #[inline]
-    pub fn series_3(&self) -> &[f64] {
-        &self.series_3
-    }
-
     /// Generic filter using indexes.
     pub fn filter_view<F>(&self, mut pred: F) -> FilteredView<'_>
     where
@@ -239,7 +209,7 @@ impl Measurements {
 
         fn compact<T>(v: &mut Vec<T>, keep: &[bool]) {
             let mut dst = 0;
-            for src in 0..v.len() {
+            for (src, _) in keep.iter().enumerate().take(v.len()) {
                 if keep[src] {
                     v.swap(dst, src);
                     dst += 1;
@@ -298,10 +268,5 @@ impl<'a> FilteredView<'a> {
     /// Borrowed second data series iterator.
     pub fn series_2(&self) -> impl Iterator<Item = f64> + '_ {
         self.indices.iter().map(move |&i| self.parent.series_2[i])
-    }
-
-    /// Borrowed third data series iterator.
-    pub fn series_3(&self) -> impl Iterator<Item = f64> + '_ {
-        self.indices.iter().map(move |&i| self.parent.series_3[i])
     }
 }
