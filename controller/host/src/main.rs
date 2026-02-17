@@ -1,9 +1,5 @@
-use std::{
-    env, fs,
-    sync::{Arc, Mutex},
-};
+use std::sync::{Arc, Mutex};
 
-use measurements::pressure;
 use tokio::sync::{OnceCell, broadcast, mpsc, oneshot};
 
 use crate::{
@@ -14,7 +10,9 @@ use crate::{
         instruments_task,
     },
     logger::{LogHandler, LogMessage},
-    plots::{PressurePlotCommands, TemperaturePlotCommands, pressure_plot_task, temperature_plot_task},
+    plots::{
+        PressurePlotCommands, TemperaturePlotCommands, pressure_plot_task, temperature_plot_task,
+    },
     status::InstrumentStatus,
 };
 
@@ -47,12 +45,6 @@ pub static PLOT_TEMPERATURE_SENDER: OnceCell<mpsc::Sender<TemperaturePlotCommand
 
 #[tokio::main]
 async fn main() {
-    // Create the configuration folder if it doesn't exist
-    let conf_folder_pth = env::home_dir()
-        .expect("Home directory must be known")
-        .join(CONFIG_FOLDER);
-    fs::create_dir_all(&conf_folder_pth).expect("Could not create config folder");
-
     // config
     let conf = Arc::new(Mutex::new(prg_config::PrgConfig::try_new().unwrap()));
 

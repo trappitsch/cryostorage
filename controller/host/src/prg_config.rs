@@ -7,7 +7,7 @@ use std::{
     path::PathBuf,
 };
 
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -17,10 +17,12 @@ use crate::{
         cryocooler::CryoCoolerConfig, hi_cube::PfeifferHiCubeConf, ion_pump::IonPumpConfig,
         lakeshore_temp::LakeshoreTempConfig, omnicontrol::OmniControlConfig,
     },
+    logger::{LogMessage, send_log_message_now},
     samples::Samples,
 };
 
 pub const CONFIG_FNAME: &str = "cryostorage_config.ron";
+pub const CONFIG_OLD_FOLDER: &str = "config_history";
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PrgConfig {
@@ -41,10 +43,17 @@ impl PrgConfig {
     ///
     /// The configuration folder is created, if it does not exist, in `main.rs`.
     pub fn try_new() -> Result<Self> {
-        let fname = env::home_dir()
+        // Create the configuration folder if it doesn't exist
+        let conf_folder_pth = env::home_dir()
             .expect("Home directory must be known")
-            .join(CONFIG_FOLDER)
-            .join(CONFIG_FNAME);
+            .join(CONFIG_FOLDER);
+        fs::create_dir_all(&conf_folder_pth).expect("Could not create config folder");
+
+        // Create the folder for the old config files, if it doesn't exist
+        let old_conf_folder_pth = conf_folder_pth.join(CONFIG_OLD_FOLDER);
+        fs::create_dir_all(&old_conf_folder_pth).expect("Could not create old config folder");
+
+        let fname = conf_folder_pth.join(CONFIG_FNAME);
 
         let mut ret_self = Self {
             fname,
@@ -59,22 +68,54 @@ impl PrgConfig {
             suntel_cryocooler: CryoCoolerConfig::default(),
         };
 
-        ret_self.load_from_file();
-        ret_self.save_to_file()?; // FIXME: Remove this line later
-        println!("Configuration loaded from {:?}", ret_self.fname);
+        if let Err(e) = ret_self.load_from_file() {
+            eprintln!("Error loading config file: {e}");
+        };
 
         Ok(ret_self)
     }
 
-    fn load_from_file(&mut self) {
+    fn load_from_file(&mut self) -> Result<()> {
         if let Ok(content) = fs::read_to_string(&self.fname)
             && let Ok(cont_ron) = ron::de::from_str::<PrgConfig>(&content)
         {
             *self = cont_ron;
+            Ok(())
+        } else {
+            self.save_to_file()?;
+            Err(anyhow!(
+                "Config file likely invalid or not found, saving a new one with default values."
+            ))
         }
     }
 
     fn save_to_file(&self) -> Result<()> {
+        // backup the previous config file with same name and timestamp if it exists
+        if self.fname.exists() {
+            let timestamp = chrono::Utc::now().format("%Y-%m-%d-%H:%M:%S");
+            let stem = self
+                .fname
+                .file_stem()
+                .and_then(|s| s.to_str())
+                .unwrap_or("cryostorage_config");
+            let ext = self
+                .fname
+                .extension()
+                .and_then(|s| s.to_str())
+                .unwrap_or("ron");
+            let backup_fname = self
+                .fname
+                .parent()
+                .expect("Config file has a parent folder")
+                .join(CONFIG_OLD_FOLDER)
+                .join(format!("{timestamp}_{stem}.{ext}"));
+            if let Err(e) = fs::copy(&self.fname, backup_fname) {
+                send_log_message_now(LogMessage::new_error(&format!(
+                    "Failed to backup config file: {e}"
+                )));
+            };
+        };
+
         let content = ron::ser::to_string_pretty(self, ron::ser::PrettyConfig::default())?;
         let mut f = File::options()
             .write(true)
