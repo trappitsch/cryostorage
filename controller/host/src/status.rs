@@ -13,6 +13,7 @@ use sunpower_cryotelgt::CoolerState;
 use crate::{
     app::{AppWindow, BakingTime, Logic, PumpStandStateGUI, ValveOrPumpState},
     instruments::omnicontrol::{Gauge, GaugeStatus},
+    plots::{PressureDataPoint, PressurePlotCommands, send_pressure_plot_cmd_now},
 };
 
 pub struct InstrumentStatus {
@@ -263,6 +264,23 @@ impl InstrumentStatus {
             PressureReading::Off => self.pressure_transfer_gauge = GaugeStatus::Off,
             PressureReading::Value(_) => self.pressure_transfer_gauge = GaugeStatus::On,
             _ => {}
+        }
+
+        self.send_pressures_to_plot();
+    }
+
+    fn send_pressures_to_plot(&self) {
+        if let (PressureReading::Value(p_chamber), PressureReading::Value(p_transfer)) = (
+            self.pressure_chamber_current,
+            self.pressure_transfer_current,
+        ) {
+            let dp = PressureDataPoint {
+                ts: chrono::Local::now(),
+                chamber: p_chamber.as_millibars(),
+                transfer: p_transfer.as_millibars(),
+            };
+
+            send_pressure_plot_cmd_now(PressurePlotCommands::AddDataPoint(dp));
         }
     }
 

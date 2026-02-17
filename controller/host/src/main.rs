@@ -3,6 +3,7 @@ use std::{
     sync::{Arc, Mutex},
 };
 
+use measurements::pressure;
 use tokio::sync::{OnceCell, broadcast, mpsc, oneshot};
 
 use crate::{
@@ -13,6 +14,7 @@ use crate::{
         instruments_task,
     },
     logger::{LogHandler, LogMessage},
+    plots::{PressurePlotCommands, pressure_plot_task},
     status::InstrumentStatus,
 };
 
@@ -21,6 +23,7 @@ mod connections;
 mod controller;
 mod instruments;
 mod logger;
+mod plots;
 mod prg_config;
 mod samples;
 mod status;
@@ -31,11 +34,15 @@ pub const LOG_LEVEL_DISPLAY: logger::Level = logger::Level::Warning;
 
 pub static HALT_SENDER: OnceCell<broadcast::Sender<()>> = OnceCell::const_new();
 pub static LOG_SENDER: OnceCell<mpsc::Sender<LogMessage>> = OnceCell::const_new();
+
 pub static CONTROLLER_COMMAND_SENDER: OnceCell<mpsc::Sender<ControllerCommands>> =
     OnceCell::const_new();
 pub static INSTRUMENT_COMMAND_SENDER: OnceCell<mpsc::Sender<InstrumentCommands>> =
     OnceCell::const_new();
 pub static HICUBE_COMMAND_SENDER: OnceCell<mpsc::Sender<HiCubeCommands>> = OnceCell::const_new();
+
+pub static PLOT_PRESSURE_SENDER: OnceCell<mpsc::Sender<PressurePlotCommands>> =
+    OnceCell::const_new();
 
 #[tokio::main]
 async fn main() {
@@ -62,6 +69,13 @@ async fn main() {
     LOG_SENDER.set(tx_log).expect("Uninitialized");
 
     let log_handler_listen = tokio::spawn(logger::log_handler_task(log_handler, rx_ui_set));
+
+    // Pressure plotting task
+    let (tx_p_plot, rx_p_plot) = mpsc::channel(32);
+    PLOT_PRESSURE_SENDER
+        .set(tx_p_plot.clone())
+        .expect("Uninitialized");
+    let p_plot_task = tokio::spawn(pressure_plot_task(rx_p_plot));
 
     // comms for controller task
     let (tx_ctrl, rx_ctrl) = mpsc::channel(32);
@@ -112,7 +126,8 @@ async fn main() {
                 cntrl_bc_listen,
                 hicube_task,
                 instr_tsk,
-                log_handler_listen
+                log_handler_listen,
+                p_plot_task,
             );
             println!("App exited normally")
         }

@@ -13,15 +13,12 @@ use sunpower_cryotelgt::CoolerState;
 use tokio::sync::{mpsc, oneshot};
 
 use crate::{
-    controller::{ControllerCommands, send_cntrl_cmd_now},
-    instruments::{
+    controller::{ControllerCommands, send_cntrl_cmd_now}, instruments::{
         InstrumentCommands,
         hi_cube::{HiCubeCommands, send_hicube_command_now},
         omnicontrol::Gauge,
         send_instr_cmd_now,
-    },
-    prg_config::PrgConfig,
-    status::InstrumentStatus,
+    }, plots::{PressurePlotCommands, send_pressure_plot_cmd_now}, prg_config::PrgConfig, status::InstrumentStatus
 };
 
 slint::include_modules!();
@@ -44,19 +41,8 @@ pub fn app_main(
 
     // pass the ui to the instrument status handler
     inst_status.lock().expect("Poisoned").set_ui(ui.as_weak());
-
-    // FIXME:
-    let mut vh = crate::vacuum_history::VacuumHistory::new(
-        crate::vacuum_history::PlotSizePx {
-            width: 800,
-            height: 400,
-        },
-        ui.as_weak(),
-    );
-    vh.add_measurement(
-        measurements::Pressure::from_millibars(1.0e-7),
-        measurements::Pressure::from_millibars(1.0e-5),
-    )?;
+    // pass the ui to the pressure plot task
+    send_pressure_plot_cmd_now(PressurePlotCommands::SetUi(ui.as_weak()));
 
     // Debug builds
     #[cfg(debug_assertions)]

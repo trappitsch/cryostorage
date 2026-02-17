@@ -65,7 +65,6 @@ impl OmniControlInst {
 
     /// Connect to the Omnicontrol and store instrument in self.
     fn connect(&mut self) -> Result<()> {
-        println!("Connecting...");
         let addr = self.config.tcp_ip_adapter.get_address();
         let socket_addr: SocketAddr = addr.parse()?;
 
