@@ -14,7 +14,7 @@ use crate::{
         instruments_task,
     },
     logger::{LogHandler, LogMessage},
-    plots::{PressurePlotCommands, pressure_plot_task},
+    plots::{PressurePlotCommands, TemperaturePlotCommands, pressure_plot_task, temperature_plot_task},
     status::InstrumentStatus,
 };
 
@@ -42,6 +42,8 @@ pub static INSTRUMENT_COMMAND_SENDER: OnceCell<mpsc::Sender<InstrumentCommands>>
 pub static HICUBE_COMMAND_SENDER: OnceCell<mpsc::Sender<HiCubeCommands>> = OnceCell::const_new();
 
 pub static PLOT_PRESSURE_SENDER: OnceCell<mpsc::Sender<PressurePlotCommands>> =
+    OnceCell::const_new();
+pub static PLOT_TEMPERATURE_SENDER: OnceCell<mpsc::Sender<TemperaturePlotCommands>> =
     OnceCell::const_new();
 
 #[tokio::main]
@@ -76,6 +78,13 @@ async fn main() {
         .set(tx_p_plot.clone())
         .expect("Uninitialized");
     let p_plot_task = tokio::spawn(pressure_plot_task(rx_p_plot));
+
+    // Temperature plotting task
+    let (tx_t_plot, rx_t_plot) = mpsc::channel(32);
+    PLOT_TEMPERATURE_SENDER
+        .set(tx_t_plot.clone())
+        .expect("Uninitialized");
+    let t_plot_task = tokio::spawn(temperature_plot_task(rx_t_plot));
 
     // comms for controller task
     let (tx_ctrl, rx_ctrl) = mpsc::channel(32);

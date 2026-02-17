@@ -101,6 +101,7 @@ export component InfoArea inherits Rectangle {
     in-out property <string> title: "Info area";
     in-out property <string> text: " 150 K";
     in-out property <color> text_color: Palette.text;
+    in-out property <color> title_color: Palette.text;
 
     width: Const.element_width_wide;
     height: Const.info_height;
@@ -114,6 +115,7 @@ export component InfoArea inherits Rectangle {
 
         H3Text {
             text: root.title;
+            color: root.title_color;
             horizontal-alignment: center;
         }
 

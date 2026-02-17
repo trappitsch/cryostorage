@@ -13,7 +13,10 @@ use sunpower_cryotelgt::CoolerState;
 use crate::{
     app::{AppWindow, BakingTime, Logic, PumpStandStateGUI, ValveOrPumpState},
     instruments::omnicontrol::{Gauge, GaugeStatus},
-    plots::{PressureDataPoint, PressurePlotCommands, send_pressure_plot_cmd_now},
+    plots::{
+        PressureDataPoint, PressurePlotCommands, TemperatureDataPoint, TemperaturePlotCommands,
+        send_pressure_plot_cmd_now, send_temperature_plot_cmd_now,
+    },
 };
 
 pub struct InstrumentStatus {
@@ -294,6 +297,20 @@ impl InstrumentStatus {
         self.temperature_bridge = bridge;
         self.temperature_cooler = cooler;
         self.temperature_sample = sample;
+
+        self.send_temperatures_to_plot();
+    }
+
+    /// Send temperatures to plot
+    pub fn send_temperatures_to_plot(&self) {
+        // if a temperature is out 0 -> below yaxis minimum!
+        let dp = TemperatureDataPoint {
+            ts: chrono::Local::now(),
+            sample: self.temperature_sample.as_kelvin(),
+            bridge: self.temperature_bridge.as_kelvin(),
+            cooler: self.temperature_cooler.as_kelvin(),
+        };
+        send_temperature_plot_cmd_now(TemperaturePlotCommands::AddDataPoint(dp));
     }
 
     /// Set valve pump called state.

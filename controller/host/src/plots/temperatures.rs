@@ -1,4 +1,4 @@
-//! Plot the pressure figure and accepts signals that send pressure data points.
+//! Plot the temperature figure and accepts signals that send temperature data points.
 
 use anyhow::{Result, anyhow, bail};
 use plotters::prelude::*;
@@ -8,24 +8,24 @@ use tokio::sync::mpsc;
 use crate::{
     app::{AppWindow, Logic},
     logger::{LogMessage, send_log_message_now},
-    plots::{Measurements, PLOT_STYLE, PlotSizePx, PressureDataPoint, TIME_RANGE_TO_KEEP},
+    plots::{Measurements, PLOT_STYLE, PlotSizePx, TIME_RANGE_TO_KEEP, TemperatureDataPoint},
 };
 
-pub enum PressurePlotCommands {
-    AddDataPoint(PressureDataPoint),
+pub enum TemperaturePlotCommands {
+    AddDataPoint(TemperatureDataPoint),
     SetUi(Weak<AppWindow>),
 }
 
-pub struct PressurePlot {
+pub struct TemperaturePlot {
     measurements: Measurements,
     ui: Option<Weak<AppWindow>>,
     plot_size: PlotSizePx,
 }
 
-impl PressurePlot {
-    /// Create a new and empty pressure plot.
+impl TemperaturePlot {
+    /// Create a new and empty temperature plot.
     pub fn new(plot_size: PlotSizePx) -> Self {
-        let measurements = Measurements::new_pressure();
+        let measurements = Measurements::new_temperature();
 
         Self {
             measurements,
@@ -39,11 +39,11 @@ impl PressurePlot {
         self.ui = Some(ui);
     }
 
-    /// Make the plot for the pressure display with a logarithmic scenario and set it to the UI.
+    /// Make the plot for the temperature display with a logarithmic scenario and set it to the UI.
     fn plot_it(&self) -> Result<()> {
         let ui = match &self.ui {
             Some(ui) => ui,
-            None => bail!("Cannot make pressure plot: UI not set."),
+            None => bail!("Cannot make temperature plot: UI not set."),
         };
 
         let mut pixel_buffer =
@@ -65,26 +65,16 @@ impl PressurePlot {
                 .last()
                 .ok_or_else(|| anyhow!("Not enough data yet to plot."))?,
         );
-        let (min_y, max_y) = {
-            let min_1 = view.series_1().fold(f64::INFINITY, f64::min);
-            let max_1 = view.series_1().fold(f64::NEG_INFINITY, f64::max);
-            let min_2 = view.series_2().fold(f64::INFINITY, f64::min);
-            let max_2 = view.series_2().fold(f64::NEG_INFINITY, f64::max);
-            let (min_exp, max_exp) = (
-                min_1.min(min_2).log10().floor(),
-                max_1.max(max_2).log10().ceil(),
-            );
-            (10_f64.powf(min_exp), 10_f64.powf(max_exp))
-        };
+        let (min_y, max_y) = (70.0, 300.0);
 
         let mut chart = ChartBuilder::on(&root)
             .margin(10)
             .set_label_area_size(LabelAreaPosition::Left, 90)
             .set_label_area_size(LabelAreaPosition::Bottom, 60)
-            .build_cartesian_2d(min_ts..max_ts, (min_y..max_y).log_scale())?;
+            .build_cartesian_2d(min_ts..max_ts, min_y..max_y)?;
 
         let xlbl = "Time";
-        let ylbl = "Pressure (mbar)";
+        let ylbl = "Temperature (K)";
 
         chart
             .configure_mesh()
@@ -101,20 +91,26 @@ impl PressurePlot {
             .x_label_formatter(&|xval| xval.format("%H:%M").to_string())
             .max_light_lines(4)
             .y_desc(ylbl)
-            .y_labels(5)
-            .y_label_formatter(&|yval| format!("{:.0e}", yval))
+            .y_labels(3)
+            .y_label_formatter(&|yval| format!("{:.0}", yval))
             .draw()?;
 
-        // Draw the chamber
+        // Draw the first series
         chart.draw_series(LineSeries::new(
             view.iter_series_1(),
-            &PLOT_STYLE.chamber_color,
+            &PLOT_STYLE.sample_color,
         ))?;
 
         // Draw the second series
         chart.draw_series(LineSeries::new(
             view.iter_series_2(),
-            &PLOT_STYLE.transfer_color,
+            &PLOT_STYLE.bridge_color,
+        ))?;
+
+        // Draw the third series
+        chart.draw_series(LineSeries::new(
+            view.iter_series_3(),
+            &PLOT_STYLE.cooler_color,
         ))?;
 
         // Avoid IO failure being ignored silently by manually calling present function
@@ -125,7 +121,7 @@ impl PressurePlot {
 
         ui.upgrade_in_event_loop(move |ui| {
             let img = slint::Image::from_rgb8(pixel_buffer);
-            ui.global::<Logic>().set_vacuum_plot(img);
+            ui.global::<Logic>().set_temperature_plot(img);
         })
         .expect("UI still exists");
 
@@ -133,22 +129,20 @@ impl PressurePlot {
     }
 
     /// Make the plot and set it to the UI.
+    ///
+    /// TODO: Analyze what here actually needs to be done everytime and what can be done at init
     pub fn make_plot(&mut self) {
         if let Err(e) = self.plot_it() {
             send_log_message_now(LogMessage::new_error(&format!(
-                "Failed to make pressure plot: {e}"
+                "Failed to make temperature plot: {e}"
             )));
         }
     }
 }
 
-/// Pressure plot task: Receive pressure data points and update the plot and UI.
-///
-/// FIXME: Halt receiver
-pub async fn pressure_plot_task(mut rx: mpsc::Receiver<PressurePlotCommands>) {
-    println!("Starting pressure plot task");
-
-    let mut plot = PressurePlot::new(PlotSizePx {
+/// Pressure plot task: Receive temperature data points and update the plot and UI.
+pub async fn temperature_plot_task(mut rx: mpsc::Receiver<TemperaturePlotCommands>) {
+    let mut plot = TemperaturePlot::new(PlotSizePx {
         width: 800,
         height: 400,
     });
@@ -159,11 +153,11 @@ pub async fn pressure_plot_task(mut rx: mpsc::Receiver<PressurePlotCommands>) {
         tokio::select! {
             Some(cmd) = rx.recv() => {
                 match cmd {
-                    PressurePlotCommands::AddDataPoint(dp) => {
-                        plot.measurements.push_pressure(dp);
+                    TemperaturePlotCommands::AddDataPoint(dp) => {
+                        plot.measurements.push_temperature(dp);
                         plot.make_plot();
                     }
-                    PressurePlotCommands::SetUi(ui) => {
+                    TemperaturePlotCommands::SetUi(ui) => {
                         plot.set_ui(ui);
                     }
                 }
@@ -175,37 +169,37 @@ pub async fn pressure_plot_task(mut rx: mpsc::Receiver<PressurePlotCommands>) {
     }
 }
 
-/// Get the command sender for the pressure plot.
-fn get_pressur_plot_command_sender() -> mpsc::Sender<PressurePlotCommands> {
-    crate::PLOT_PRESSURE_SENDER
+/// Get the command sender for the temperature plot.
+fn get_temperature_plot_command_sender() -> mpsc::Sender<TemperaturePlotCommands> {
+    crate::PLOT_TEMPERATURE_SENDER
         .get()
         .expect("Uninitialized")
         .clone()
 }
 
-/// Convenience function to await sending a pressure plot command.
+/// Convenience function to await sending a temperature plot command.
 ///
 /// If an error occurs, this error is logged. Otherwise, the program will continue
 /// as normal.
-pub async fn send_pressure_plot_cmd(cmd: PressurePlotCommands) {
-    let sender = get_pressur_plot_command_sender();
+pub async fn send_temperature_plot_cmd(cmd: TemperaturePlotCommands) {
+    let sender = get_temperature_plot_command_sender();
     if let Err(e) = sender.send(cmd).await {
         send_log_message_now(LogMessage::new_error(&format!(
-            "Failed to send pressure plot command: {}",
+            "Failed to send temperature plot command: {}",
             e
         )));
     }
 }
 
-/// Convenience function to send a pressure plot command without awaiting.
+/// Convenience function to send a temperature plot command without awaiting.
 ///
 /// If an error occurs, this error is logged. Otherwise, the program will continue
 /// as normal.
-pub fn send_pressure_plot_cmd_now(cmd: PressurePlotCommands) {
-    let sender = get_pressur_plot_command_sender();
+pub fn send_temperature_plot_cmd_now(cmd: TemperaturePlotCommands) {
+    let sender = get_temperature_plot_command_sender();
     if let Err(e) = sender.try_send(cmd) {
         send_log_message_now(LogMessage::new_error(&format!(
-            "Failed to send pressure plot command now: {}",
+            "Failed to send temperature plot command now: {}",
             e
         )));
     }

@@ -22,18 +22,21 @@ export component CryoScreen inherits MyWindow {
             TemperatureArea {
                 width: (Const.useable_width - 4 * Const.border_spacing) / 3;
                 title: "Sample temperature";
+                title_color: Palette.rosewater;
                 temperature: Logic.sample_temp;
             }
 
             TemperatureArea {
                 width: (Const.useable_width - 4 * Const.border_spacing) / 3;
                 title: "Bridge temperature";
+                title_color: Palette.green;
                 temperature: Logic.bridge_temp;
             }
 
             TemperatureArea {
                 width: (Const.useable_width - 4 * Const.border_spacing) / 3;
                 title: "Cooler temperature";
+                title_color: Palette.sky;
                 temperature: Logic.cooler_temp;
             }
         }
@@ -58,7 +61,7 @@ export component CryoScreen inherits MyWindow {
 
         MyHorizontalLayout {
             Image {
-                source: Logic.vacuum_plot;
+                source: Logic.temperature_plot;
             }
 
             MyVerticalLayout {
