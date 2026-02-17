@@ -1,13 +1,10 @@
 //! Module to plot the results of the simulations.
 //!
 //! TODO:
-//! - Automatic saving of the datapoint values to a predefined file.
-//! - Autoclean every hour or so
-//! - only add new datapoints if signifantly different from the last one, or every minute
 //! - Load data from file when starting the program and display the last N hours immediately.
 use std::time::Duration;
 
-use chrono::{DateTime, Local};
+use chrono::{DateTime, Local, TimeDelta};
 use plotters::prelude::*;
 
 mod measurements;
@@ -19,6 +16,21 @@ pub use pressures::{PressurePlotCommands, pressure_plot_task, send_pressure_plot
 pub use temperatures::{
     TemperaturePlotCommands, send_temperature_plot_cmd_now, temperature_plot_task,
 };
+
+/// File name for the pressure history data.
+pub const HISTORY_PRESSURE_FNAME: &str = "pressure_history.csv";
+
+/// File name for the temperature history data.
+pub const HISTORY_TEMPERATURE_FNAME: &str = "temperature_history.csv";
+
+/// If values don't change, we only add a new datapoint after this interval.
+pub const MAX_DURATION_BETWEEN_POINTS: TimeDelta = TimeDelta::new(20, 00).unwrap();
+
+/// Minimum temerature difference to be exceeded for logging in any variable.
+pub const MIN_LOG_DT: f64 = 1.0;
+
+/// Minimum pressure difference factor to log the next data point.
+pub const MIN_LOG_DP_FACT: f64 = 0.01;
 
 pub const PLOT_STYLE: PlotStyle = PlotStyle {
     bg_color: RGBColor(24, 24, 37),
@@ -33,6 +45,7 @@ pub const PLOT_STYLE: PlotStyle = PlotStyle {
     cooler_color: RGBColor(137, 220, 235),   // sky
 };
 
+const TIME_INTERVAL_CLEANUP: Duration = Duration::from_hours(1);
 const TIME_RANGE_TO_KEEP: Duration = Duration::from_hours(24);
 
 /// One datapoint for the pressure plot.
@@ -70,14 +83,6 @@ pub enum PlotType {
     PressurePlot,
     /// Temperature plot
     TemperaturePlot,
-}
-
-/// Attributes of a given function to plot.
-#[derive(Clone, Debug, Default)]
-pub struct PlotAttributes {
-    /// Name of the function to plot.
-    pub name: String,
-    pub color: RGBColor,
 }
 
 /// Holds the plot size in pixels.

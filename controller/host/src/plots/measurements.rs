@@ -1,10 +1,23 @@
 //! Measurements module: Holds the measurements class and the Filtered View
 
-use std::time::Duration;
+use std::{env, i8::MAX, io::Write, path::PathBuf, time::Duration};
 
-use chrono::{DateTime, Local};
+use chrono::{DateTime, Local, TimeDelta};
 
-use crate::plots::{PlotType, PressureDataPoint, TemperatureDataPoint};
+use crate::{
+    CONFIG_FOLDER, LogMessage,
+    logger::send_log_message_now,
+    plots::{
+        HISTORY_PRESSURE_FNAME, HISTORY_TEMPERATURE_FNAME, MAX_DURATION_BETWEEN_POINTS, MIN_LOG_DP_FACT, MIN_LOG_DT, PlotType, PressureDataPoint, TemperatureDataPoint
+    },
+};
+
+/// Enum for both possible data point types.
+#[derive(Clone, Debug)]
+enum PossibleDataPoint {
+    Pressure(PressureDataPoint),
+    Temperature(TemperatureDataPoint),
+}
 
 /// A measurement container that can take pressure or temperature data.
 ///
@@ -13,32 +26,73 @@ use crate::plots::{PlotType, PressureDataPoint, TemperatureDataPoint};
 /// plot.
 pub struct Measurements {
     plot_type: PlotType,
+    fname: PathBuf,
     timestamps: Vec<DateTime<Local>>,
     series_1: Vec<f64>,
     series_2: Vec<f64>,
     series_3: Vec<f64>, // ignored in pressure plot
+    last_dp: Option<PossibleDataPoint>,
 }
 
 impl Measurements {
     /// Create a new measurement container for a pressure plot.
     pub fn new_pressure() -> Self {
+        let fname = env::home_dir()
+            .expect("Home directory must be known")
+            .join(CONFIG_FOLDER)
+            .join(HISTORY_PRESSURE_FNAME);
+
+        // create the file with header if it does not exist
+        if !fname.exists() {
+            std::fs::create_dir_all(fname.parent().unwrap())
+                .expect("Creating config folder must work");
+            let mut file =
+                std::fs::File::create(&fname).expect("Creating pressure history file must work");
+            writeln!(
+                file,
+                "Timestamp,Chamber_pressure_mbar,Transfer_pressure_mbar"
+            )
+            .expect("Writing header to pressure history file must work");
+        }
+
         Self {
             plot_type: PlotType::PressurePlot,
+            fname,
             timestamps: Vec::new(),
             series_1: Vec::new(),
             series_2: Vec::new(),
             series_3: Vec::new(), // ignored in pressure plot
+            last_dp: None,
         }
     }
 
     /// Create a new measurement container for a temperature plot.
     pub fn new_temperature() -> Self {
+        let fname = env::home_dir()
+            .expect("Home directory must be known")
+            .join(CONFIG_FOLDER)
+            .join(HISTORY_TEMPERATURE_FNAME);
+
+        // create the file with header if it does not exist
+        if !fname.exists() {
+            std::fs::create_dir_all(fname.parent().unwrap())
+                .expect("Creating config folder must work");
+            let mut file =
+                std::fs::File::create(&fname).expect("Creating pressure history file must work");
+            writeln!(
+                file,
+                "Timestamp,Sample_temperature_K,Bridge_temperature_K,Cooler_temperature_K"
+            )
+            .expect("Writing header to pressure history file must work");
+        }
         Self {
             plot_type: PlotType::TemperaturePlot,
+            fname,
             timestamps: Vec::new(),
             series_1: Vec::new(),
             series_2: Vec::new(),
             series_3: Vec::new(),
+            last_dp: None,
         }
     }
 
@@ -47,9 +101,35 @@ impl Measurements {
         if self.plot_type != PlotType::PressurePlot {
             panic!("Trying to push pressure data to a temperature plot");
         };
+
+        // check if the last datapoint is too young to push a new one
+        if let Some(PossibleDataPoint::Pressure(PressureDataPoint {
+            ts,
+            chamber,
+            transfer,
+        })) = &self.last_dp
+            && (dp.ts - ts) < MAX_DURATION_BETWEEN_POINTS
+            && ((dp.chamber / chamber - 1.0).abs() < MIN_LOG_DP_FACT)
+            && ((dp.transfer / transfer - 1.0).abs() < MIN_LOG_DP_FACT)
+        {
+            return;
+        }
+
+        self.last_dp = Some(PossibleDataPoint::Pressure(dp.clone()));
         self.timestamps.push(dp.ts);
         self.series_1.push(dp.chamber);
         self.series_2.push(dp.transfer);
+
+        // write to the history file
+        let mut file = std::fs::OpenOptions::new()
+            .append(true)
+            .open(&self.fname)
+            .expect("Opening vacuum history file must work");
+        if let Err(e) = writeln!(file, "{},{},{}", dp.ts, dp.chamber, dp.transfer) {
+            send_log_message_now(LogMessage::new_error(&format!(
+                "Failed to write pressure datapoint to history file: {e}"
+            )));
+        };
     }
 
     /// Push a new temperature datapoint to the measurement container.
@@ -57,10 +137,38 @@ impl Measurements {
         if self.plot_type != PlotType::TemperaturePlot {
             panic!("Trying to push temperature data to a pressure plot");
         };
+
+        // check if the last datapoint is too young to push a new one
+        if let Some(PossibleDataPoint::Temperature(TemperatureDataPoint {
+            ts,
+            sample,
+            bridge,
+            cooler,
+        })) = &self.last_dp
+            && (dp.ts - ts) < MAX_DURATION_BETWEEN_POINTS
+            && ((dp.sample - sample).abs() < MIN_LOG_DT)
+            && ((dp.bridge - bridge).abs() < MIN_LOG_DT)
+            && ((dp.cooler - cooler).abs() < MIN_LOG_DT)
+        {
+            return;
+        }
+
+        self.last_dp = Some(PossibleDataPoint::Temperature(dp.clone()));
         self.timestamps.push(dp.ts);
         self.series_1.push(dp.sample);
         self.series_2.push(dp.bridge);
         self.series_3.push(dp.cooler);
+
+        // write to the history file
+        let mut file = std::fs::OpenOptions::new()
+            .append(true)
+            .open(&self.fname)
+            .expect("Opening temperature history file must work");
+        if let Err(e) = writeln!(file, "{},{},{},{}", dp.ts, dp.sample, dp.bridge, dp.cooler) {
+            send_log_message_now(LogMessage::new_error(&format!(
+                "Failed to write temperature datapoint to history file: {e}"
+            )));
+        };
     }
 
     /// Length of the measurement series.

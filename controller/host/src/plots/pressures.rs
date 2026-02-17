@@ -3,12 +3,12 @@
 use anyhow::{Result, anyhow, bail};
 use plotters::prelude::*;
 use slint::{ComponentHandle, Weak};
-use tokio::sync::mpsc;
+use tokio::{sync::mpsc, time::Instant};
 
 use crate::{
     app::{AppWindow, Logic},
     logger::{LogMessage, send_log_message_now},
-    plots::{Measurements, PLOT_STYLE, PlotSizePx, PressureDataPoint, TIME_RANGE_TO_KEEP},
+    plots::{Measurements, PLOT_STYLE, PlotSizePx, PressureDataPoint, TIME_INTERVAL_CLEANUP, TIME_RANGE_TO_KEEP},
 };
 
 pub enum PressurePlotCommands {
@@ -155,11 +155,19 @@ pub async fn pressure_plot_task(mut rx: mpsc::Receiver<PressurePlotCommands>) {
 
     let mut rx_shutdown = crate::HALT_SENDER.get().expect("Uninitialized").subscribe();
 
+    let mut next_cleanup_time =  Instant::now() + TIME_INTERVAL_CLEANUP;
+
     loop {
         tokio::select! {
             Some(cmd) = rx.recv() => {
                 match cmd {
                     PressurePlotCommands::AddDataPoint(dp) => {
+                        // cleanup first?
+                        if Instant::now() >= next_cleanup_time {
+                            plot.measurements.retain(TIME_RANGE_TO_KEEP);
+                            next_cleanup_time = Instant::now() + TIME_INTERVAL_CLEANUP;
+                        }
+
                         plot.measurements.push_pressure(dp);
                         plot.make_plot();
                     }
