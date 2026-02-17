@@ -58,7 +58,12 @@ pub async fn start_controller_tasks(
     {
         device.serial
     } else {
-        panic!("No '{}' device found in poststation.", config.product_name);
+        send_log_message(LogMessage::new_error(&format!(
+            "No connected device with product name '{}' found.",
+            { config.product_name }
+        )))
+        .await;
+        0
     };
 
     // Get a new controller client.
@@ -147,8 +152,6 @@ pub async fn controller_broadcast_listener(
 ) {
     let mut rx_shutdown = crate::HALT_SENDER.get().unwrap().subscribe();
 
-    let listener_wait_time = Duration::from_millis(icd::BROADCAST_INTERVAL_MS * 2);
-
     let mut run_initialize = true; // If true, runs initialize after broadcast
 
     // Wait for UI to be set in InstrumentStatus
@@ -192,15 +195,6 @@ pub async fn controller_broadcast_listener(
                     )).await;
                     break;
                 }
-            }
-            _ = sleep(listener_wait_time) => {
-                    send_log_message(LogMessage::new_warning(
-                        "Poststation listener timed out while waiting for broadcast message. Trying to reconnect..."
-                    )).await;
-                    if let Ok(s) = client.stream_topic::<BcInstStatus>(serial).await {
-                        sub = s;
-                        send_log_message(LogMessage::new_info("Poststation broadcast listener reconnected successfully.")).await;
-                    }
             }
             _ = rx_shutdown.recv() => {
                 println!("Controller broadcast listener shutting down");
