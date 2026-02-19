@@ -302,8 +302,17 @@ impl InstrumentStatus {
     }
 
     /// Send temperatures to plot
+    ///
+    /// We only want to plot (and save) data if at least one temperature is non-zero, as zero
+    /// values represent an error in reading (i.e., sensor is disconnected).
     pub fn send_temperatures_to_plot(&self) {
-        // if a temperature is out 0 -> below yaxis minimum!
+        if self.temperature_bridge.as_kelvin() == 0.0
+            && self.temperature_cooler.as_kelvin() == 0.0
+            && self.temperature_sample.as_kelvin() == 0.0
+        {
+            return;
+        }
+
         let dp = TemperatureDataPoint {
             ts: chrono::Local::now(),
             sample: self.temperature_sample.as_kelvin(),
