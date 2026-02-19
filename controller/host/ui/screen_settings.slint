@@ -62,6 +62,19 @@ component Baking inherits Rectangle {
             RegularButton {
                 enabled: !Logic.baking_is_enabled;
                 width: button_width;
+                text: "+ d";
+                clicked => {
+                    Logic.baking_time.hours += 24;
+                }
+            }
+
+            Rectangle {
+                width: 10px;
+            }
+
+            RegularButton {
+                enabled: !Logic.baking_is_enabled;
+                width: button_width;
                 text: "- h";
                 clicked => {
                     if (Logic.baking_time.hours > 0) {
@@ -80,7 +93,7 @@ component Baking inherits Rectangle {
             }
 
             Rectangle {
-                width: 20px;
+                width: 10px;
             }
 
             RegularButton {
@@ -106,7 +119,7 @@ component Baking inherits Rectangle {
             }
 
             Rectangle {
-                width: 20px;
+                width: 10px;
             }
 
             RegularButton {
