@@ -24,7 +24,7 @@ pub const HISTORY_PRESSURE_FNAME: &str = "pressure_history.csv";
 pub const HISTORY_TEMPERATURE_FNAME: &str = "temperature_history.csv";
 
 /// If values don't change, we only add a new datapoint after this interval.
-pub const MAX_DURATION_BETWEEN_POINTS: TimeDelta = TimeDelta::new(20, 00).unwrap();
+pub const MAX_DURATION_BETWEEN_POINTS: TimeDelta = TimeDelta::new(300, 00).unwrap();
 
 /// Minimum temerature difference to be exceeded for logging in any variable.
 pub const MIN_LOG_DT: f64 = 1.0;
