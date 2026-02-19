@@ -1,39 +1,40 @@
 //! Workflows for starting and stopping the cryocooler.
 
+use std::sync::{Arc, Mutex};
+
 use anyhow::{Result, anyhow, bail};
 
-use icd::{BakingState, FlowMeterState};
 use sunpower_cryotelgt::CoolerState;
 
 use crate::{
     instruments::{InstrumentCommands, send_instr_cmd_now},
-    prg_config::CryoCoolerAuthorization,
-    status::PressureReading,
+    prg_config::Authorizations,
+    status::{InstrumentStatus, PressureReading},
 };
 
 /// Get permission to start the cryocooler.
 ///
 /// Checks for active watercooling and safe pressure levels.
 fn get_start_cooler_permission(
-    flow_meter: &FlowMeterState,
-    baking: &BakingState,
-    p_chamber: &PressureReading,
-    authorization: &CryoCoolerAuthorization,
+    inst_status: Arc<Mutex<InstrumentStatus>>,
+    auths: &Authorizations,
 ) -> Result<()> {
+    let p_chamber = inst_status.lock().expect("Poisoned").get_pressures().0;
+
     let p_chamber_mbar = match p_chamber {
         PressureReading::Value(val) => val.as_millibars(),
         _ => bail!("Chamber pressure gauge error: Check gauge and try again."),
     };
 
-    if !matches!(baking, BakingState::Off) {
+    if !inst_status.lock().expect("Poisoned").is_baking_off() {
         bail!("Baking is on: cannot start cooler.")
     };
 
-    if !matches!(flow_meter, FlowMeterState::Ok) {
+    if !inst_status.lock().expect("Poisoned").is_water_flow_ok() {
         bail!("Water flow error: cannot start cooler.")
     };
 
-    if p_chamber_mbar < authorization.max_pressure_on_mbar {
+    if p_chamber_mbar < auths.cryo_cooler.max_pressure_on_mbar {
         Ok(())
     } else {
         Err(anyhow!(
@@ -42,20 +43,15 @@ fn get_start_cooler_permission(
     }
 }
 
-/// Function to start the cryocooler.
-pub fn start_cooler(
-    flow_meter: &FlowMeterState,
-    baking: &BakingState,
-    p_chamber: &PressureReading,
-    authorization: &CryoCoolerAuthorization,
+/// Function to set the cryocooler.
+pub fn set_cooler(
+    inst_status: Arc<Mutex<InstrumentStatus>>,
+    auths: &Authorizations,
+    cooler_state: CoolerState,
 ) -> Result<()> {
-    get_start_cooler_permission(flow_meter, baking, p_chamber, authorization)?;
-    send_instr_cmd_now(InstrumentCommands::CryoCoolerState(CoolerState::Enabled));
-    Ok(())
-}
-
-/// Function to stop the cryocooler (no permissions needed).
-pub fn stop_cooler() -> Result<()> {
-    send_instr_cmd_now(InstrumentCommands::CryoCoolerState(CoolerState::Disabled));
+    if cooler_state == CoolerState::Enabled {
+        get_start_cooler_permission(inst_status, auths)?
+    }
+    send_instr_cmd_now(InstrumentCommands::CryoCoolerState(cooler_state));
     Ok(())
 }

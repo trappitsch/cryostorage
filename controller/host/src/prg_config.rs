@@ -189,15 +189,50 @@ impl PrgConfig {
 /// in the configuration file.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Authorizations{
-    pub open_valve: OpenValveAuthorization,
+    pub baking: BakingAuthorization,
     pub cryo_cooler: CryoCoolerAuthorization,
+    pub open_valve: OpenValveAuthorization,
 }
 
 impl Default for Authorizations{
     fn default() -> Self {
         Self {
-            open_valve: OpenValveAuthorization::default(),
+            baking: BakingAuthorization::default(),
             cryo_cooler: CryoCoolerAuthorization::default(),
+            open_valve: OpenValveAuthorization::default(),
+        }
+    }
+}
+
+/// Authorization limits for baking the chamber.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct BakingAuthorization {
+    __doc_max_chamber_pressure_mbar: String,
+    pub max_chamber_pressure_mbar: f64,
+}
+
+impl BakingAuthorization {
+    pub fn default() -> Self {
+        Self {
+            __doc_max_chamber_pressure_mbar: String::from("Maximum chamber pressure allowed to start baking."),
+            max_chamber_pressure_mbar: 0.00001,
+        }
+    }
+}
+
+
+/// Authorization limits for the cryocooler.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct CryoCoolerAuthorization {
+    __doc_max_pressure_on: String,
+    pub max_pressure_on_mbar: f64,
+}
+
+impl CryoCoolerAuthorization {
+    pub fn default() -> Self {
+        Self {
+            __doc_max_pressure_on: String::from("Authorization to turn on the cryocooler is given if the pressure in the chamber is below this limit."),
+            max_pressure_on_mbar: 0.00001,
         }
     }
 }
@@ -221,22 +256,6 @@ impl Default for OpenValveAuthorization {
             },
             __doc_low_pressure_limit: String::from("Authorization give independent of range if both gauges show pressure below the low_pressure_limit."),
             low_pressure_limit_mbar: 0.00001,
-        }
-    }
-}
-
-/// Authorization limits for the cryocooler.
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct CryoCoolerAuthorization {
-    __doc_max_pressure_on: String,
-    pub max_pressure_on_mbar: f64,
-}
-
-impl CryoCoolerAuthorization {
-    pub fn default() -> Self {
-        Self {
-            __doc_max_pressure_on: String::from("Authorization to turn on the cryocooler is given if the pressure in the chamber is below this limit."),
-            max_pressure_on_mbar: 0.00001,
         }
     }
 }

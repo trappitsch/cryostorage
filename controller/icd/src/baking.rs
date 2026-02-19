@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 /// State of the baking system.
 ///
 /// This enum is used to send and receive baking state messages.
-#[derive(Clone, Debug, Default, Serialize, Deserialize, Schema)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize, Schema, PartialEq, Eq)]
 pub enum BakingState {
     On {
         time_sec: u64,

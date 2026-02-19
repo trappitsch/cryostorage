@@ -55,10 +55,10 @@ pub fn app_main(
     WORKFLOW_COMMAND_SENDER
         .set(tx_wf.clone())
         .expect("Uninitialized");
-    let authorizations = conf.lock().expect("Poisoned").get_authorizations();
+    let auths = conf.lock().expect("Poisoned").get_authorizations();
     let _wf_taks = tokio::spawn(workflow_task(
         Arc::clone(&inst_status),
-        authorizations,
+        auths,
         ui.as_weak(),
         rx_wf,
     ));
@@ -121,7 +121,7 @@ impl ControllerCommandHandler {
                     }
                     false => BakingState::Off,
                 };
-                send_cntrl_cmd_now(ControllerCommands::Baking(baking_state.clone()));
+                send_workflow_command_now(WorkflowCommands::Baking(baking_state));
             }
         });
     }

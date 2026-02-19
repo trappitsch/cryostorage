@@ -17,7 +17,7 @@
 
 use std::sync::{Arc, Mutex};
 
-use icd::ValveState;
+use icd::{BakingState, ValveState};
 use slint::{ComponentHandle, Weak};
 use sunpower_cryotelgt::CoolerState;
 use tokio::sync::{OnceCell, mpsc};
@@ -29,11 +29,13 @@ use crate::{
     prg_config::Authorizations,
     status::InstrumentStatus,
     workflows::{
-        cooler::{start_cooler, stop_cooler},
-        valves::{close_pump_valve, close_transfer_valve, open_pump_valve, open_transfer_valve},
+        baking::set_baking,
+        cooler::set_cooler,
+        valves::{set_pump_valve, set_transfer_valve},
     },
 };
 
+mod baking;
 mod cooler;
 mod valves;
 
@@ -45,15 +47,16 @@ pub static WORKFLOW_COMMAND_SENDER: OnceCell<mpsc::Sender<WorkflowCommands>> =
 ///
 /// These are the commands that the UI will send to activate the various workflows.
 pub enum WorkflowCommands {
+    Baking(BakingState),
+    CryoCoolerState(CoolerState),
     TransferValve(ValveState),
     PumpValve(ValveState),
-    CryoCoolerState(CoolerState),
 }
 
 /// The workflow task: Listen to WorkflowCommands and execute them.
 pub async fn workflow_task(
     inst_status: Arc<Mutex<InstrumentStatus>>,
-    authorizations: Authorizations,
+    auths: Authorizations,
     ui: Weak<AppWindow>,
     mut rx_wf: mpsc::Receiver<WorkflowCommands>,
 ) {
@@ -63,85 +66,45 @@ pub async fn workflow_task(
         tokio::select! {
             Some(cmd) = rx_wf.recv() => {
                 match cmd {
+                    WorkflowCommands::Baking(state) => {
+                        set_baking(Arc::clone(&inst_status), &auths, ui.clone(), state)
+                            .unwrap_or_else(|e| {
+                                error_dialog_helper(ui.clone(), e);
+                        });
+                    }
                     WorkflowCommands::CryoCoolerState(state) => {
-                        let res = match state {
-                            CoolerState::Enabled => {
-                                let (flow_meter, baking, (p_ch, _)) = {
-                                    let status = inst_status.lock().expect("Poisoned");
-                                    (
-                                        status.get_flow_meter_state(),
-                                        status.get_baking_state(),
-                                        status.get_pressures(),
-                                    )
-                                };
-                                start_cooler(&flow_meter, &baking, &p_ch, &authorizations.cryo_cooler)
-                            }
-                            CoolerState::Disabled => {
-                                stop_cooler()
-                            }
-                        };
-                        if let Err(e) = res {
-                            ui.upgrade_in_event_loop(move |_| {
-                                if let Err(e) = show_error_dialog(e) {
-                                    send_log_message_now(LogMessage::new_error(&format!(
-                                        "Failed to show error dialog: {e}"
-                                    )));
-                                };
-                            }).expect("UI must be alive");
-                        };
+                        set_cooler(Arc::clone(&inst_status), &auths, state).unwrap_or_else(|e| {
+                            error_dialog_helper(ui.clone(), e);
+                        });
                     },
                     WorkflowCommands::TransferValve(state) => {
-                        let button_value: bool;
-                        let res = match state {
-                            ValveState::Open => {
-                                button_value = true;
-                                let (p_ch, p_tr) = inst_status.lock().expect("Poisoned").get_pressures();
-                                open_transfer_valve(&p_ch, &p_tr, &authorizations.open_valve)
+                        let button_value = state == ValveState::Open;
+
+                        match set_transfer_valve(Arc::clone(&inst_status), &auths, state) {
+                            Ok(()) => {
+                                ui.upgrade_in_event_loop(move |ui| {
+                                    ui.global::<Logic>().set_transfer_valve_is_open(button_value);
+                                }).expect("UI must be alive");
+                            },
+                            Err(e) => {
+                                error_dialog_helper(ui.clone(), e)
                             }
-                            ValveState::Closed => {
-                                button_value = false;
-                                let vct_state = inst_status.lock().expect("Poisoned").get_vct_state();
-                                close_transfer_valve(&vct_state)
-                            }
-                            ValveState::Undefined => unreachable!("Can only open or close value in workflows."),
                         };
-                        ui.upgrade_in_event_loop(move |ui| {
-                            if let Err(e) = res {
-                                if let Err(e) = show_error_dialog(e) {
-                                    send_log_message_now(LogMessage::new_error(&format!(
-                                        "Failed to show error dialog: {e}"
-                                    )));
-                                };
-                            } else {
-                                ui.global::<Logic>().set_transfer_valve_is_open(button_value);
-                            }
-                        }).expect("UI must be alive");
                     },
                     WorkflowCommands::PumpValve(state) => {
-                        let button_value: bool;
-                        let res = match state {
-                            ValveState::Open => {
-                                button_value = true;
-                                let (p_ch, p_tr) = inst_status.lock().expect("Poisoned").get_pressures();
-                                open_pump_valve(&p_ch, &p_tr, &authorizations.open_valve)
+                        let button_value = state == ValveState::Open;
+
+                        match set_pump_valve(Arc::clone(&inst_status), &auths, state) {
+                            Ok(()) => {
+                                ui.upgrade_in_event_loop(move |ui| {
+                                    ui.global::<Logic>().set_pump_valve_is_open(button_value);
+                                }).expect("UI must be alive");
+                            },
+                            Err(e) => {
+                                error_dialog_helper(ui.clone(), e)
                             }
-                            ValveState::Closed => {
-                                button_value = false;
-                                close_pump_valve()
-                            }
-                            ValveState::Undefined => unreachable!("Can only open or close value in workflows."),
                         };
-                        ui.upgrade_in_event_loop(move |ui| {
-                            if let Err(e) = res {
-                                if let Err(e) = show_error_dialog(e) {
-                                    send_log_message_now(LogMessage::new_error(&format!(
-                                        "Failed to show error dialog: {e}"
-                                    )));
-                                };
-                            } else {
-                                ui.global::<Logic>().set_transfer_valve_is_open(button_value);
-                            }
-                        }).expect("UI must be alive");
+
                     }
                 }
             }
@@ -151,6 +114,18 @@ pub async fn workflow_task(
             }
         }
     }
+}
+
+/// Helper function to show an error dialog in the UI from an error type.
+fn error_dialog_helper(ui: Weak<AppWindow>, e: anyhow::Error) {
+    ui.upgrade_in_event_loop(move |_| {
+        if let Err(e_show) = show_error_dialog(e) {
+            send_log_message_now(LogMessage::new_error(&format!(
+                "Failed to show error dialog: {e_show}"
+            )));
+        };
+    })
+    .expect("UI must be alive");
 }
 
 /// Get a cone of the workflow command sender.

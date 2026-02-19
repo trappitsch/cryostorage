@@ -1,20 +1,11 @@
 //! Implementations of status for the workflows.
 
-use icd::{BakingState, FlowMeterState, VctState};
+use icd::{BakingState, FlowMeterState, ValveState};
+use sunpower_cryotelgt::CoolerState;
 
 use crate::status::{InstrumentStatus, PressureReading};
 
 impl InstrumentStatus {
-    /// Is baking turned off?
-    pub fn get_baking_state(&self) -> BakingState {
-        self.baking_curr.clone()
-    }
-
-    /// Get the flow meter state.
-    pub fn get_flow_meter_state(&self) -> FlowMeterState {
-        self.flow_meter_curr.clone()
-    }
-
     /// Get the pressures as a tuple.
     ///
     /// Returns: (p_chamber, p_transfer)
@@ -25,8 +16,28 @@ impl InstrumentStatus {
         )
     }
 
-    /// Get the VCT state.
-    pub fn get_vct_state(&self) -> VctState {
-        self.vct_curr.clone()
+    /// Is baking turned off?
+    pub fn is_baking_off(&self) -> bool {
+        self.baking_curr == BakingState::Off
+    }
+
+    /// Is the water flow ok?
+    pub fn is_water_flow_ok(&self) -> bool {
+        self.flow_meter_curr == FlowMeterState::Ok
+    }
+
+    /// Is the cryocooler off?
+    pub fn is_cryo_cooler_off(&self) -> bool {
+        self.cooler_state == CoolerState::Disabled
+    }
+
+    /// Is the pump valve open?
+    pub fn is_pump_valve_open(&self) -> bool {
+        self.valve_pump_curr == ValveState::Open
+    }
+
+    /// Is the VCT connected?
+    pub fn is_vct_connected(&self) -> bool {
+        self.vct_curr.is_connected()
     }
 }
