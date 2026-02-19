@@ -19,12 +19,14 @@ use crate::{
 mod app;
 mod connections;
 mod controller;
+mod dialog;
 mod instruments;
 mod logger;
 mod plots;
 mod prg_config;
 mod samples;
 mod status;
+mod workflows;
 
 pub const CONFIG_FOLDER: &str = ".cryostorage";
 pub const LOG_LEVEL_DISPLAY: logger::Level = logger::Level::Warning;

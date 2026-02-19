@@ -1,0 +1,53 @@
+import { Const } from "consts.slint";
+import { Palette } from "palette.slint";
+import { NormalText, RegularButton, H3Text } from "elements.slint";
+
+export component ErrorDialog inherits Window {
+    in property <string> error_message: "An error has occurred.\n\nYou did something stupid, you moron.";
+    pure callback close_pressed();
+
+    max-width: Const.screen_width;
+    max-height: Const.screen_height;
+
+    always-on-top: true;
+    no-frame: true;
+
+    Rectangle {
+        x: 0px;
+        y: 0px;
+        width: root.width;
+        height: root.height;
+        background: Palette.bg;
+    }
+
+    VerticalLayout {
+        spacing: 20px;
+        padding: 20px;
+        alignment: center;
+
+        H3Text {
+            text: "Error:";
+        }
+
+        NormalText {
+            text: root.error_message;
+        }
+
+        Rectangle {
+            height: 10px;
+        }
+
+        HorizontalLayout {
+            alignment: end;
+
+            RegularButton {
+                enabled: true;
+                text: "Close";
+
+                clicked => {
+                    root.close_pressed();
+                }
+            }
+        }
+    }
+}

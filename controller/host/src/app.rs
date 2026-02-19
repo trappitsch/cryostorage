@@ -26,6 +26,9 @@ use crate::{
     },
     prg_config::PrgConfig,
     status::InstrumentStatus,
+    workflows::{
+        WORKFLOW_COMMAND_SENDER, WorkflowCommands, send_workflow_command_now, workflow_task,
+    },
 };
 
 slint::include_modules!();
@@ -41,16 +44,29 @@ pub fn app_main(
         panic!("Failed to send UI to the logger");
     };
 
-    // initialize the various GUI handlers
-    let _controller_cmd_handler = ControllerCommandHandler::new(ui.as_weak());
-    let _gui_cmd_handler = GuiCommandHandler::new(ui.as_weak(), Arc::clone(&conf));
-    let _instrument_cmd_handler = InstrumentCommandHandler::new(ui.as_weak());
-
     // pass the ui to the instrument status handler
     inst_status.lock().expect("Poisoned").set_ui(ui.as_weak());
     // pass the ui to the plotting task
     send_pressure_plot_cmd_now(PressurePlotCommands::SetUi(ui.as_weak()));
     send_temperature_plot_cmd_now(TemperaturePlotCommands::SetUi(ui.as_weak()));
+
+    // initialize the workflow channel and spawn the task.
+    let (tx_wf, rx_wf) = mpsc::channel(32);
+    WORKFLOW_COMMAND_SENDER
+        .set(tx_wf.clone())
+        .expect("Uninitialized");
+    let authorizations = conf.lock().expect("Poisoned").get_authorizations();
+    let _wf_taks = tokio::spawn(workflow_task(
+        Arc::clone(&inst_status),
+        authorizations,
+        ui.as_weak(),
+        rx_wf,
+    ));
+
+    // initialize the various GUI handlers
+    let _controller_cmd_handler = ControllerCommandHandler::new(ui.as_weak());
+    let _gui_cmd_handler = GuiCommandHandler::new(ui.as_weak(), Arc::clone(&conf));
+    let _instrument_cmd_handler = InstrumentCommandHandler::new(ui.as_weak());
 
     // Debug builds
     #[cfg(debug_assertions)]
@@ -74,9 +90,7 @@ struct ControllerCommandHandler {
 impl ControllerCommandHandler {
     /// Initialize all switches
     fn new(ui: Weak<AppWindow>) -> Self {
-        let sf = Self {
-            ui: ui.unwrap(),
-        };
+        let sf = Self { ui: ui.unwrap() };
         sf.init();
         sf
     }
@@ -125,31 +139,25 @@ impl ControllerCommandHandler {
     }
 
     fn pump_valve_set_open(&self) {
-        let ui = self.ui.as_weak();
         self.ui.global::<Logic>().on_pump_valve_set_open({
             move |val| {
                 let vst = match val {
                     true => ValveState::Open,
                     false => ValveState::Closed,
                 };
-                send_cntrl_cmd_now(ControllerCommands::PumpValve(vst));
-                ui.unwrap().global::<Logic>().set_pump_valve_is_open(val);
+                send_workflow_command_now(WorkflowCommands::PumpValve(vst));
             }
         });
     }
 
     fn transfer_valve_set_open(&self) {
-        let ui = self.ui.as_weak();
         self.ui.global::<Logic>().on_transfer_valve_set_open({
             move |val| {
                 let vst = match val {
                     true => ValveState::Open,
                     false => ValveState::Closed,
                 };
-                send_cntrl_cmd_now(ControllerCommands::TransferValve(vst));
-                ui.unwrap()
-                    .global::<Logic>()
-                    .set_transfer_valve_is_open(val);
+                send_workflow_command_now(WorkflowCommands::TransferValve(vst));
             }
         });
     }
@@ -295,9 +303,7 @@ struct InstrumentCommandHandler {
 
 impl InstrumentCommandHandler {
     fn new(ui: Weak<AppWindow>) -> Self {
-        let sf = Self {
-            ui: ui.unwrap(),
-        };
+        let sf = Self { ui: ui.unwrap() };
         sf.init();
         sf
     }

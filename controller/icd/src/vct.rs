@@ -24,6 +24,13 @@ pub struct VctState {
     pub attach: VctConnectedState,
 }
 
+impl VctState {
+    /// Get if the VCT is connected (either gate or attach).
+    pub fn is_connected(&self) -> bool {
+        matches!(self.gate, VctConnectedState::Connected) || matches!(self.attach, VctConnectedState::Connected)
+    }
+}
+
 /// Handshake message.
 ///
 /// This represents the message we want to send to our electronics to signal if we are ready or not

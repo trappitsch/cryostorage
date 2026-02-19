@@ -28,12 +28,12 @@ pub const CONFIG_OLD_FOLDER: &str = "config_history";
 pub struct PrgConfig {
     fname: PathBuf,
     admin_pin: String,
+    authorizations: Authorizations,
     agilent_ion_pump: IonPumpConfig,
     controller_config: ControllerConfig,
     pfeiffer_hicube: PfeifferHiCubeConf,
     pfeiffer_omnicontrol: OmniControlConfig,
     samples: Samples,
-    limits: InstrumentLimits,
     lakeshore_temperature: LakeshoreTempConfig,
     suntel_cryocooler: CryoCoolerConfig,
 }
@@ -58,12 +58,12 @@ impl PrgConfig {
         let mut ret_self = Self {
             fname,
             admin_pin: String::from("1234"),
+            authorizations: Authorizations::default(),
             agilent_ion_pump: IonPumpConfig::default(),
             controller_config: ControllerConfig::default(),
             pfeiffer_hicube: PfeifferHiCubeConf::default(),
             pfeiffer_omnicontrol: OmniControlConfig::default(),
             samples: Samples::new(),
-            limits: InstrumentLimits::default(),
             lakeshore_temperature: LakeshoreTempConfig::default(),
             suntel_cryocooler: CryoCoolerConfig::default(),
         };
@@ -131,6 +131,11 @@ impl PrgConfig {
         self.admin_pin.clone()
     }
 
+    /// Get a clone of the authorizations.
+    pub fn get_authorizations(&self) -> Authorizations {
+        self.authorizations.clone()
+    }
+
     /// Get a clone of the controller configuration.
     pub fn get_controller_config(&self) -> ControllerConfig {
         self.controller_config.clone()
@@ -174,24 +179,71 @@ impl PrgConfig {
     }
 }
 
-/// Limits of the instrument.
+/// As structure to provide certain authorizations and limits for the safe operation of the system.
 ///
-/// These limits are used to ensure safe opearations and to prevent damage to the system and the
+/// These authorizations are used to ensure safe operations and to prevent damage to the system and the
 /// chamber. They are checked against with current values to allow or disallow certain operations.
-#[derive(Debug, Serialize, Deserialize)]
-pub struct InstrumentLimits {
-    /// Maximum pressure allowable in main chamber to initiate a sample transfer.
-    pub max_main_pressure_transfer: f64,
-    /// Pressure difference threshold between main and pump to allow opening the pump valve. This
-    /// is a factor between the two pressures.
-    pub max_pressure_diff_pump_valve: f64,
+///
+/// We add some `__doc_xxx` fields to the struct to be able to display some documentation on
+/// certain variables. These are not used for the program and are solely for providing explanations
+/// in the configuration file.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Authorizations{
+    pub open_valve: OpenValveAuthorization,
+    pub cryo_cooler: CryoCoolerAuthorization,
 }
 
-impl Default for InstrumentLimits {
+impl Default for Authorizations{
     fn default() -> Self {
         Self {
-            max_main_pressure_transfer: 5e-8,
-            max_pressure_diff_pump_valve: 10.0,
+            open_valve: OpenValveAuthorization::default(),
+            cryo_cooler: CryoCoolerAuthorization::default(),
         }
     }
+}
+
+/// Authorization limits for opening valves.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct OpenValveAuthorization {
+    __doc_valve_ratio: String,
+    pub valve_ratio_range: SafeRangeLimits,
+    __doc_low_pressure_limit: String,
+    pub low_pressure_limit_mbar: f64,
+}
+
+impl Default for OpenValveAuthorization {
+    fn default() -> Self {
+        Self {
+            __doc_valve_ratio: String::from("Authoization give if: lower_limit < Gauge1/Gauge2 < upper_limit."),
+            valve_ratio_range: SafeRangeLimits {
+                lower_limit: 0.001,
+                upper_limit: 100.0,
+            },
+            __doc_low_pressure_limit: String::from("Authorization give independent of range if both gauges show pressure below the low_pressure_limit."),
+            low_pressure_limit_mbar: 0.00001,
+        }
+    }
+}
+
+/// Authorization limits for the cryocooler.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct CryoCoolerAuthorization {
+    __doc_min_pressure_on: String,
+    pub min_pressure_on_mbar: f64,
+}
+
+impl CryoCoolerAuthorization {
+    pub fn default() -> Self {
+        Self {
+            __doc_min_pressure_on: String::from("Authorization to turn on the cryocooler is given if the pressure in the chamber is below this limit."),
+            min_pressure_on_mbar: 0.00001,
+        }
+    }
+}
+
+/// Limits for ensuring defining safe ranges.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct SafeRangeLimits {
+    pub lower_limit: f64,
+    pub upper_limit: f64,
 }
