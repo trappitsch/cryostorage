@@ -214,7 +214,7 @@ pub struct OpenValveAuthorization {
 impl Default for OpenValveAuthorization {
     fn default() -> Self {
         Self {
-            __doc_valve_ratio: String::from("Authoization give if: lower_limit < Gauge1/Gauge2 < upper_limit."),
+            __doc_valve_ratio: String::from("Authorization given if: lower_limit < Gauge1/Gauge2 < upper_limit."),
             valve_ratio_range: SafeRangeLimits {
                 lower_limit: 0.001,
                 upper_limit: 100.0,
@@ -228,15 +228,15 @@ impl Default for OpenValveAuthorization {
 /// Authorization limits for the cryocooler.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct CryoCoolerAuthorization {
-    __doc_min_pressure_on: String,
-    pub min_pressure_on_mbar: f64,
+    __doc_max_pressure_on: String,
+    pub max_pressure_on_mbar: f64,
 }
 
 impl CryoCoolerAuthorization {
     pub fn default() -> Self {
         Self {
-            __doc_min_pressure_on: String::from("Authorization to turn on the cryocooler is given if the pressure in the chamber is below this limit."),
-            min_pressure_on_mbar: 0.00001,
+            __doc_max_pressure_on: String::from("Authorization to turn on the cryocooler is given if the pressure in the chamber is below this limit."),
+            max_pressure_on_mbar: 0.00001,
         }
     }
 }

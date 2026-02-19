@@ -356,7 +356,7 @@ impl InstrumentCommandHandler {
                     true => CoolerState::Enabled,
                     false => CoolerState::Disabled,
                 };
-                send_instr_cmd_now(InstrumentCommands::CryoCoolerState(state));
+                send_workflow_command_now(WorkflowCommands::CryoCoolerState(state));
             }
         });
     }

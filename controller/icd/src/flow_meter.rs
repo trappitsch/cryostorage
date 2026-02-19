@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 /// State of the flow meter.
 ///
 /// This represents how the water flow through the cryocooler is behaving.
-#[derive(Debug, Default, Serialize, Deserialize, Schema)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize, Schema)]
 pub enum FlowMeterState {
     /// All is good.
     Ok,

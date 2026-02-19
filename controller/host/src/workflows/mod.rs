@@ -19,6 +19,7 @@ use std::sync::{Arc, Mutex};
 
 use icd::ValveState;
 use slint::{ComponentHandle, Weak};
+use sunpower_cryotelgt::CoolerState;
 use tokio::sync::{OnceCell, mpsc};
 
 use crate::{
@@ -27,9 +28,13 @@ use crate::{
     logger::{LogMessage, send_log_message_now},
     prg_config::Authorizations,
     status::InstrumentStatus,
-    workflows::valves::{close_transfer_valve, open_transfer_valve, open_pump_valve, close_pump_valve},
+    workflows::{
+        cooler::{start_cooler, stop_cooler},
+        valves::{close_pump_valve, close_transfer_valve, open_pump_valve, open_transfer_valve},
+    },
 };
 
+mod cooler;
 mod valves;
 
 /// Sender for the controller commands.
@@ -42,6 +47,7 @@ pub static WORKFLOW_COMMAND_SENDER: OnceCell<mpsc::Sender<WorkflowCommands>> =
 pub enum WorkflowCommands {
     TransferValve(ValveState),
     PumpValve(ValveState),
+    CryoCoolerState(CoolerState),
 }
 
 /// The workflow task: Listen to WorkflowCommands and execute them.
@@ -57,6 +63,33 @@ pub async fn workflow_task(
         tokio::select! {
             Some(cmd) = rx_wf.recv() => {
                 match cmd {
+                    WorkflowCommands::CryoCoolerState(state) => {
+                        let res = match state {
+                            CoolerState::Enabled => {
+                                let (flow_meter, baking, (p_ch, _)) = {
+                                    let status = inst_status.lock().expect("Poisoned");
+                                    (
+                                        status.get_flow_meter_state(),
+                                        status.get_baking_state(),
+                                        status.get_pressures(),
+                                    )
+                                };
+                                start_cooler(&flow_meter, &baking, &p_ch, &authorizations.cryo_cooler)
+                            }
+                            CoolerState::Disabled => {
+                                stop_cooler()
+                            }
+                        };
+                        if let Err(e) = res {
+                            ui.upgrade_in_event_loop(move |_| {
+                                if let Err(e) = show_error_dialog(e) {
+                                    send_log_message_now(LogMessage::new_error(&format!(
+                                        "Failed to show error dialog: {e}"
+                                    )));
+                                };
+                            }).expect("UI must be alive");
+                        };
+                    },
                     WorkflowCommands::TransferValve(state) => {
                         let button_value: bool;
                         let res = match state {
