@@ -9,7 +9,7 @@
 
 use std::{sync::Arc, time::Duration};
 
-use anyhow::Result;
+use anyhow::{Result, bail};
 
 use opcua::{
     client::{ClientBuilder, DataChangeCallback, IdentityToken, Session},
@@ -44,7 +44,7 @@ impl HiCubeClient {
     ///
     /// # Arguments
     /// * `ip` - The IP address of the pump stand and its port, e.g., "192.168.1.100:4840".
-    pub async fn try_new_and_connect(ip: &str) -> Result<Self> {
+    pub async fn try_new_and_connect(ip: &str, timeout: Duration) -> Result<Self> {
         let endpoint_url = format!("opc.tcp://{ip}");
 
         let mut client = ClientBuilder::new()
@@ -62,12 +62,16 @@ impl HiCubeClient {
         )
             .into();
 
-        // Create the session
-        // let session = client.connect_to_endpoint(endpoint, IdentityToken::Anonymous)?;
-        let (session, event_loop) = client
-            .connect_to_matching_endpoint(endpoint, IdentityToken::Anonymous)
-            .await?;
+        let res = tokio::select! {
+            tmp = client.connect_to_matching_endpoint(endpoint, IdentityToken::Anonymous) => {
+                tmp
+            }
+            _ = tokio::time::sleep(timeout) => {
+                bail!("Connection timed out after {} ms", timeout.as_millis());
+            }
+        };
 
+        let (session, event_loop) = res?;
         let ret = Self {
             session: session.clone(),
         };

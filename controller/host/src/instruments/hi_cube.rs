@@ -10,15 +10,13 @@
 
 use std::sync::{Arc, Mutex};
 
-use pfeiffer_hicube::{
-    HiCubeClient, PumpStandState, Variables as HiCubeVariables, VentState,
-};
+use pfeiffer_hicube::{HiCubeClient, PumpStandState, Variables as HiCubeVariables, VentState};
 use serde::{Deserialize, Serialize};
 use tokio::sync::mpsc;
 
 use crate::{
     app::ValveOrPumpState,
-    connections::TcpIpAdapter,
+    connections::{TCP_IP_TIMEOUT, TcpIpAdapter},
     logger::{LogMessage, send_log_message, send_log_message_now},
     status::InstrumentStatus,
 };
@@ -41,9 +39,19 @@ pub async fn pfeiffer_hicube_task(
 ) {
     let mut rx_shutdown = crate::HALT_SENDER.get().unwrap().subscribe();
 
-    let hicube_inst = HiCubeClient::try_new_and_connect(&conf.tcp_ip_adapter.get_address())
-        .await
-        .unwrap();
+    // FIXME: Make sure this timeout is long enough with the actual instrument!
+    let hicube_inst =
+        match HiCubeClient::try_new_and_connect(&conf.tcp_ip_adapter.get_address(), TCP_IP_TIMEOUT)
+            .await
+        {
+            Ok(hc) => hc,
+            Err(e) => {
+                send_log_message(
+                    LogMessage::new_error(&format!("Failed to connect to HiCube: {e}")),
+                ).await;
+                return;
+            }
+        };
 
     let mut sub = hicube_inst.subscribe().await.unwrap();
 
