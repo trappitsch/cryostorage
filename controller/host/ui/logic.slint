@@ -112,6 +112,9 @@ export global Logic {
     in-out property <ValveOrPumpState> vent_valve_state: ValveOrPumpState.UndefinedOrError;
     in-out property <ValveOrPumpState> ion_pump_state: ValveOrPumpState.UndefinedOrError;
 
+    // VCT attached status: displays green box around VCT if attached
+    in-out property <bool> is_vct_attached: true;
+
     // Logging
     in-out property <[string]> log_messages: [];
 

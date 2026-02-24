@@ -1,6 +1,13 @@
 import { MyWindow } from "elements.slint";
 
-import { NormalText, MyHorizontalLayout, MyVerticalLayout, SmallSwitch, VacuumStateCircle, PumpStandStateCircle } from "elements.slint";
+import {
+    NormalText,
+    MyHorizontalLayout,
+    MyVerticalLayout,
+    SmallSwitch,
+    VacuumStateCircle,
+    PumpStandStateCircle,
+} from "elements.slint";
 import { Const } from "consts.slint";
 
 import { Palette } from "palette.slint";
@@ -14,6 +21,20 @@ export component VacuumScreen inherits MyWindow {
         x: Const.border_spacing;
         y: Const.border_spacing;
         source: @image-url("imgs/vacuum_system.svg");
+    }
+
+    // VCT attached rectangle
+    Rectangle {
+        x: vi.x + 232.454px;
+        y: vi.y + 322.543px;
+        width: 93.347px;
+        height: 11.571px;
+        background: Logic.is_vct_attached ? Palette.green : Palette.bg;
+        TouchArea {
+            clicked => {
+                Logic.is_vct_attached = !Logic.is_vct_attached;  // toggle for testing
+        }
+        }
     }
 
     VacuumStateCircle {
@@ -76,17 +97,17 @@ export component VacuumScreen inherits MyWindow {
 
     // Legend
     Rectangle {
-        property<length> spacing: Const.border_spacing / 3 * 2;
-        property<length> text_x_gap: 40px;
-        property<length> text_y_gap: -5px;
+        property <length> spacing: Const.border_spacing / 3 * 2;
+        property <length> text_x_gap: 40px;
+        property <length> text_y_gap: -5px;
 
         width: longest_text.x + longest_text.width + spacing;
-        height: 5 * Const.border_spacing / 3 * 2 +  4 * on_circ.height;
+        height: 5 * Const.border_spacing / 3 * 2 + 4 * on_circ.height;
 
         border-radius: Const.border_radius_small;
 
         // calculated from image
-        x: Const.border_spacing + 737.912px - self.width; 
+        x: Const.border_spacing + 737.912px - self.width;
         y: Const.border_spacing + 336.113px - self.height;
 
         background: Palette.button_off;
@@ -96,7 +117,6 @@ export component VacuumScreen inherits MyWindow {
             x: spacing;
             y: spacing;
         }
-
 
         NormalText {
             x: on_circ.x + text_x_gap;
@@ -119,7 +139,7 @@ export component VacuumScreen inherits MyWindow {
         diff_circ := VacuumStateCircle {
             state: ValveOrPumpState.SetDifferentFromCalled;
             x: Const.border_spacing / 3 * 2;
-            y: 3 * spacing +  2 * self.height;
+            y: 3 * spacing + 2 * self.height;
         }
 
         NormalText {
@@ -131,7 +151,7 @@ export component VacuumScreen inherits MyWindow {
         err_circ := VacuumStateCircle {
             state: ValveOrPumpState.UndefinedOrError;
             x: Const.border_spacing / 3 * 2;
-            y: 4 * spacing +  3 * self.height;
+            y: 4 * spacing + 3 * self.height;
         }
 
         longest_text := NormalText {

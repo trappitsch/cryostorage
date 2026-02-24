@@ -26,7 +26,7 @@ pub struct VctState {
 
 impl VctState {
     /// Get if the VCT is attached (or the attachment procedure has been started).
-    pub fn is_attahched(&self) -> bool {
+    pub fn is_attached(&self) -> bool {
         matches!(self.attach, VctConnectedState::Connected)
     }
 

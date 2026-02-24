@@ -126,6 +126,9 @@ impl InstrumentStatus {
                 }
             };
 
+            // Is the VCT attached?
+            let is_vct_attached = self.vct_curr.is_attached();
+
             // Update UI in event loop
             ui.upgrade_in_event_loop(move |ui| {
                 ui.global::<Logic>()
@@ -137,6 +140,7 @@ impl InstrumentStatus {
                 ui.global::<Logic>().set_pump_valve_state(valve_pump_state);
                 ui.global::<Logic>()
                     .set_transfer_valve_state(valve_transfer_state);
+                ui.global::<Logic>().set_is_vct_attached(is_vct_attached);
             })
             .unwrap();
         }
