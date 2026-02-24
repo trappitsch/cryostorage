@@ -25,9 +25,14 @@ pub struct VctState {
 }
 
 impl VctState {
-    /// Get if the VCT is connected (either gate or attach).
-    pub fn is_connected(&self) -> bool {
-        matches!(self.gate, VctConnectedState::Connected) || matches!(self.attach, VctConnectedState::Connected)
+    /// Get if the VCT is attached (or the attachment procedure has been started).
+    pub fn is_attahched(&self) -> bool {
+        matches!(self.attach, VctConnectedState::Connected)
+    }
+
+    /// Get if the dock gate valve is open.
+    pub fn is_gate_open(&self) -> bool {
+        matches!(self.gate, VctConnectedState::Connected) 
     }
 }
 

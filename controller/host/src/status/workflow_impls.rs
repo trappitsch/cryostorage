@@ -36,8 +36,8 @@ impl InstrumentStatus {
         self.valve_pump_curr == ValveState::Open
     }
 
-    /// Is the VCT connected?
-    pub fn is_vct_connected(&self) -> bool {
-        self.vct_curr.is_connected()
+    /// Is the VCT dock gate valve open?
+    pub fn is_vct_gate_open(&self) -> bool {
+        self.vct_curr.is_gate_open()
     }
 }
