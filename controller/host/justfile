@@ -15,7 +15,7 @@ release:
     git tag $DATE_TAG
     git push origin $DATE_TAG
 
-    glab release create $TODAY \
+    glab release create $DATE_TAG\
     --title "Cryostorage Host" \
     --notes "Release of the aarch64 host binary for the cryostorage chamber." \
     --assets-link "path=target/aarch64-unknown-linux-gnu/release/host,name=cryostorage_host_aarch64"
