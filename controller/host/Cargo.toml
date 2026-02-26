@@ -32,6 +32,5 @@ lakeshore_336     = { path = "../lakeshore_336", version = "0.1.0" }
 pfeiffer-omnicontrol = { path = "../pfeiffer_omnicontrol", version = "0.1.0" }
 instrumentrs    = { path = "../instrumentRs", version = "0.1.0" }
 
-
 [build-dependencies]
 slint-build     = "1.14.1"

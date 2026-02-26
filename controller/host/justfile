@@ -1,0 +1,27 @@
+release:
+    #!/usr/bin/fish
+    set DATE_TAG (date +"%Y-%m-%d")
+
+    # check if the repo is dirty
+    just check-dirty
+
+    # cross compile the host binary for aarch64
+    cross build --release 
+
+    # move main tag to the the last commit (this one is clean)
+    jj b m main -t @-
+    jj git push
+
+    git tag $DATE_TAG
+    git push origin $DATE_TAG
+
+    glab release create $TODAY \
+    --title "Cryostorage Host" \
+    --notes "Release of the aarch64 host binary for the cryostorage chamber." \
+    --assets-link "path=target/aarch64-unknown-linux-gnu/release/host,name=cryostorage_host_aarch64"
+
+@check-dirty:
+    if jj status | rg -q "Working copy changes:"; then \
+        echo "⚠️  The jj repository is dirty – uncommitted changes detected."; \
+        exit 1; \
+    fi
