@@ -6,7 +6,7 @@
 	(paper "A4")
 	(title_block
 		(title "Cryostorage chamber - Gate valve control")
-		(rev "2026-02-13")
+		(rev "2026-02-25")
 		(company "EPFL, Reto Trappitsch")
 		(comment 2 "Note 2: Transfer arm and valve open position directly interlock 24V for closing valves")
 	)

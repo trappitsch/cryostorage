@@ -60,8 +60,8 @@
       ],
       "drc_exclusions": [
         [
-          "lib_footprint_mismatch|158360000|64532500|4e7d4bd0-1b07-45ab-a2cd-a4d72c1aeb15|00000000-0000-0000-0000-000000000000",
-          ""
+          "unconnected_items|184300000|69500000|F.Cu|4|b47014a6-43bb-4ffd-a162-31720d54b2fc|193adeae-39f4-49e9-b084-4c5755f171d2",
+          "connected internally"
         ]
       ],
       "meta": {
@@ -248,12 +248,12 @@
   "erc": {
     "erc_exclusions": [
       [
-        "pin_to_pin|635000|927100|cf5ecb3f-7e7a-455f-bd69-f7a09fd14bca|48ed81cd-7ab2-480a-8b44-19b5fd8dce5e|/65dfcb21-5bed-4c8b-b45c-eae336c9e929|/65dfcb21-5bed-4c8b-b45c-eae336c9e929|/65dfcb21-5bed-4c8b-b45c-eae336c9e929",
-        ""
+        "pin_not_driven|457200|266700|d72b17cc-b0d6-4c0e-9d55-eab2bb3b6d09|00000000-0000-0000-0000-000000000000|/65dfcb21-5bed-4c8b-b45c-eae336c9e929|/65dfcb21-5bed-4c8b-b45c-eae336c9e929|",
+        "connected to H5"
       ],
       [
-        "power_pin_not_driven|584200|190500|70971377-bfee-4753-b56e-d9b48194d69b|00000000-0000-0000-0000-000000000000|/65dfcb21-5bed-4c8b-b45c-eae336c9e929|/65dfcb21-5bed-4c8b-b45c-eae336c9e929|",
-        "Rpi"
+        "power_pin_not_driven|635000|190500|6dca7252-4216-483b-adc3-ee3416ab0bfb|00000000-0000-0000-0000-000000000000|/65dfcb21-5bed-4c8b-b45c-eae336c9e929|/65dfcb21-5bed-4c8b-b45c-eae336c9e929|",
+        "correctly connected"
       ]
     ],
     "meta": {
