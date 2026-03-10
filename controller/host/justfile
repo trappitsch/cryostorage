@@ -14,7 +14,7 @@ DATE_TAG := `date +"%Y-%m-%d"`
     # cross compile the host binary for aarch64
     cross build --release 
 
-    cp target/aarch64-unknown-linux-gnu/release/host ~/switchDrive/Cryo Storage/controller_host_release/conroller_host
+    cp target/aarch64-unknown-linux-gnu/release/host ~/switchDrive/Institution/cryostorage_release/cryostorage_host
 
 @check-dirty:
     if jj status | rg -q "Working copy changes:"; \
