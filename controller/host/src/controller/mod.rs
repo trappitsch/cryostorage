@@ -1,13 +1,13 @@
 //! This module handles communication with the controller firmware via poststation.
 use std::{
     sync::{Arc, Mutex},
-    time::Duration,
+    time::{self, Duration},
 };
 
 use icd::{BakingState, BcInstStatus, LightState, ValveState, VctHandshake};
 use poststation_sdk::{PoststationClient, connect};
 use serde::{Deserialize, Serialize};
-use tokio::{sync::mpsc, task::JoinHandle};
+use tokio::{sync::mpsc, task::JoinHandle, time::sleep};
 
 use crate::{
     logger::{LogMessage, send_log_message, send_log_message_now},
@@ -45,9 +45,34 @@ pub async fn start_controller_tasks(
     inst_status: Arc<Mutex<InstrumentStatus>>,
     rx_ctrl: mpsc::Receiver<ControllerCommands>,
 ) -> (JoinHandle<()>, JoinHandle<()>) {
-    let ps_client = connect(config.address)
-        .await
-        .expect("Poststation connection must work. Is poststation running?");
+    let tic = time::Instant::now();
+    let ps_client = loop {
+        if let Ok(conn) = connect(&config.address).await {
+            break Some(conn);
+        };
+
+        // if we fail to connect, wait for a while to try again until timeout reached
+        if tic.elapsed() > Duration::from_secs(5) {
+            break None;
+        } else {
+            sleep(Duration::from_millis(250)).await;
+        };
+    };
+
+    let ps_client = match ps_client {
+        Some(client) => client,
+        None => {
+            send_log_message(LogMessage::new_error(&format!(
+                "Failed to connect to poststation at '{}'. Is poststation running? Restart the program.",
+                { config.address }
+            )))
+            .await;
+            return (
+                tokio::spawn(async {}),
+                tokio::spawn(async {}),
+            );
+        }
+    };
 
     let serial = if let Some(device) = ps_client
         .get_devices()
@@ -69,7 +94,7 @@ pub async fn start_controller_tasks(
     // Get a new controller client.
     let cntrl_client = ControllerClient::new(ps_client.clone(), serial);
 
-    // Spawn the cntroller command handling task.
+    // Spawn the controller command handling task.
     let cntrl_task = tokio::spawn(controller_task(
         cntrl_client,
         rx_ctrl,

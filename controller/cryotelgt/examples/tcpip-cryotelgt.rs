@@ -3,6 +3,8 @@ use std::{thread::sleep, time::Duration};
 use sunpower_cryotelgt::{CoolerState, CryoTelGt, StopMode};
 use instrumentrs::TcpIpInterface;
 
+use measurements::Power;
+
 use measurements::Temperature;
 
 fn main() {
@@ -20,11 +22,23 @@ fn main() {
     println!("Current state: {:?}", inst.get_state().unwrap());
 
     // get full state
-    // println!("Full state: {:?}", inst.get_full_state().unwrap());
+    println!("Full state: {:?}", inst.get_full_state().unwrap());
 
     // let set_temp = Temperature::from_kelvin(110.0);
     // inst.set_temperature_setpoint(set_temp).unwrap();
-    // inst.set_stop_mode(StopMode::DigitalInput).unwrap();
+    println!("\n\n\nTurn cryocooler to external");
+    inst.set_stop_mode(StopMode::DigitalInput).unwrap();
+
+
+    sleep(Duration::from_secs(2));
+    println!("Current min power: {}", inst.get_power_min().unwrap());
+    println!("Current max power: {}", inst.get_power_max().unwrap());
+
+    sleep(Duration::from_secs(2));
+
+    // let new_min_power = Power::from_watts(0.0);
+    // println!("\nSet min power to {}", new_min_power); 
+    // inst.set_power_min(new_min_power).unwrap();
 
 
 
