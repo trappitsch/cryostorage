@@ -33,4 +33,5 @@ pfeiffer-omnicontrol = { path = "../pfeiffer_omnicontrol", version = "0.1.0" }
 instrumentrs    = { path = "../instrumentRs", version = "0.1.0" }
 
 [build-dependencies]
+chrono = "0.4.42"
 slint-build     = "1.14.1"

@@ -9,7 +9,7 @@ use crate::{
         hi_cube::{HiCubeCommands, pfeiffer_hicube_task},
         instruments_task,
     },
-    logger::{LogHandler, LogMessage},
+    logger::{LogHandler, LogMessage, send_log_message},
     plots::{
         PressurePlotCommands, TemperaturePlotCommands, pressure_plot_task, temperature_plot_task,
     },
@@ -118,6 +118,11 @@ async fn main() {
         Arc::clone(&inst_status),
         rx_hicube,
     ));
+
+    send_log_message(LogMessage::new_info(&format!(
+        "Started cryostorage_host: BuildInfo - {}",
+        env!("BUILD_INFO")
+    ))).await;
 
     // start the app
     match app::app_main(Arc::clone(&conf), Arc::clone(&inst_status), tx_ui_set) {
