@@ -1,5 +1,7 @@
 //! Plot the temperature figure and accepts signals that send temperature data points.
 
+use std::f64;
+
 use anyhow::{Result, anyhow, bail};
 use plotters::prelude::*;
 use slint::{ComponentHandle, Weak};
@@ -65,7 +67,15 @@ impl TemperaturePlot {
                 .last()
                 .ok_or_else(|| anyhow!("Not enough data yet to plot."))?,
         );
-        let (min_y, max_y) = (70.0, 300.0);
+        let (min_y, max_y) = {
+            let min_1 = view.series_1().fold(f64::INFINITY, f64::min);
+            let max_1 = view.series_1().fold(f64::NEG_INFINITY, f64::max);
+            let min_2 = view.series_2().fold(f64::INFINITY, f64::min);
+            let max_2 = view.series_2().fold(f64::NEG_INFINITY, f64::max);
+            let min_3 = view.series_3().fold(f64::INFINITY, f64::min);
+            let max_3 = view.series_3().fold(f64::NEG_INFINITY, f64::max);
+            (min_1.min(min_2).min(min_3) - 15.0, max_1.max(max_2).max(max_3) + 15.0)
+        };
 
         let mut chart = ChartBuilder::on(&root)
             .margin(10)

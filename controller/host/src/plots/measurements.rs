@@ -269,4 +269,9 @@ impl<'a> FilteredView<'a> {
     pub fn series_2(&self) -> impl Iterator<Item = f64> + '_ {
         self.indices.iter().map(move |&i| self.parent.series_2[i])
     }
+
+    /// Borrowed third data series iterator.
+    pub fn series_3(&self) -> impl Iterator<Item = f64> + '_ {
+        self.indices.iter().map(move |&i| self.parent.series_3[i])
+    }
 }
