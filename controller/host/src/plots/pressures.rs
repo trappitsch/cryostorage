@@ -143,11 +143,7 @@ impl PressurePlot {
 }
 
 /// Pressure plot task: Receive pressure data points and update the plot and UI.
-///
-/// FIXME: Halt receiver
 pub async fn pressure_plot_task(mut rx: mpsc::Receiver<PressurePlotCommands>) {
-    println!("Starting pressure plot task");
-
     let mut plot = PressurePlot::new(PlotSizePx {
         width: 800,
         height: 400,

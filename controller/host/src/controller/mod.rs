@@ -160,7 +160,6 @@ pub async fn controller_task(
                 }
             }
             _ = rx_shutdown.recv() => {
-                println!("Controller command handling task shutting down");
                 break;
             }
         }
@@ -222,7 +221,6 @@ pub async fn controller_broadcast_listener(
                 }
             }
             _ = rx_shutdown.recv() => {
-                println!("Controller broadcast listener shutting down");
                 break;
             }
         }

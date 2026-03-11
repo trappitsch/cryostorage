@@ -30,11 +30,6 @@ export component VacuumScreen inherits MyWindow {
         width: 93.347px;
         height: 11.571px;
         background: Logic.is_vct_attached ? Palette.green : Palette.bg;
-        TouchArea {
-            clicked => {
-                Logic.is_vct_attached = !Logic.is_vct_attached;  // toggle for testing
-        }
-        }
     }
 
     VacuumStateCircle {

@@ -109,7 +109,6 @@ pub async fn workflow_task(
                 }
             }
             _ = rx_shutdown.recv() => {
-                println!("Workflow task shutting down");
                 break;
             }
         }

@@ -122,7 +122,12 @@ async fn main() {
     send_log_message(LogMessage::new_info(&format!(
         "Started cryostorage_host: BuildInfo - {}",
         env!("BUILD_INFO")
-    ))).await;
+    )))
+    .await;
+    println!(
+        "Started cryostorage_host: BuildInfo - {}",
+        env!("BUILD_INFO")
+    );
 
     // start the app
     match app::app_main(Arc::clone(&conf), Arc::clone(&inst_status), tx_ui_set) {

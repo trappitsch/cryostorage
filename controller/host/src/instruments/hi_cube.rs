@@ -92,7 +92,6 @@ pub async fn pfeiffer_hicube_task(
                 }
             },
             _ = rx_shutdown.recv() => {
-                println!("Shutting down HiCube task.");
                 break;
             }
         }
