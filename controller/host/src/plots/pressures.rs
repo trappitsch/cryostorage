@@ -3,11 +3,14 @@
 use anyhow::{Result, anyhow, bail};
 use plotters::prelude::*;
 use slint::{ComponentHandle, Weak};
-use tokio::{sync::mpsc, time::Instant};
+use tokio::{
+    sync::mpsc,
+    time::{Instant, sleep_until},
+};
 
 use crate::{
     app::{AppWindow, Logic},
-    logger,
+    log,
     plots::{
         Measurements, PLOT_STYLE, PlotSizePx, PressureDataPoint, TIME_INTERVAL_CLEANUP,
         TIME_RANGE_TO_KEEP,
@@ -138,7 +141,7 @@ impl PressurePlot {
     /// Make the plot and set it to the UI.
     pub fn make_plot(&mut self) {
         if let Err(e) = self.plot_it() {
-            logger::err_now!("Failed to make pressure plot: {}", e);
+            log::err_now!("Failed to make pressure plot: {}", e);
         }
     }
 }
@@ -152,7 +155,8 @@ pub async fn pressure_plot_task(mut rx: mpsc::Receiver<PressurePlotCommands>) {
 
     let mut rx_shutdown = crate::HALT_SENDER.get().expect("Uninitialized").subscribe();
 
-    let mut next_cleanup_time = Instant::now() + TIME_INTERVAL_CLEANUP;
+    let mut next_plot_cleanup = Instant::now() + TIME_INTERVAL_CLEANUP;
+    let mut next_hist_rotation = Instant::now() + crate::LOG_ROTATION_DURATION;
 
     loop {
         tokio::select! {
@@ -160,9 +164,9 @@ pub async fn pressure_plot_task(mut rx: mpsc::Receiver<PressurePlotCommands>) {
                 match cmd {
                     PressurePlotCommands::AddDataPoint(dp) => {
                         // cleanup first?
-                        if Instant::now() >= next_cleanup_time {
+                        if Instant::now() >= next_plot_cleanup {
                             plot.measurements.retain(TIME_RANGE_TO_KEEP);
-                            next_cleanup_time = Instant::now() + TIME_INTERVAL_CLEANUP;
+                            next_plot_cleanup = Instant::now() + TIME_INTERVAL_CLEANUP;
                         }
 
                         plot.measurements.push_pressure(dp);
@@ -172,6 +176,11 @@ pub async fn pressure_plot_task(mut rx: mpsc::Receiver<PressurePlotCommands>) {
                         plot.set_ui(ui);
                     }
                 }
+            }
+            _ = sleep_until(next_hist_rotation) => {
+                plot.measurements.rotate_history_file();
+                crate::log::info!("Rotated {} file", super::HISTORY_PRESSURE_FNAME).await;
+                next_hist_rotation = Instant::now() + crate::LOG_ROTATION_DURATION;
             }
             _ = rx_shutdown.recv() => {
                     break;
@@ -195,6 +204,6 @@ fn get_pressur_plot_command_sender() -> mpsc::Sender<PressurePlotCommands> {
 pub fn send_pressure_plot_cmd_now(cmd: PressurePlotCommands) {
     let sender = get_pressur_plot_command_sender();
     if let Err(e) = sender.try_send(cmd) {
-        logger::err_now!("Failed to send pressure plot command now: {}", e);
+        log::err_now!("Failed to send pressure plot command now: {}", e);
     }
 }

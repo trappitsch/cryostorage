@@ -13,7 +13,7 @@ use tokio::{
     time::sleep,
 };
 
-use crate::{logger, status::InstrumentStatus};
+use crate::{log, status::InstrumentStatus};
 
 mod client;
 
@@ -66,7 +66,7 @@ pub async fn start_controller_tasks(
     let ps_client = match ps_client {
         Some(client) => client,
         None => {
-            logger::err!("Failed to connect to poststation at '{}'. Is poststation running? Restart the program.", { config.address }).await;
+            log::err!("Failed to connect to poststation at '{}'. Is poststation running? Restart the program.", { config.address }).await;
             return (tokio::spawn(async {}), tokio::spawn(async {}));
         }
     };
@@ -80,7 +80,7 @@ pub async fn start_controller_tasks(
     {
         device.serial
     } else {
-        logger::err!("No connected device with product name '{}' found.", {
+        log::err!("No connected device with product name '{}' found.", {
             config.product_name
         })
         .await;
@@ -123,11 +123,11 @@ pub async fn controller_task(
                         match cntrl.get_light().await {
                             Ok(st) => {
                                 if inst_status.lock().expect("Poisoned").set_chamber_light_and_ui(st).is_err() {
-                                    logger::err_now!("Failed to initialize chamber light state on GUI.");
+                                    log::err_now!("Failed to initialize chamber light state on GUI.");
                                 }
                             }
                             Err(e) => {
-                                logger::err_now!("Failed to get chamber light state from controller: {}", e);
+                                log::err_now!("Failed to get chamber light state from controller: {}", e);
                             }
                         };
                     }
@@ -186,7 +186,7 @@ pub async fn controller_broadcast_listener(
     let mut sub = match client.stream_topic::<BcInstStatus>(serial).await {
         Ok(s) => s,
         Err(e) => {
-            logger::err!(
+            log::err!(
                 "Broadcast subscription failed. Restart the program. Error: {}",
                 e
             )
@@ -206,7 +206,7 @@ pub async fn controller_broadcast_listener(
                             run_initialize = false;
                         };
                 } else {
-                    logger::err!("Poststation broadcast stream closed unexpectedly. Is poststation running? Restart the program.").await;
+                    log::err!("Poststation broadcast stream closed unexpectedly. Is poststation running? Restart the program.").await;
                     break;
                 }
             }
@@ -232,7 +232,7 @@ fn get_cntrl_cmd_sender() -> mpsc::Sender<ControllerCommands> {
 pub async fn send_cntrl_cmd(cmd: ControllerCommands) {
     let sender = get_cntrl_cmd_sender();
     if let Err(e) = sender.send(cmd).await {
-        logger::err_now!("Failed to send controller command: {}", e);
+        log::err_now!("Failed to send controller command: {}", e);
     }
 }
 
@@ -243,7 +243,7 @@ pub async fn send_cntrl_cmd(cmd: ControllerCommands) {
 pub fn send_cntrl_cmd_now(cmd: ControllerCommands) {
     let sender = get_cntrl_cmd_sender();
     if let Err(e) = sender.try_send(cmd) {
-        logger::err_now!("Failed to send controller command now: {}", e);
+        log::err_now!("Failed to send controller command now: {}", e);
     }
 }
 

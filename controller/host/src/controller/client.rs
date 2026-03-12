@@ -12,7 +12,7 @@ use icd::{
 };
 use poststation_sdk::PoststationClient;
 
-use crate::logger;
+use crate::log;
 
 /// Holds the controller client for communication functions.
 pub struct ControllerClient {
@@ -42,7 +42,7 @@ impl ControllerClient {
             .await
             .is_err()
         {
-            logger::err!("Failed to send new baking state to controller").await;
+            log::err!("Failed to send new baking state to controller").await;
         }
     }
 
@@ -62,7 +62,7 @@ impl ControllerClient {
             .await
             .is_err()
         {
-            logger::err!("Failed to send new light state to controller").await;
+            log::err!("Failed to send new light state to controller").await;
         }
     }
 
@@ -73,7 +73,7 @@ impl ControllerClient {
             .await
             .is_err()
         {
-            logger::err!("Failed to send new pump valve state to controller").await;
+            log::err!("Failed to send new pump valve state to controller").await;
         }
     }
 
@@ -84,7 +84,7 @@ impl ControllerClient {
             .await
             .is_err()
         {
-            logger::err!("Failed to send new transfer valve state to controller").await;
+            log::err!("Failed to send new transfer valve state to controller").await;
         }
     }
 
@@ -95,7 +95,7 @@ impl ControllerClient {
             .await
             .is_err()
         {
-            logger::err!("Failed to send new VCT handshake to controller").await;
+            log::err!("Failed to send new VCT handshake to controller").await;
         }
     }
 }

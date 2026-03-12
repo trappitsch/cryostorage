@@ -35,7 +35,7 @@ use crate::instruments::ion_pump::IonPumpInst;
 use crate::instruments::lakeshore_temp::LakeshoreTempInst;
 use crate::instruments::omnicontrol::{Gauge, GaugeStatus, OmniControlInst};
 use crate::instruments::utils::ThermocoupleChannelName;
-use crate::logger;
+use crate::log;
 use crate::prg_config::PrgConfig;
 use crate::status::InstrumentStatus;
 
@@ -118,7 +118,7 @@ pub async fn instruments_task(
     let cooler_setpoint_temperature = match cryocooler_inst.get_setpoint_temperature() {
         Ok(t) => t,
         Err(e) => {
-            logger::err!(
+            log::err!(
                 "Failed to set initial cryocooler setpoint temperature: {}",
                 e,
             )
@@ -131,7 +131,7 @@ pub async fn instruments_task(
     let cooler_state = match cryocooler_inst.get_state() {
         Ok(s) => s,
         Err(e) => {
-            logger::err!("Failed to set initial cryocooler state: {}", e,).await;
+            log::err!("Failed to set initial cryocooler state: {}", e,).await;
             cryocooler_inst.reset_instrument();
             CoolerState::Disabled
         }
@@ -154,18 +154,18 @@ pub async fn instruments_task(
             .set_temperature_setpoint_and_ui(cooler_setpoint_temperature)
             .is_err()
         {
-            logger::err_now!("Failed to set initial cryocooler setpoint temperature in UI");
+            log::err_now!("Failed to set initial cryocooler setpoint temperature in UI");
         }
 
         if inst_status.set_cooler_state_and_ui(cooler_state).is_err() {
-            logger::err_now!("Failed to set initial cryocooler state in UI");
+            log::err_now!("Failed to set initial cryocooler state in UI");
         }
 
         if inst_status
             .set_ion_pump_state_and_ui(ion_pump_state)
             .is_err()
         {
-            logger::err_now!("Failed to set initial ion pump state in UI");
+            log::err_now!("Failed to set initial ion pump state in UI");
         }
     } // drop lock
 
@@ -179,7 +179,7 @@ pub async fn instruments_task(
                 let mut temperatures = match lakeshore_temp_inst.get_status_measurements() {
                     Ok(temps) => temps,
                     Err(e) => {
-                        logger::err!("Failed to read temperatures from Lakeshore336: {}", e).await;
+                        log::err!("Failed to read temperatures from Lakeshore336: {}", e).await;
                         lakeshore_temp_inst.reset_instrument();
                         HashMap::new()
                     }
@@ -188,7 +188,7 @@ pub async fn instruments_task(
                 let temperature_cooler = match cryocooler_inst.get_status_measurement() {
                     Ok(temps) => temps,
                     Err(e) => {
-                        logger::err!("Failed to read temperature from Cryocooler: {}", e).await;
+                        log::err!("Failed to read temperature from Cryocooler: {}", e).await;
                         cryocooler_inst.reset_instrument();
                         HashMap::new()
                     }
@@ -209,7 +209,7 @@ pub async fn instruments_task(
                 let current_power = match cryocooler_inst.get_current_power() {
                     Ok(p) => p,
                     Err(e) => {
-                        logger::err!("Failed to read current power from Cryocooler: {}", e).await;
+                        log::err!("Failed to read current power from Cryocooler: {}", e).await;
                         cryocooler_inst.reset_instrument();
                         Power::default()
                     }
@@ -224,7 +224,7 @@ pub async fn instruments_task(
                         pressures.extend(phm);
                     }
                     Err(e) => {
-                        logger::err!("Failed to read pressures from Omnicontrol: {}", e).await;
+                        log::err!("Failed to read pressures from Omnicontrol: {}", e).await;
                         omnicontrol_inst.reset_instrument();
                     }
                 };
@@ -252,7 +252,7 @@ pub async fn instruments_task(
                                     .expect("UI set before this loop started.");
                             },
                             Err(e) => {
-                                logger::err!("Failed to set cryocooler setpoint temperature: {}", e).await;
+                                log::err!("Failed to set cryocooler setpoint temperature: {}", e).await;
                             }
                         }
                     }
@@ -264,13 +264,13 @@ pub async fn instruments_task(
                                     .expect("UI set before this loop started.");
                             },
                             Err(e) => {
-                                logger::err!("Failed to set cryocooler state: {}", e).await;
+                                log::err!("Failed to set cryocooler state: {}", e).await;
                             }
                         }
                     }
                     InstrumentCommands::GaugeState((gauge, state)) => {
                         if omnicontrol_inst.set_status(gauge, state).is_err() {
-                            logger::err!("Failed to set {} gauge to state: {}", gauge, state).await;
+                            log::err!("Failed to set {} gauge to state: {}", gauge, state).await;
                         }
                     }
                     InstrumentCommands::IonPumpState(state) => {
@@ -283,7 +283,7 @@ pub async fn instruments_task(
                             },
                             Err(e) => {
                                 ion_pump_inst.reset_instrument();
-                                logger::err!("Failed to set ion pump state: {}", e).await;
+                                log::err!("Failed to set ion pump state: {}", e).await;
                                 ValveOrPumpState::UndefinedOrError
                             }
                         };
@@ -316,6 +316,6 @@ fn get_instr_cmd_sender() -> mpsc::Sender<InstrumentCommands> {
 pub fn send_instr_cmd_now(cmd: InstrumentCommands) {
     let sender = get_instr_cmd_sender();
     if let Err(e) = sender.try_send(cmd) {
-        logger::err_now!("Failed to send instrument command now: {}", e);
+        log::err_now!("Failed to send instrument command now: {}", e);
     }
 }

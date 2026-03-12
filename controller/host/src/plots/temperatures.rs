@@ -5,11 +5,14 @@ use std::f64;
 use anyhow::{Result, anyhow, bail};
 use plotters::prelude::*;
 use slint::{ComponentHandle, Weak};
-use tokio::{sync::mpsc, time::Instant};
+use tokio::{
+    sync::mpsc,
+    time::{Instant, sleep_until},
+};
 
 use crate::{
     app::{AppWindow, Logic},
-    logger,
+    log,
     plots::{
         Measurements, PLOT_STYLE, PlotSizePx, TIME_INTERVAL_CLEANUP, TIME_RANGE_TO_KEEP,
         TemperatureDataPoint,
@@ -149,7 +152,7 @@ impl TemperaturePlot {
     /// TODO: Analyze what here actually needs to be done everytime and what can be done at init
     pub fn make_plot(&mut self) {
         if let Err(e) = self.plot_it() {
-            logger::err_now!("Failed to make temperature plot: {}", e);
+            log::err_now!("Failed to make temperature plot: {}", e);
         }
     }
 }
@@ -164,6 +167,7 @@ pub async fn temperature_plot_task(mut rx: mpsc::Receiver<TemperaturePlotCommand
     let mut rx_shutdown = crate::HALT_SENDER.get().expect("Uninitialized").subscribe();
 
     let mut next_cleanup_time = Instant::now() + TIME_INTERVAL_CLEANUP;
+    let mut next_hist_rotation = Instant::now() + crate::LOG_ROTATION_DURATION;
 
     loop {
         tokio::select! {
@@ -183,6 +187,11 @@ pub async fn temperature_plot_task(mut rx: mpsc::Receiver<TemperaturePlotCommand
                         plot.set_ui(ui);
                     }
                 }
+            }
+            _ = sleep_until(next_hist_rotation) => {
+                plot.measurements.rotate_history_file();
+                crate::log::info!("Rotated {} file", super::HISTORY_TEMPERATURE_FNAME).await;
+                next_hist_rotation = Instant::now() + crate::LOG_ROTATION_DURATION;
             }
             _ = rx_shutdown.recv() => {
                     break;
@@ -206,6 +215,6 @@ fn get_temperature_plot_command_sender() -> mpsc::Sender<TemperaturePlotCommands
 pub fn send_temperature_plot_cmd_now(cmd: TemperaturePlotCommands) {
     let sender = get_temperature_plot_command_sender();
     if let Err(e) = sender.try_send(cmd) {
-        logger::err_now!("Failed to send temperature plot command now: {}", e);
+        log::err_now!("Failed to send temperature plot command now: {}", e);
     }
 }

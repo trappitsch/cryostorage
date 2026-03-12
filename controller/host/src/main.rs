@@ -1,4 +1,9 @@
-use std::sync::{Arc, Mutex};
+use std::{
+    env, fs,
+    path::PathBuf,
+    sync::{Arc, Mutex},
+    time::Duration,
+};
 
 use tokio::sync::{OnceCell, broadcast, mpsc, oneshot};
 
@@ -7,9 +12,10 @@ mod connections;
 mod controller;
 mod dialog;
 mod instruments;
-mod logger;
+mod log;
 mod plots;
 mod prg_config;
+mod rotation;
 mod samples;
 mod status;
 mod workflows;
@@ -21,13 +27,19 @@ use crate::{
     status::InstrumentStatus,
 };
 
-pub const CONFIG_FOLDER: &str = ".cryostorage";
-pub const LOG_LEVEL_DISPLAY: logger::Level = logger::Level::Warning;
+pub static CONFIG_FOLDER: OnceCell<PathBuf> = OnceCell::const_new(); // config files, logs
+pub static ARCHIVE_FOLDER: OnceCell<PathBuf> = OnceCell::const_new(); // archive of config files, logs
+pub const LOG_ROTATION_DURATION: Duration = Duration::from_secs(7 * 24 * 3600); // Duration between log rot.
+
+pub const LOG_LEVEL_DISPLAY: log::Level = log::Level::Warning;
 
 pub static HALT_SENDER: OnceCell<broadcast::Sender<()>> = OnceCell::const_new();
 
 #[tokio::main]
 async fn main() {
+    // first let's create the config and archive folders if they don't exist already.
+    init_config_folders();
+
     // config
     let conf = Arc::new(Mutex::new(prg_config::PrgConfig::try_new().unwrap()));
 
@@ -41,10 +53,10 @@ async fn main() {
     // LogHandler
     let (tx_log, rx_log) = mpsc::channel(128);
     let (tx_ui_set, rx_ui_set) = oneshot::channel();
-    let log_handler = logger::LogHandler::new(rx_log);
-    logger::LOG_SENDER.set(tx_log).expect("Uninitialized");
+    let log_handler = log::LogHandler::new(rx_log);
+    log::LOG_SENDER.set(tx_log).expect("Uninitialized");
 
-    let log_handler_listen = tokio::spawn(logger::log_handler_task(log_handler, rx_ui_set));
+    let log_handler_listen = tokio::spawn(log::log_handler_task(log_handler, rx_ui_set));
 
     // Pressure plotting task
     let (tx_p_plot, rx_p_plot) = mpsc::channel(32);
@@ -100,7 +112,7 @@ async fn main() {
         rx_hicube,
     ));
 
-    logger::info!(
+    log::info!(
         "Started cryostorage_host: Build Info - {}",
         env!("BUILD_INFO")
     )
@@ -123,4 +135,21 @@ async fn main() {
         }
         Err(e) => eprintln!("App exited with error: {}", e),
     }
+}
+
+/// Set the config and archive folder consts, create the directories.
+fn init_config_folders() {
+    let conf_folder_pth = env::home_dir()
+        .expect("Home directory must be known")
+        .join(".cryostorage");
+    fs::create_dir_all(&conf_folder_pth).expect("Could not create config folder");
+    CONFIG_FOLDER
+        .set(conf_folder_pth.clone())
+        .expect("Uninitialized");
+
+    let archive_folder_pth = conf_folder_pth.join("archive");
+    fs::create_dir_all(&archive_folder_pth).expect("Could not create archive folder");
+    ARCHIVE_FOLDER
+        .set(archive_folder_pth)
+        .expect("Uninitialized");
 }

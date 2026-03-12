@@ -1,15 +1,16 @@
 //! Measurements module: Holds the measurements class and the Filtered View
 
-use std::{env, io::Write, path::PathBuf, time::Duration};
+use std::{io::Write, path::PathBuf, time::Duration};
 
 use chrono::{DateTime, Local};
 
 use crate::{
-    CONFIG_FOLDER, logger,
+    CONFIG_FOLDER, log,
     plots::{
         HISTORY_PRESSURE_FNAME, HISTORY_TEMPERATURE_FNAME, MAX_DURATION_BETWEEN_POINTS,
         MIN_LOG_DP_FACT, MIN_LOG_DT, PlotType, PressureDataPoint, TemperatureDataPoint,
     },
+    rotation::rotate,
 };
 
 /// Enum for both possible data point types.
@@ -37,25 +38,12 @@ pub struct Measurements {
 impl Measurements {
     /// Create a new measurement container for a pressure plot.
     pub fn new_pressure() -> Self {
-        let fname = env::home_dir()
-            .expect("Home directory must be known")
-            .join(CONFIG_FOLDER)
+        let fname = CONFIG_FOLDER
+            .get()
+            .expect("Config folder is initialized")
             .join(HISTORY_PRESSURE_FNAME);
 
-        // create the file with header if it does not exist
-        if !fname.exists() {
-            std::fs::create_dir_all(fname.parent().unwrap())
-                .expect("Creating config folder must work");
-            let mut file =
-                std::fs::File::create(&fname).expect("Creating pressure history file must work");
-            writeln!(
-                file,
-                "Timestamp,Chamber_pressure_mbar,Transfer_pressure_mbar"
-            )
-            .expect("Writing header to pressure history file must work");
-        }
-
-        Self {
+        let ret = Self {
             plot_type: PlotType::PressurePlot,
             fname,
             timestamps: Vec::new(),
@@ -63,29 +51,22 @@ impl Measurements {
             series_2: Vec::new(),
             series_3: Vec::new(), // ignored in pressure plot
             last_dp: None,
-        }
+        };
+
+        ret.empty_history_file();
+
+        ret
     }
 
     /// Create a new measurement container for a temperature plot.
     pub fn new_temperature() -> Self {
-        let fname = env::home_dir()
-            .expect("Home directory must be known")
-            .join(CONFIG_FOLDER)
+        let fname = CONFIG_FOLDER
+            .get()
+            .expect("Config folder is initialized")
             .join(HISTORY_TEMPERATURE_FNAME);
 
         // create the file with header if it does not exist
-        if !fname.exists() {
-            std::fs::create_dir_all(fname.parent().unwrap())
-                .expect("Creating config folder must work");
-            let mut file =
-                std::fs::File::create(&fname).expect("Creating pressure history file must work");
-            writeln!(
-                file,
-                "Timestamp,Sample_temperature_K,Bridge_temperature_K,Cooler_temperature_K"
-            )
-            .expect("Writing header to pressure history file must work");
-        }
-        Self {
+        let ret = Self {
             plot_type: PlotType::TemperaturePlot,
             fname,
             timestamps: Vec::new(),
@@ -93,6 +74,36 @@ impl Measurements {
             series_2: Vec::new(),
             series_3: Vec::new(),
             last_dp: None,
+        };
+
+        ret.empty_history_file();
+
+        ret
+    }
+
+    /// Create an empty measurement file (if it doesn't exist or after log rotation)
+    fn empty_history_file(&self) {
+        if !self.fname.exists() {
+            match self.plot_type {
+                PlotType::PressurePlot => {
+                    let mut file = std::fs::File::create(&self.fname)
+                        .expect("Creating pressure history file must work");
+                    writeln!(
+                        file,
+                        "Timestamp,Chamber_pressure_mbar,Transfer_pressure_mbar"
+                    )
+                    .expect("Writing header to pressure history file must work");
+                }
+                PlotType::TemperaturePlot => {
+                    let mut file = std::fs::File::create(&self.fname)
+                        .expect("Creating pressure history file must work");
+                    writeln!(
+                        file,
+                        "Timestamp,Sample_temperature_K,Bridge_temperature_K,Cooler_temperature_K"
+                    )
+                    .expect("Writing header to pressure history file must work");
+                }
+            }
         }
     }
 
@@ -126,7 +137,7 @@ impl Measurements {
             .open(&self.fname)
             .expect("Opening vacuum history file must work");
         if let Err(e) = writeln!(file, "{},{},{}", dp.ts, dp.chamber, dp.transfer) {
-            logger::err_now!("Failed to write pressure datapoint to history file: {}", e);
+            log::err_now!("Failed to write pressure datapoint to history file: {}", e);
         };
     }
 
@@ -163,11 +174,26 @@ impl Measurements {
             .open(&self.fname)
             .expect("Opening temperature history file must work");
         if let Err(e) = writeln!(file, "{},{},{},{}", dp.ts, dp.sample, dp.bridge, dp.cooler) {
-            logger::err_now!(
+            log::err_now!(
                 "Failed to write temperature datapoint to history file: {}",
                 e
             );
         };
+    }
+
+    /// Rotate the history file.
+    ///
+    /// This is intentionally blocking in order to avoid writing to a history file while it is
+    /// being rotated.
+    pub fn rotate_history_file(&self) {
+        let fname = match self.plot_type {
+            PlotType::PressurePlot => HISTORY_PRESSURE_FNAME,
+            PlotType::TemperaturePlot => HISTORY_TEMPERATURE_FNAME,
+        };
+        if let Err(e) = rotate(fname) {
+            log::warning_now!("Failed to rotate {} file: {}", fname, e);
+        }
+        self.empty_history_file();
     }
 
     /// Length of the measurement series.

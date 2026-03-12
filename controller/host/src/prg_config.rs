@@ -1,7 +1,6 @@
 //! Module to handle saving and loading configuration files.
 
 use std::{
-    env,
     fs::{self, File},
     io::Write,
     path::PathBuf,
@@ -11,18 +10,17 @@ use anyhow::{Result, anyhow};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    CONFIG_FOLDER,
+    ARCHIVE_FOLDER, CONFIG_FOLDER,
     controller::ControllerConfig,
     instruments::{
         cryocooler::CryoCoolerConfig, hi_cube::PfeifferHiCubeConf, ion_pump::IonPumpConfig,
         lakeshore_temp::LakeshoreTempConfig, omnicontrol::OmniControlConfig,
     },
-    logger,
+    log,
     samples::Samples,
 };
 
 pub const CONFIG_FNAME: &str = "cryostorage_config.ron";
-pub const CONFIG_OLD_FOLDER: &str = "config_history";
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PrgConfig {
@@ -43,17 +41,10 @@ impl PrgConfig {
     ///
     /// The configuration folder is created, if it does not exist, in `main.rs`.
     pub fn try_new() -> Result<Self> {
-        // Create the configuration folder if it doesn't exist
-        let conf_folder_pth = env::home_dir()
-            .expect("Home directory must be known")
-            .join(CONFIG_FOLDER);
-        fs::create_dir_all(&conf_folder_pth).expect("Could not create config folder");
-
-        // Create the folder for the old config files, if it doesn't exist
-        let old_conf_folder_pth = conf_folder_pth.join(CONFIG_OLD_FOLDER);
-        fs::create_dir_all(&old_conf_folder_pth).expect("Could not create old config folder");
-
-        let fname = conf_folder_pth.join(CONFIG_FNAME);
+        let fname = CONFIG_FOLDER
+            .get()
+            .expect("Config folder is initialized")
+            .join(CONFIG_FNAME);
 
         let mut ret_self = Self {
             fname,
@@ -92,7 +83,10 @@ impl PrgConfig {
     fn save_to_file(&self) -> Result<()> {
         // backup the previous config file with same name and timestamp if it exists
         if self.fname.exists() {
+            let archive_folder = ARCHIVE_FOLDER.get().expect("Archive folder is initialized");
+
             let timestamp = chrono::Utc::now().format("%Y-%m-%d-%H:%M:%S");
+
             let stem = self
                 .fname
                 .file_stem()
@@ -103,14 +97,16 @@ impl PrgConfig {
                 .extension()
                 .and_then(|s| s.to_str())
                 .unwrap_or("ron");
+
             let backup_fname = self
                 .fname
                 .parent()
                 .expect("Config file has a parent folder")
-                .join(CONFIG_OLD_FOLDER)
+                .join(archive_folder)
                 .join(format!("{timestamp}_{stem}.{ext}"));
+
             if let Err(e) = fs::copy(&self.fname, backup_fname) {
-                logger::err_now!("Failed to backup config file: {}", e);
+                log::err_now!("Failed to backup config file: {}", e);
             };
         };
 
