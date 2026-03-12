@@ -22,7 +22,7 @@ fn set_build_version() {
             "-r",
             "main",
             "-T",
-            "self.commit_id().short()"
+            "self.commit_id().short()",
         ])
         .output()
         .ok()

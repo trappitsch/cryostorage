@@ -7,12 +7,13 @@ use std::{
 use icd::{BakingState, BcInstStatus, LightState, ValveState, VctHandshake};
 use poststation_sdk::{PoststationClient, connect};
 use serde::{Deserialize, Serialize};
-use tokio::{sync::{OnceCell, mpsc}, task::JoinHandle, time::sleep};
-
-use crate::{
-    logger::{LogMessage, send_log_message, send_log_message_now},
-    status::InstrumentStatus,
+use tokio::{
+    sync::{OnceCell, mpsc},
+    task::JoinHandle,
+    time::sleep,
 };
+
+use crate::{logger, status::InstrumentStatus};
 
 mod client;
 
@@ -65,15 +66,8 @@ pub async fn start_controller_tasks(
     let ps_client = match ps_client {
         Some(client) => client,
         None => {
-            send_log_message(LogMessage::new_error(&format!(
-                "Failed to connect to poststation at '{}'. Is poststation running? Restart the program.",
-                { config.address }
-            )))
-            .await;
-            return (
-                tokio::spawn(async {}),
-                tokio::spawn(async {}),
-            );
+            logger::err!("Failed to connect to poststation at '{}'. Is poststation running? Restart the program.", { config.address }).await;
+            return (tokio::spawn(async {}), tokio::spawn(async {}));
         }
     };
 
@@ -86,10 +80,9 @@ pub async fn start_controller_tasks(
     {
         device.serial
     } else {
-        send_log_message(LogMessage::new_error(&format!(
-            "No connected device with product name '{}' found.",
-            { config.product_name }
-        )))
+        logger::err!("No connected device with product name '{}' found.", {
+            config.product_name
+        })
         .await;
         0
     };
@@ -130,15 +123,11 @@ pub async fn controller_task(
                         match cntrl.get_light().await {
                             Ok(st) => {
                                 if inst_status.lock().expect("Poisoned").set_chamber_light_and_ui(st).is_err() {
-                                    send_log_message_now(LogMessage::new_error(
-                                        "Failed to initialize chamber light state on GUI.",
-                                    ));
+                                    logger::err_now!("Failed to initialize chamber light state on GUI.");
                                 }
                             }
                             Err(e) => {
-                                send_log_message_now(LogMessage::new_error(
-                                    &format!("Failed to get chamber light state from controller: {}", e),
-                                ));
+                                logger::err_now!("Failed to get chamber light state from controller: {}", e);
                             }
                         };
                     }
@@ -197,10 +186,10 @@ pub async fn controller_broadcast_listener(
     let mut sub = match client.stream_topic::<BcInstStatus>(serial).await {
         Ok(s) => s,
         Err(e) => {
-            send_log_message(LogMessage::new_error(&format!(
+            logger::err!(
                 "Broadcast subscription failed. Restart the program. Error: {}",
                 e
-            )))
+            )
             .await;
             return;
         }
@@ -217,9 +206,7 @@ pub async fn controller_broadcast_listener(
                             run_initialize = false;
                         };
                 } else {
-                    send_log_message(LogMessage::new_error(
-                        "Poststation broadcast stream closed unexpectedly. Is poststation running? Restart the program."
-                    )).await;
+                    logger::err!("Poststation broadcast stream closed unexpectedly. Is poststation running? Restart the program.").await;
                     break;
                 }
             }
@@ -245,10 +232,7 @@ fn get_cntrl_cmd_sender() -> mpsc::Sender<ControllerCommands> {
 pub async fn send_cntrl_cmd(cmd: ControllerCommands) {
     let sender = get_cntrl_cmd_sender();
     if let Err(e) = sender.send(cmd).await {
-        send_log_message_now(LogMessage::new_error(&format!(
-            "Failed to send controller command: {}",
-            e
-        )));
+        logger::err_now!("Failed to send controller command: {}", e);
     }
 }
 
@@ -259,10 +243,7 @@ pub async fn send_cntrl_cmd(cmd: ControllerCommands) {
 pub fn send_cntrl_cmd_now(cmd: ControllerCommands) {
     let sender = get_cntrl_cmd_sender();
     if let Err(e) = sender.try_send(cmd) {
-        send_log_message_now(LogMessage::new_error(&format!(
-            "Failed to send controller command now: {}",
-            e
-        )));
+        logger::err_now!("Failed to send controller command now: {}", e);
     }
 }
 

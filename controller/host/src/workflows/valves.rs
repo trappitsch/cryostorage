@@ -13,8 +13,8 @@ use crate::{
 
 /// Get permission to close the transfer valve based on the VCT state.
 ///
-/// If the VCT dock gate valve is currently open, permission to close the transfer valve is 
-/// denied as the arm could be in. This check allows raising an appropriate error message 
+/// If the VCT dock gate valve is currently open, permission to close the transfer valve is
+/// denied as the arm could be in. This check allows raising an appropriate error message
 /// to the user.
 fn get_close_transfer_valve_permission(inst_status: Arc<Mutex<InstrumentStatus>>) -> Result<()> {
     if inst_status.lock().expect("Poisoned").is_vct_gate_open() {

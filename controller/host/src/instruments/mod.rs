@@ -35,7 +35,7 @@ use crate::instruments::ion_pump::IonPumpInst;
 use crate::instruments::lakeshore_temp::LakeshoreTempInst;
 use crate::instruments::omnicontrol::{Gauge, GaugeStatus, OmniControlInst};
 use crate::instruments::utils::ThermocoupleChannelName;
-use crate::logger::{LogMessage, send_log_message, send_log_message_now};
+use crate::logger;
 use crate::prg_config::PrgConfig;
 use crate::status::InstrumentStatus;
 
@@ -118,10 +118,10 @@ pub async fn instruments_task(
     let cooler_setpoint_temperature = match cryocooler_inst.get_setpoint_temperature() {
         Ok(t) => t,
         Err(e) => {
-            send_log_message(LogMessage::new_error(&format!(
+            logger::err!(
                 "Failed to set initial cryocooler setpoint temperature: {}",
                 e,
-            )))
+            )
             .await;
             cryocooler_inst.reset_instrument();
             Temperature::default()
@@ -131,11 +131,7 @@ pub async fn instruments_task(
     let cooler_state = match cryocooler_inst.get_state() {
         Ok(s) => s,
         Err(e) => {
-            send_log_message(LogMessage::new_error(&format!(
-                "Failed to set initial cryocooler state: {}",
-                e,
-            )))
-            .await;
+            logger::err!("Failed to set initial cryocooler state: {}", e,).await;
             cryocooler_inst.reset_instrument();
             CoolerState::Disabled
         }
@@ -158,24 +154,18 @@ pub async fn instruments_task(
             .set_temperature_setpoint_and_ui(cooler_setpoint_temperature)
             .is_err()
         {
-            send_log_message_now(LogMessage::new_error(
-                "Failed to set initial cryocooler setpoint temperature in UI",
-            ));
+            logger::err_now!("Failed to set initial cryocooler setpoint temperature in UI");
         }
 
         if inst_status.set_cooler_state_and_ui(cooler_state).is_err() {
-            send_log_message_now(LogMessage::new_error(
-                "Failed to set initial cryocooler state in UI",
-            ));
+            logger::err_now!("Failed to set initial cryocooler state in UI");
         }
 
         if inst_status
             .set_ion_pump_state_and_ui(ion_pump_state)
             .is_err()
         {
-            send_log_message_now(LogMessage::new_error(
-                "Failed to set initial ion pump state in UI",
-            ));
+            logger::err_now!("Failed to set initial ion pump state in UI");
         }
     } // drop lock
 
@@ -189,9 +179,7 @@ pub async fn instruments_task(
                 let mut temperatures = match lakeshore_temp_inst.get_status_measurements() {
                     Ok(temps) => temps,
                     Err(e) => {
-                        send_log_message( LogMessage::new_error(
-                            &format!("Failed to read temperatures from Lakeshore336: {}", e)
-                        )).await;
+                        logger::err!("Failed to read temperatures from Lakeshore336: {}", e).await;
                         lakeshore_temp_inst.reset_instrument();
                         HashMap::new()
                     }
@@ -200,9 +188,7 @@ pub async fn instruments_task(
                 let temperature_cooler = match cryocooler_inst.get_status_measurement() {
                     Ok(temps) => temps,
                     Err(e) => {
-                        send_log_message( LogMessage::new_error(
-                            &format!("Failed to read temperature from Cryocooler: {}", e)
-                        )).await;
+                        logger::err!("Failed to read temperature from Cryocooler: {}", e).await;
                         cryocooler_inst.reset_instrument();
                         HashMap::new()
                     }
@@ -223,9 +209,7 @@ pub async fn instruments_task(
                 let current_power = match cryocooler_inst.get_current_power() {
                     Ok(p) => p,
                     Err(e) => {
-                        send_log_message( LogMessage::new_error(
-                            &format!("Failed to read current power from Cryocooler: {}", e)
-                        )).await;
+                        logger::err!("Failed to read current power from Cryocooler: {}", e).await;
                         cryocooler_inst.reset_instrument();
                         Power::default()
                     }
@@ -240,11 +224,7 @@ pub async fn instruments_task(
                         pressures.extend(phm);
                     }
                     Err(e) => {
-                        send_log_message(LogMessage::new_error(&format!(
-                            "Failed to read pressures from Omnicontrol: {}",
-                            e
-                        )))
-                        .await;
+                        logger::err!("Failed to read pressures from Omnicontrol: {}", e).await;
                         omnicontrol_inst.reset_instrument();
                     }
                 };
@@ -272,11 +252,7 @@ pub async fn instruments_task(
                                     .expect("UI set before this loop started.");
                             },
                             Err(e) => {
-                                send_log_message(LogMessage::new_error(
-                                    &format!(
-                                        "Failed to set cryocooler setpoint temperature: {}", e)
-                                    )
-                                ).await;
+                                logger::err!("Failed to set cryocooler setpoint temperature: {}", e).await;
                             }
                         }
                     }
@@ -288,21 +264,13 @@ pub async fn instruments_task(
                                     .expect("UI set before this loop started.");
                             },
                             Err(e) => {
-                                send_log_message(LogMessage::new_error(
-                                    &format!(
-                                        "Failed to set cryocooler state: {}", e)
-                                    )
-                                ).await;
+                                logger::err!("Failed to set cryocooler state: {}", e).await;
                             }
                         }
                     }
                     InstrumentCommands::GaugeState((gauge, state)) => {
                         if omnicontrol_inst.set_status(gauge, state).is_err() {
-                            send_log_message(LogMessage::new_error(
-                                &format!(
-                                    "Failed to set {} gauge to state: {}", gauge, state)
-                                )
-                            ).await;
+                            logger::err!("Failed to set {} gauge to state: {}", gauge, state).await;
                         }
                     }
                     InstrumentCommands::IonPumpState(state) => {
@@ -315,11 +283,7 @@ pub async fn instruments_task(
                             },
                             Err(e) => {
                                 ion_pump_inst.reset_instrument();
-                                send_log_message(LogMessage::new_error(
-                                    &format!(
-                                        "Failed to set ion pump state: {}", e)
-                                    )
-                                ).await;
+                                logger::err!("Failed to set ion pump state: {}", e).await;
                                 ValveOrPumpState::UndefinedOrError
                             }
                         };
@@ -352,9 +316,6 @@ fn get_instr_cmd_sender() -> mpsc::Sender<InstrumentCommands> {
 pub fn send_instr_cmd_now(cmd: InstrumentCommands) {
     let sender = get_instr_cmd_sender();
     if let Err(e) = sender.try_send(cmd) {
-        send_log_message_now(LogMessage::new_error(&format!(
-            "Failed to send instrument command now: {}",
-            e
-        )));
+        logger::err_now!("Failed to send instrument command now: {}", e);
     }
 }

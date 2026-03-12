@@ -7,8 +7,11 @@ use tokio::{sync::mpsc, time::Instant};
 
 use crate::{
     app::{AppWindow, Logic},
-    logger::{LogMessage, send_log_message_now},
-    plots::{Measurements, PLOT_STYLE, PlotSizePx, PressureDataPoint, TIME_INTERVAL_CLEANUP, TIME_RANGE_TO_KEEP},
+    logger,
+    plots::{
+        Measurements, PLOT_STYLE, PlotSizePx, PressureDataPoint, TIME_INTERVAL_CLEANUP,
+        TIME_RANGE_TO_KEEP,
+    },
 };
 
 pub enum PressurePlotCommands {
@@ -135,9 +138,7 @@ impl PressurePlot {
     /// Make the plot and set it to the UI.
     pub fn make_plot(&mut self) {
         if let Err(e) = self.plot_it() {
-            send_log_message_now(LogMessage::new_error(&format!(
-                "Failed to make pressure plot: {e}"
-            )));
+            logger::err_now!("Failed to make pressure plot: {}", e);
         }
     }
 }
@@ -151,7 +152,7 @@ pub async fn pressure_plot_task(mut rx: mpsc::Receiver<PressurePlotCommands>) {
 
     let mut rx_shutdown = crate::HALT_SENDER.get().expect("Uninitialized").subscribe();
 
-    let mut next_cleanup_time =  Instant::now() + TIME_INTERVAL_CLEANUP;
+    let mut next_cleanup_time = Instant::now() + TIME_INTERVAL_CLEANUP;
 
     loop {
         tokio::select! {
@@ -194,9 +195,6 @@ fn get_pressur_plot_command_sender() -> mpsc::Sender<PressurePlotCommands> {
 pub fn send_pressure_plot_cmd_now(cmd: PressurePlotCommands) {
     let sender = get_pressur_plot_command_sender();
     if let Err(e) = sender.try_send(cmd) {
-        send_log_message_now(LogMessage::new_error(&format!(
-            "Failed to send pressure plot command now: {}",
-            e
-        )));
+        logger::err_now!("Failed to send pressure plot command now: {}", e);
     }
 }

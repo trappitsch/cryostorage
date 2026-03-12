@@ -9,8 +9,11 @@ use tokio::{sync::mpsc, time::Instant};
 
 use crate::{
     app::{AppWindow, Logic},
-    logger::{LogMessage, send_log_message_now},
-    plots::{Measurements, PLOT_STYLE, PlotSizePx, TIME_INTERVAL_CLEANUP, TIME_RANGE_TO_KEEP, TemperatureDataPoint},
+    logger,
+    plots::{
+        Measurements, PLOT_STYLE, PlotSizePx, TIME_INTERVAL_CLEANUP, TIME_RANGE_TO_KEEP,
+        TemperatureDataPoint,
+    },
 };
 
 pub enum TemperaturePlotCommands {
@@ -74,7 +77,10 @@ impl TemperaturePlot {
             let max_2 = view.series_2().fold(f64::NEG_INFINITY, f64::max);
             let min_3 = view.series_3().fold(f64::INFINITY, f64::min);
             let max_3 = view.series_3().fold(f64::NEG_INFINITY, f64::max);
-            (min_1.min(min_2).min(min_3) - 15.0, max_1.max(max_2).max(max_3) + 15.0)
+            (
+                min_1.min(min_2).min(min_3) - 15.0,
+                max_1.max(max_2).max(max_3) + 15.0,
+            )
         };
 
         let mut chart = ChartBuilder::on(&root)
@@ -143,9 +149,7 @@ impl TemperaturePlot {
     /// TODO: Analyze what here actually needs to be done everytime and what can be done at init
     pub fn make_plot(&mut self) {
         if let Err(e) = self.plot_it() {
-            send_log_message_now(LogMessage::new_error(&format!(
-                "Failed to make temperature plot: {e}"
-            )));
+            logger::err_now!("Failed to make temperature plot: {}", e);
         }
     }
 }
@@ -159,7 +163,7 @@ pub async fn temperature_plot_task(mut rx: mpsc::Receiver<TemperaturePlotCommand
 
     let mut rx_shutdown = crate::HALT_SENDER.get().expect("Uninitialized").subscribe();
 
-    let mut next_cleanup_time =  Instant::now() + TIME_INTERVAL_CLEANUP;
+    let mut next_cleanup_time = Instant::now() + TIME_INTERVAL_CLEANUP;
 
     loop {
         tokio::select! {
@@ -202,9 +206,6 @@ fn get_temperature_plot_command_sender() -> mpsc::Sender<TemperaturePlotCommands
 pub fn send_temperature_plot_cmd_now(cmd: TemperaturePlotCommands) {
     let sender = get_temperature_plot_command_sender();
     if let Err(e) = sender.try_send(cmd) {
-        send_log_message_now(LogMessage::new_error(&format!(
-            "Failed to send temperature plot command now: {}",
-            e
-        )));
+        logger::err_now!("Failed to send temperature plot command now: {}", e);
     }
 }

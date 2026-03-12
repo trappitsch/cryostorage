@@ -25,7 +25,7 @@ use tokio::sync::{OnceCell, mpsc};
 use crate::{
     app::{AppWindow, Logic},
     dialog::show_error_dialog,
-    logger::{LogMessage, send_log_message_now},
+    logger,
     prg_config::Authorizations,
     status::InstrumentStatus,
     workflows::{
@@ -119,9 +119,7 @@ pub async fn workflow_task(
 fn error_dialog_helper(ui: Weak<AppWindow>, e: anyhow::Error) {
     ui.upgrade_in_event_loop(move |_| {
         if let Err(e_show) = show_error_dialog(e) {
-            send_log_message_now(LogMessage::new_error(&format!(
-                "Failed to show error dialog: {e_show}"
-            )));
+            logger::err_now!("Failed to show error dialog: {}", e_show);
         };
     })
     .expect("UI must be alive");
@@ -139,8 +137,6 @@ fn get_workflow_command_sender() -> mpsc::Sender<WorkflowCommands> {
 pub fn send_workflow_command_now(cmd: WorkflowCommands) {
     let sender = get_workflow_command_sender();
     if let Err(e) = sender.try_send(cmd) {
-        send_log_message_now(LogMessage::new_error(&format!(
-            "Failed to send workflow command now: {e}"
-        )));
+        logger::err_now!("Failed to send workflow command now: {}", e);
     }
 }

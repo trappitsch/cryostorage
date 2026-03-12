@@ -2,14 +2,6 @@ use std::sync::{Arc, Mutex};
 
 use tokio::sync::{OnceCell, broadcast, mpsc, oneshot};
 
-use crate::{
-    controller::start_controller_tasks,
-    instruments::{hi_cube::pfeiffer_hicube_task, instruments_task},
-    logger::{LogHandler, LogMessage, send_log_message},
-    plots::{pressure_plot_task, temperature_plot_task},
-    status::InstrumentStatus,
-};
-
 mod app;
 mod connections;
 mod controller;
@@ -21,6 +13,13 @@ mod prg_config;
 mod samples;
 mod status;
 mod workflows;
+
+use crate::{
+    controller::start_controller_tasks,
+    instruments::{hi_cube::pfeiffer_hicube_task, instruments_task},
+    plots::{pressure_plot_task, temperature_plot_task},
+    status::InstrumentStatus,
+};
 
 pub const CONFIG_FOLDER: &str = ".cryostorage";
 pub const LOG_LEVEL_DISPLAY: logger::Level = logger::Level::Warning;
@@ -42,7 +41,7 @@ async fn main() {
     // LogHandler
     let (tx_log, rx_log) = mpsc::channel(128);
     let (tx_ui_set, rx_ui_set) = oneshot::channel();
-    let log_handler = LogHandler::new(rx_log);
+    let log_handler = logger::LogHandler::new(rx_log);
     logger::LOG_SENDER.set(tx_log).expect("Uninitialized");
 
     let log_handler_listen = tokio::spawn(logger::log_handler_task(log_handler, rx_ui_set));
@@ -101,15 +100,11 @@ async fn main() {
         rx_hicube,
     ));
 
-    send_log_message(LogMessage::new_info(&format!(
-        "Started cryostorage_host: BuildInfo - {}",
+    logger::info!(
+        "Started cryostorage_host: Build Info - {}",
         env!("BUILD_INFO")
-    )))
+    )
     .await;
-    println!(
-        "Started cryostorage_host: BuildInfo - {}",
-        env!("BUILD_INFO")
-    );
 
     // start the app
     match app::app_main(Arc::clone(&conf), Arc::clone(&inst_status), tx_ui_set) {

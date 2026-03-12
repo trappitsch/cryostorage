@@ -17,7 +17,7 @@ use crate::{
         cryocooler::CryoCoolerConfig, hi_cube::PfeifferHiCubeConf, ion_pump::IonPumpConfig,
         lakeshore_temp::LakeshoreTempConfig, omnicontrol::OmniControlConfig,
     },
-    logger::{LogMessage, send_log_message_now},
+    logger,
     samples::Samples,
 };
 
@@ -110,9 +110,7 @@ impl PrgConfig {
                 .join(CONFIG_OLD_FOLDER)
                 .join(format!("{timestamp}_{stem}.{ext}"));
             if let Err(e) = fs::copy(&self.fname, backup_fname) {
-                send_log_message_now(LogMessage::new_error(&format!(
-                    "Failed to backup config file: {e}"
-                )));
+                logger::err_now!("Failed to backup config file: {}", e);
             };
         };
 
@@ -188,13 +186,13 @@ impl PrgConfig {
 /// certain variables. These are not used for the program and are solely for providing explanations
 /// in the configuration file.
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct Authorizations{
+pub struct Authorizations {
     pub baking: BakingAuthorization,
     pub cryo_cooler: CryoCoolerAuthorization,
     pub open_valve: OpenValveAuthorization,
 }
 
-impl Default for Authorizations{
+impl Default for Authorizations {
     fn default() -> Self {
         Self {
             baking: BakingAuthorization::default(),
@@ -214,12 +212,13 @@ pub struct BakingAuthorization {
 impl BakingAuthorization {
     pub fn default() -> Self {
         Self {
-            __doc_max_chamber_pressure_mbar: String::from("Maximum chamber pressure allowed to start baking."),
+            __doc_max_chamber_pressure_mbar: String::from(
+                "Maximum chamber pressure allowed to start baking.",
+            ),
             max_chamber_pressure_mbar: 0.00001,
         }
     }
 }
-
 
 /// Authorization limits for the cryocooler.
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -231,7 +230,9 @@ pub struct CryoCoolerAuthorization {
 impl CryoCoolerAuthorization {
     pub fn default() -> Self {
         Self {
-            __doc_max_pressure_on: String::from("Authorization to turn on the cryocooler is given if the pressure in the chamber is below this limit."),
+            __doc_max_pressure_on: String::from(
+                "Authorization to turn on the cryocooler is given if the pressure in the chamber is below this limit.",
+            ),
             max_pressure_on_mbar: 0.00001,
         }
     }
@@ -249,12 +250,16 @@ pub struct OpenValveAuthorization {
 impl Default for OpenValveAuthorization {
     fn default() -> Self {
         Self {
-            __doc_valve_ratio: String::from("Authorization given if: lower_limit < Gauge1/Gauge2 < upper_limit."),
+            __doc_valve_ratio: String::from(
+                "Authorization given if: lower_limit < Gauge1/Gauge2 < upper_limit.",
+            ),
             valve_ratio_range: SafeRangeLimits {
                 lower_limit: 0.001,
                 upper_limit: 100.0,
             },
-            __doc_low_pressure_limit: String::from("Authorization give independent of range if both gauges show pressure below the low_pressure_limit."),
+            __doc_low_pressure_limit: String::from(
+                "Authorization give independent of range if both gauges show pressure below the low_pressure_limit.",
+            ),
             low_pressure_limit_mbar: 0.00001,
         }
     }

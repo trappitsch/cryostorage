@@ -5,10 +5,10 @@ use std::{env, io::Write, path::PathBuf, time::Duration};
 use chrono::{DateTime, Local};
 
 use crate::{
-    CONFIG_FOLDER, LogMessage,
-    logger::send_log_message_now,
+    CONFIG_FOLDER, logger,
     plots::{
-        HISTORY_PRESSURE_FNAME, HISTORY_TEMPERATURE_FNAME, MAX_DURATION_BETWEEN_POINTS, MIN_LOG_DP_FACT, MIN_LOG_DT, PlotType, PressureDataPoint, TemperatureDataPoint
+        HISTORY_PRESSURE_FNAME, HISTORY_TEMPERATURE_FNAME, MAX_DURATION_BETWEEN_POINTS,
+        MIN_LOG_DP_FACT, MIN_LOG_DT, PlotType, PressureDataPoint, TemperatureDataPoint,
     },
 };
 
@@ -126,9 +126,7 @@ impl Measurements {
             .open(&self.fname)
             .expect("Opening vacuum history file must work");
         if let Err(e) = writeln!(file, "{},{},{}", dp.ts, dp.chamber, dp.transfer) {
-            send_log_message_now(LogMessage::new_error(&format!(
-                "Failed to write pressure datapoint to history file: {e}"
-            )));
+            logger::err_now!("Failed to write pressure datapoint to history file: {}", e);
         };
     }
 
@@ -165,9 +163,10 @@ impl Measurements {
             .open(&self.fname)
             .expect("Opening temperature history file must work");
         if let Err(e) = writeln!(file, "{},{},{},{}", dp.ts, dp.sample, dp.bridge, dp.cooler) {
-            send_log_message_now(LogMessage::new_error(&format!(
-                "Failed to write temperature datapoint to history file: {e}"
-            )));
+            logger::err_now!(
+                "Failed to write temperature datapoint to history file: {}",
+                e
+            );
         };
     }
 

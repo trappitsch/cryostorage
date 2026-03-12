@@ -212,6 +212,103 @@ pub fn send_log_message_now(msg: LogMessage) {
     }
 }
 
+/// Macro to send a info log message with awaiting.
+///
+/// Takes the same arguments as `format!`.
+#[allow(unused)]
+macro_rules! info {
+    ($fmt:expr) => {
+        crate::logger::send_log_message(crate::logger::LogMessage::new_info($fmt))
+    };
+    ($fmt:expr, $($arg:tt)*) => {
+        {
+            let msg = format!($fmt, $($arg)*);
+            crate::logger::send_log_message(crate::logger::LogMessage::new_info(&msg))
+        }
+    };
+}
+
+/// Macro to send a warning log message with awaiting.
+///
+/// Takes the same arguments as `format!`.
+#[allow(unused)]
+macro_rules! warning {
+    ($fmt:expr) => {
+        crate::logger::send_log_message(crate::logger::LogMessage::new_warning($fmt))
+    };
+    ($fmt:expr, $($arg:tt)*) => {
+        {
+            let msg = format!($fmt, $($arg)*);
+            crate::logger::send_log_message(crate::logger::LogMessage::new_warning(&msg))
+        }
+    };
+}
+
+/// Macro to send a warning log message with awaiting.
+///
+/// Takes the same arguments as `format!`.
+#[allow(unused)]
+macro_rules! err {
+    ($fmt:expr) => {
+        crate::logger::send_log_message(crate::logger::LogMessage::new_error($fmt))
+    };
+    ($fmt:expr, $($arg:tt)*) => {
+        {
+            let msg = format!($fmt, $($arg)*);
+            crate::logger::send_log_message(crate::logger::LogMessage::new_error(&msg))
+        }
+    };
+}
+
+/// Macro to send an info message right now.
+///
+/// Takes the same arguments as `format!`.
+#[allow(unused)]
+macro_rules! info_now {
+    ($fmt:expr) => {
+        crate::logger::send_log_message_now(crate::logger::LogMessage::new_info($fmt))
+    };
+    ($fmt:expr, $($arg:tt)*) => {
+        {
+            let msg = format!($fmt, $($arg)*);
+            crate::logger::send_log_message_now(crate::logger::LogMessage::new_info(&msg))
+        }
+    };
+}
+/// Macro to send a warning message right now.
+///
+/// Takes the same arguments as `format!`.
+#[allow(unused)]
+macro_rules! warning_now {
+    ($fmt:expr) => {
+        crate::logger::send_log_message_now(crate::logger::LogMessage::new_warning($fmt))
+    };
+    ($fmt:expr, $($arg:tt)*) => {
+        {
+            let msg = format!($fmt, $($arg)*);
+            crate::logger::send_log_message_now(crate::logger::LogMessage::new_warning(&msg))
+        }
+    };
+}
+/// Macro to send an error message right now.
+///
+/// Takes the same arguments as `format!`.
+#[allow(unused)]
+macro_rules! err_now {
+    ($fmt:expr) => {
+        crate::logger::send_log_message_now(crate::logger::LogMessage::new_error($fmt))
+    };
+    ($fmt:expr, $($arg:tt)*) => {
+        {
+            let msg = format!($fmt, $($arg)*);
+            crate::logger::send_log_message_now(crate::logger::LogMessage::new_error(&msg))
+        }
+    };
+}
+
+#[allow(unused_imports)]
+pub(crate) use {err, err_now, info, info_now, warning, warning_now};
+
 #[cfg(test)]
 mod tests {
     use super::*;
