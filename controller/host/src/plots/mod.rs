@@ -17,6 +17,13 @@ pub use temperatures::{
     TemperaturePlotCommands, send_temperature_plot_cmd_now, temperature_plot_task,
 };
 
+use tokio::sync::{OnceCell, mpsc};
+
+pub static PLOT_PRESSURE_SENDER: OnceCell<mpsc::Sender<PressurePlotCommands>> =
+    OnceCell::const_new();
+pub static PLOT_TEMPERATURE_SENDER: OnceCell<mpsc::Sender<TemperaturePlotCommands>> =
+    OnceCell::const_new();
+
 /// File name for the pressure history data.
 pub const HISTORY_PRESSURE_FNAME: &str = "pressure_history.csv";
 

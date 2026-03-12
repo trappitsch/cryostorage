@@ -181,7 +181,7 @@ impl Default for PfeifferHiCubeConf {
 
 /// Get a clone of the hicube command sender.
 fn get_hicube_cmd_sender() -> mpsc::Sender<HiCubeCommands> {
-    crate::HICUBE_COMMAND_SENDER
+    crate::instruments::HICUBE_COMMAND_SENDER
         .get()
         .expect("HiCube command sender must be initialized")
         .clone()

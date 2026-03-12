@@ -6,12 +6,14 @@ use std::{env, fmt::Display, fs::OpenOptions, io::Write, path::PathBuf};
 
 use chrono::{DateTime, Local};
 use slint::{ComponentHandle, Model, Weak};
-use tokio::sync::{mpsc, oneshot};
+use tokio::sync::{OnceCell, mpsc, oneshot};
 
 use crate::{
-    CONFIG_FOLDER, LOG_LEVEL_DISPLAY, LOG_SENDER,
+    CONFIG_FOLDER, LOG_LEVEL_DISPLAY,
     app::{AppWindow, Logic},
 };
+
+pub static LOG_SENDER: OnceCell<mpsc::Sender<LogMessage>> = OnceCell::const_new();
 
 /// The severity level of a log message.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]

@@ -7,7 +7,7 @@ use std::{
 use icd::{BakingState, BcInstStatus, LightState, ValveState, VctHandshake};
 use poststation_sdk::{PoststationClient, connect};
 use serde::{Deserialize, Serialize};
-use tokio::{sync::mpsc, task::JoinHandle, time::sleep};
+use tokio::{sync::{OnceCell, mpsc}, task::JoinHandle, time::sleep};
 
 use crate::{
     logger::{LogMessage, send_log_message, send_log_message_now},
@@ -17,6 +17,9 @@ use crate::{
 mod client;
 
 use client::ControllerClient;
+
+pub static CONTROLLER_COMMAND_SENDER: OnceCell<mpsc::Sender<ControllerCommands>> =
+    OnceCell::const_new();
 
 pub enum ControllerCommands {
     InitializeLight(),
@@ -229,7 +232,7 @@ pub async fn controller_broadcast_listener(
 
 /// Get a clone of the controller command sender.
 fn get_cntrl_cmd_sender() -> mpsc::Sender<ControllerCommands> {
-    crate::CONTROLLER_COMMAND_SENDER
+    CONTROLLER_COMMAND_SENDER
         .get()
         .expect("Uninitialized")
         .clone()

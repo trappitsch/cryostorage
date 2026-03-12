@@ -189,7 +189,7 @@ pub async fn temperature_plot_task(mut rx: mpsc::Receiver<TemperaturePlotCommand
 
 /// Get the command sender for the temperature plot.
 fn get_temperature_plot_command_sender() -> mpsc::Sender<TemperaturePlotCommands> {
-    crate::PLOT_TEMPERATURE_SENDER
+    crate::plots::PLOT_TEMPERATURE_SENDER
         .get()
         .expect("Uninitialized")
         .clone()

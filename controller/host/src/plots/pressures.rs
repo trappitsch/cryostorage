@@ -181,7 +181,7 @@ pub async fn pressure_plot_task(mut rx: mpsc::Receiver<PressurePlotCommands>) {
 
 /// Get the command sender for the pressure plot.
 fn get_pressur_plot_command_sender() -> mpsc::Sender<PressurePlotCommands> {
-    crate::PLOT_PRESSURE_SENDER
+    crate::plots::PLOT_PRESSURE_SENDER
         .get()
         .expect("Uninitialized")
         .clone()

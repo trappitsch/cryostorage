@@ -26,10 +26,11 @@ use std::time::Duration;
 use agilent_4uhv::HvState;
 use measurements::{Power, Temperature};
 use sunpower_cryotelgt::CoolerState;
-use tokio::sync::mpsc;
+use tokio::sync::{OnceCell, mpsc};
 
 use crate::app::ValveOrPumpState;
 use crate::instruments::cryocooler::CryoCoolerInst;
+use crate::instruments::hi_cube::HiCubeCommands;
 use crate::instruments::ion_pump::IonPumpInst;
 use crate::instruments::lakeshore_temp::LakeshoreTempInst;
 use crate::instruments::omnicontrol::{Gauge, GaugeStatus, OmniControlInst};
@@ -46,6 +47,10 @@ pub mod omnicontrol;
 pub mod utils;
 
 const POLLING_INTERVAL: Duration = Duration::from_secs(5);
+
+pub static INSTRUMENT_COMMAND_SENDER: OnceCell<mpsc::Sender<InstrumentCommands>> =
+    OnceCell::const_new();
+pub static HICUBE_COMMAND_SENDER: OnceCell<mpsc::Sender<HiCubeCommands>> = OnceCell::const_new();
 
 /// Commands that can be sent to instruments.
 pub enum InstrumentCommands {
@@ -334,7 +339,7 @@ pub async fn instruments_task(
 
 /// Get a clone of the instrument command sender.
 fn get_instr_cmd_sender() -> mpsc::Sender<InstrumentCommands> {
-    crate::INSTRUMENT_COMMAND_SENDER
+    INSTRUMENT_COMMAND_SENDER
         .get()
         .expect("Uninitialized")
         .clone()

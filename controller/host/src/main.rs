@@ -3,16 +3,10 @@ use std::sync::{Arc, Mutex};
 use tokio::sync::{OnceCell, broadcast, mpsc, oneshot};
 
 use crate::{
-    controller::{ControllerCommands, start_controller_tasks},
-    instruments::{
-        InstrumentCommands,
-        hi_cube::{HiCubeCommands, pfeiffer_hicube_task},
-        instruments_task,
-    },
+    controller::start_controller_tasks,
+    instruments::{hi_cube::pfeiffer_hicube_task, instruments_task},
     logger::{LogHandler, LogMessage, send_log_message},
-    plots::{
-        PressurePlotCommands, TemperaturePlotCommands, pressure_plot_task, temperature_plot_task,
-    },
+    plots::{pressure_plot_task, temperature_plot_task},
     status::InstrumentStatus,
 };
 
@@ -32,18 +26,6 @@ pub const CONFIG_FOLDER: &str = ".cryostorage";
 pub const LOG_LEVEL_DISPLAY: logger::Level = logger::Level::Warning;
 
 pub static HALT_SENDER: OnceCell<broadcast::Sender<()>> = OnceCell::const_new();
-pub static LOG_SENDER: OnceCell<mpsc::Sender<LogMessage>> = OnceCell::const_new();
-
-pub static CONTROLLER_COMMAND_SENDER: OnceCell<mpsc::Sender<ControllerCommands>> =
-    OnceCell::const_new();
-pub static INSTRUMENT_COMMAND_SENDER: OnceCell<mpsc::Sender<InstrumentCommands>> =
-    OnceCell::const_new();
-pub static HICUBE_COMMAND_SENDER: OnceCell<mpsc::Sender<HiCubeCommands>> = OnceCell::const_new();
-
-pub static PLOT_PRESSURE_SENDER: OnceCell<mpsc::Sender<PressurePlotCommands>> =
-    OnceCell::const_new();
-pub static PLOT_TEMPERATURE_SENDER: OnceCell<mpsc::Sender<TemperaturePlotCommands>> =
-    OnceCell::const_new();
 
 #[tokio::main]
 async fn main() {
@@ -61,27 +43,27 @@ async fn main() {
     let (tx_log, rx_log) = mpsc::channel(128);
     let (tx_ui_set, rx_ui_set) = oneshot::channel();
     let log_handler = LogHandler::new(rx_log);
-    LOG_SENDER.set(tx_log).expect("Uninitialized");
+    logger::LOG_SENDER.set(tx_log).expect("Uninitialized");
 
     let log_handler_listen = tokio::spawn(logger::log_handler_task(log_handler, rx_ui_set));
 
     // Pressure plotting task
     let (tx_p_plot, rx_p_plot) = mpsc::channel(32);
-    PLOT_PRESSURE_SENDER
+    plots::PLOT_PRESSURE_SENDER
         .set(tx_p_plot.clone())
         .expect("Uninitialized");
     let p_plot_task = tokio::spawn(pressure_plot_task(rx_p_plot));
 
     // Temperature plotting task
     let (tx_t_plot, rx_t_plot) = mpsc::channel(32);
-    PLOT_TEMPERATURE_SENDER
+    plots::PLOT_TEMPERATURE_SENDER
         .set(tx_t_plot.clone())
         .expect("Uninitialized");
     let t_plot_task = tokio::spawn(temperature_plot_task(rx_t_plot));
 
     // comms for controller task
     let (tx_ctrl, rx_ctrl) = mpsc::channel(32);
-    CONTROLLER_COMMAND_SENDER
+    controller::CONTROLLER_COMMAND_SENDER
         .set(tx_ctrl.clone())
         .expect("Uninitialized");
 
@@ -95,7 +77,7 @@ async fn main() {
 
     // instruments monitoring task
     let (tx_instr, rx_instr) = mpsc::channel(32);
-    INSTRUMENT_COMMAND_SENDER
+    instruments::INSTRUMENT_COMMAND_SENDER
         .set(tx_instr.clone())
         .expect("Uninitialized");
     let instr_tsk = tokio::spawn(instruments_task(
@@ -106,7 +88,7 @@ async fn main() {
 
     // HiCube task
     let (tx_hicube, rx_hicube) = mpsc::channel(32);
-    HICUBE_COMMAND_SENDER
+    instruments::HICUBE_COMMAND_SENDER
         .set(tx_hicube.clone())
         .expect("Uninitialized");
     let hicube_conf = conf
