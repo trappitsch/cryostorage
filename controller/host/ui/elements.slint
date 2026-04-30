@@ -166,6 +166,35 @@ export component StatusOkErr inherits Rectangle {
     }
 }
 
+// Same size as Big Switch
+export component BigButton inherits Rectangle {
+    in property <string> text: "Long Button";
+    in property <bool> enabled: Logic.admin_mode;
+    callback clicked();
+
+    width: Const.element_width_wide;
+    height: Const.big_switch_height;
+
+    border_radius: Const.border_radius_large;
+
+    ta := TouchArea {
+        clicked => {
+            if (root.enabled) {
+                root.clicked();
+            }
+        }
+    }
+
+    background: enabled ? (!ta.pressed ? Palette.button_off : Palette.button_on) : Palette.button_off;
+
+    H2Text {
+        text: root.text;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+        color: enabled ? Palette.text : Palette.button_inactive_text;
+    }
+}
+
 export component LongButton inherits Rectangle {
     in property <string> text: "Long Button";
     in property <bool> enabled: Logic.admin_mode;

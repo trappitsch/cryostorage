@@ -27,6 +27,11 @@ export enum PumpStandStateGUI {
 
 // Logic
 export global Logic {
+    // Overall workflows
+    pure callback set_chamber_is_pumed(bool);
+    in-out property <bool> chamber_is_pumped;
+    pure callback initiate_sample_transfer();
+
     // Baking
     in-out property <bool> baking_is_enabled;
     in-out property <BakingTime> baking_time: {
@@ -60,7 +65,7 @@ export global Logic {
 
     // Samples
     pure callback edit_sample_name(string, string, string);
-    in-out property <[{pos: string, name: string, date_str: string }]> sample_model: [
+    in-out property <[{ pos: string, name: string, date_str: string}]> sample_model: [
         { pos: "A1", name: "", date_str: "" },
         { pos: "A2", name: "", date_str: "" },
         { pos: "B1", name: "", date_str: "" },

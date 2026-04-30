@@ -44,6 +44,7 @@ export component CryoScreen inherits MyWindow {
         MyHorizontalLayout {
 
             BigSwitch {
+                enabled: true;  // no need for admin mode
                 title: "Cryocooler";
                 right_side: Logic.cryocooler_is_on;
                 left_text: "Off";
