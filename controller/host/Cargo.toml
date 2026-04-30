@@ -4,24 +4,25 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-anyhow          = "1.0.100"
+anyhow          = "1"
 async-compat    = "0.2.5"
-chrono          = { version = "0.4.42", features = ["serde"] }
+chrono          = { version = "0.4", features = ["serde"] }
 icd             = { path = "../icd", version = "0.1.0" }
 measurements    = { version = "0.11.1", features = ["serde", "std"] }
-plotters        = { version = "0.3.5", default-features = false, features = [
+plotters        = { version = "0.3", default-features = false, features = [
                       "bitmap_backend",
                       "chrono",
                       "line_series",
                       "ttf"
                     ]}
-poststation-sdk = "0.4.1"
-ron             = "0.11.0"
-serde           = { version = "1.0.226", features = ["derive"] }
+poststation-sdk = "0.4"
+ron             = "0.12"
+serde           = { version = "1", features = ["derive"] }
 serde-hex       = "0.1.0"
-serialport      = "4.8.1"
-slint           = "1.14.1"
-tokio           = { version = "1.47.1", features = ["macros", "rt"] }
+serialport      = "4.9"
+slint           = {version = "1", features = ["backend-linuxkms"]}
+i-slint-common  = {version = "1", features = ["fontconfig-dlopen"]}
+tokio           = { version = "1", features = ["macros", "rt"] }
 
 pfeiffer_hicube = { version = "0.1.0", path = "../pfeiffer_hicube" }
 
@@ -33,5 +34,5 @@ pfeiffer-omnicontrol = { path = "../pfeiffer_omnicontrol", version = "0.1.0" }
 instrumentrs    = { path = "../instrumentRs", version = "0.1.0" }
 
 [build-dependencies]
-chrono = "0.4.42"
-slint-build     = "1.14.1"
+chrono          = "0.4"
+slint-build     = "1"
