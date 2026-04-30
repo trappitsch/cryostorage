@@ -1,0 +1,17 @@
+[book]
+title = "Cryostorage chamber manual"
+authors = ["Reto Trappitsch"]
+description = "Administrator manual for the cryostorage chamber integration and UI."
+language = "en"
+
+[preprocessor]
+
+[preprocessor.mermaid]
+command = "mdbook-mermaid"
+
+[output]
+
+[output.html]
+additional-js = ["mermaid.min.js", "mermaid-init.js"]
+mathjax-support = true
+

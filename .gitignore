@@ -70,3 +70,6 @@ target/*
 
 ## Project
 sandbox/
+
+## book
+docs/book
