@@ -6,7 +6,7 @@ use std::{
     path::PathBuf,
 };
 
-use anyhow::{Result, anyhow};
+use anyhow::{Result, anyhow, bail};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -160,13 +160,27 @@ impl PrgConfig {
         self.pfeiffer_hicube.clone()
     }
 
+    /// Execute a swipe action on the sample
+    pub fn execute_swipe_action(
+        &mut self,
+        pos1: &str,
+        dx: f32,
+        dy: f32,
+    ) -> Option<[(String, Sample); 2]> {
+        let res = self.samples.execute_swipe_swap(pos1, dx, dy);
+        if self.save_to_file().is_err() {
+            eprintln!("Couldn't save file. should not happen...");
+        };
+        res
+    }
+
     /// Get a clone of the samples.
     pub fn get_samples(&self) -> Samples {
         self.samples.clone()
     }
 
     /// Update the samples, save to file, and return index of updated entry.
-    pub fn update_sample(&mut self, pos: &str, value: &str) -> Result<(usize, Sample)> {
+    pub fn update_sample(&mut self, pos: &str, value: &str) -> Result<Sample> {
         let res = self.samples.update_sample(pos, value);
         self.save_to_file()?;
         res

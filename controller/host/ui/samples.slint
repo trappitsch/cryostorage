@@ -1,5 +1,13 @@
 import { Const } from "consts.slint";
-import { NormalText, H3Text, H2Text, RegularButton, MyWindow, MyVerticalLayout, MyLineEdit } from "elements.slint";
+import {
+    NormalText,
+    H3Text,
+    H2Text,
+    RegularButton,
+    MyWindow,
+    MyVerticalLayout,
+    MyLineEdit,
+} from "elements.slint";
 import { Palette } from "palette.slint";
 import { Logic } from "logic.slint";
 
@@ -16,76 +24,88 @@ component SampleButton inherits Rectangle {
     property <length> smp_button_width: Logic.total_width / 4;
     property <length> holder_width: 90px;
     property <length> holder_height: 90px;
+    in-out property <int> tmp: 0;
 
     height: smp_button_height;
     width: smp_button_width;
 
-    TouchArea {
-        clicked => {
-            Logic.edit_sample_name(position, sample_name, sample_date);
+    SwipeGestureHandler {
+        handle-swipe-down: true;
+        handle-swipe-left: true;
+        handle-swipe-right: true;
+        handle-swipe-up: true;
+
+        swiped => {
+            Logic.sample_swiped(position, self.pressed-position, self.current-position)
         }
-    }
 
-    HorizontalLayout {
-        alignment: center;
+        TouchArea {
+            clicked => {
+                Logic.edit_sample_name(position, sample_name, sample_date);
+            }
+        }
 
-        VerticalLayout {
-            alignment: start;
-            padding-top: 20px;
+        HorizontalLayout {
+            alignment: center;
 
-            HorizontalLayout {
-                alignment: center;
-                main_rectangle := Rectangle {
-                    width: holder_width;
-                    height: holder_height;
-                    border-width: Logic.border_width;
-                    border-radius: 5px;
-                    border-color: Logic.border_color;
-                    background: is_empty ? Palette.sample_bg_empty : Palette.sample_bg_used;
+            VerticalLayout {
+                alignment: start;
+                padding-top: 20px;
 
-                    H2Text {
-                        text: position;
-                        color: Palette.sample_pos_text;
-                    }
+                HorizontalLayout {
+                    alignment: center;
+                    main_rectangle := Rectangle {
+                        width: holder_width;
+                        height: holder_height;
+                        border-width: Logic.border_width;
+                        border-radius: 5px;
+                        border-color: Logic.border_color;
+                        background: is_empty ? Palette.sample_bg_empty : Palette.sample_bg_used;
 
-                // the little feet
+                        H2Text {
+                            text: position;
+                            color: Palette.sample_pos_text;
+                        }
+
+                        // the little feet
                 property <length> ft_dim: 15px;
-                    property <length> ft_rad: 5px;
-                    property <length> ft_edge_spacing: 15px;
-                    property <[length]> ft_xoffset: [-ft_dim / 2, holder_width - ft_dim / 2];
-                    property <[length]> ft_yoffset: [ft_edge_spacing, holder_height - ft_dim - ft_edge_spacing];
-                    for xoffset in ft_xoffset: Rectangle {
-                        for yoffset in ft_yoffset: Rectangle {
-                            x: parent.x + xoffset;
-                            y: parent.y + yoffset;
-                            width: ft_dim;
-                            height: ft_dim;
-                            background: Logic.border_color;
-                            border-radius: ft_rad;
+                        property <length> ft_rad: 5px;
+                        property <length> ft_edge_spacing: 15px;
+                        property <[length]> ft_xoffset: [-ft_dim / 2, holder_width - ft_dim / 2];
+                        property <[length]> ft_yoffset: [ft_edge_spacing, holder_height - ft_dim - ft_edge_spacing];
+                        for xoffset in ft_xoffset: Rectangle {
+                            for yoffset in ft_yoffset: Rectangle {
+                                x: parent.x + xoffset;
+                                y: parent.y + yoffset;
+                                width: ft_dim;
+                                height: ft_dim;
+                                background: Logic.border_color;
+                                border-radius: ft_rad;
+                            }
                         }
                     }
                 }
-            }
 
-            Rectangle {
-                height: 20px;
-            }
+                Rectangle {
+                    height: 20px;
+                }
 
-            name_txt := NormalText {
-                max-width: 0.9 * smp_button_width;
-                text: is_empty ? "empty" : sample_name;
-                font-italic: is_empty;
-                horizontal-alignment: center;
-                wrap: no-wrap;
-            }
+                name_txt := NormalText {
+                    max-width: 0.9 * smp_button_width;
+                    text: is_empty ? "empty" : sample_name;
+                    font-italic: is_empty;
+                    horizontal-alignment: center;
+                    wrap: no-wrap;
+                }
 
-            NormalText {
-                max-width: 0.9 * smp_button_width;
-                text: is_empty ? "" : sample_date;
-                font-italic: true;
-                font-size: name_txt.font-size - 2pt;
-                horizontal-alignment: center;
-                wrap: no-wrap;
+                NormalText {
+                    max-width: 0.9 * smp_button_width;
+                    text: is_empty ? "" : sample_date;
+                    font-italic: true;
+                    font-size: name_txt.font-size - 2pt;
+                    horizontal-alignment: center;
+                    wrap: no-wrap;
+                }
             }
         }
     }

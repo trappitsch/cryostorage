@@ -25,6 +25,7 @@ use crate::{
         send_temperature_plot_cmd_now,
     },
     prg_config::PrgConfig,
+    samples::get_sample_idx,
     status::InstrumentStatus,
     workflows::{
         WORKFLOW_COMMAND_SENDER, WorkflowCommands, send_workflow_command_now, workflow_task,
@@ -196,6 +197,7 @@ impl GuiCommandHandler {
         self.admin_mode();
         self.close_button();
         self.edit_sample_name();
+        self.sample_swiped();
     }
 
     // FIXME: Delete
@@ -279,8 +281,8 @@ impl GuiCommandHandler {
                 let fut = async move {
                     let answer = rx.recv().await;
                     if let Some(ans) = answer {
-                        if let Ok((idx, smp)) =
-                            cfg.lock().expect("Poisoned").update_sample(&pos, &ans)
+                        if let Ok(smp) = cfg.lock().expect("Poisoned").update_sample(&pos, &ans)
+                            && let Some(idx) = get_sample_idx(&pos)
                         {
                             let model = ui.unwrap().global::<Logic>().get_sample_model();
                             model.set_row_data(
@@ -288,7 +290,9 @@ impl GuiCommandHandler {
                                 (smp.get_date().into(), smp.get_name().into(), pos),
                             );
                         } else {
-                            eprintln!("Failed to update sample name: no position {pos}");
+                            eprintln!(
+                                "Failed to update sample name or get index: no position {pos}"
+                            );
                         }
                     } else {
                         eprintln!("Failed to update sample name: no answer from keyboard");
@@ -299,6 +303,33 @@ impl GuiCommandHandler {
 
                 //         }
                 //     });
+            }
+        });
+    }
+
+    fn sample_swiped(&self) {
+        self.ui.global::<Logic>().on_sample_swiped({
+            let cfg = Arc::clone(&self.conf);
+            let ui = self.ui.as_weak();
+            move |pos, start, end| {
+                let dx = end.x - start.x;
+                let dy = end.y - start.y;
+
+                if let Some(swp) = cfg
+                    .lock()
+                    .expect("Poisoned")
+                    .execute_swipe_action(&pos, dx, dy)
+                {
+                    let model = ui.unwrap().global::<Logic>().get_sample_model();
+                    for (pos, smp) in swp {
+                        if let Some(idx) = get_sample_idx(&pos) {
+                            model.set_row_data(
+                                idx,
+                                (smp.get_date().into(), smp.get_name().into(), pos.into()),
+                            );
+                        };
+                    }
+                }
             }
         });
     }
