@@ -1,3 +1,3 @@
 # User interface
 
-TBD
+## Configuration

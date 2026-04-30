@@ -256,7 +256,7 @@ which is in the flowchart set to 20 minutes.
     end
 ```
 
-Chamber pressure high
+### Chamber pressure high
 
 If the chamber pressure is too high, i.e., if
 \\[ \frac{p_\text{ch}}{p_\text{tr}} > 100, \\]

@@ -19,6 +19,8 @@
 //! something. This is acceptable for our use case. Worse case scenario will be that the interface
 //! freezes until a timeout is hit.
 
+use anyhow::Result;
+
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
@@ -29,6 +31,7 @@ use sunpower_cryotelgt::CoolerState;
 use tokio::sync::{OnceCell, mpsc};
 
 use crate::app::ValveOrPumpState;
+use crate::dialog::show_error_dialog;
 use crate::instruments::cryocooler::CryoCoolerInst;
 use crate::instruments::hi_cube::HiCubeCommands;
 use crate::instruments::ion_pump::IonPumpInst;
@@ -169,6 +172,7 @@ pub async fn instruments_task(
         }
     } // drop lock
 
+    // set later to a reasonable value
     let mut polling_interval = Duration::from_millis(1);
 
     loop {
@@ -265,6 +269,9 @@ pub async fn instruments_task(
                             },
                             Err(e) => {
                                 log::err!("Failed to set cryocooler state: {}", e).await;
+                                show_error_dialog(
+                                    "Setting cryocooler state failed. Please check connections and try again!"
+                                ).expect("If this does not work, we want to panic!");
                             }
                         }
                     }
@@ -318,4 +325,16 @@ pub fn send_instr_cmd_now(cmd: InstrumentCommands) {
     if let Err(e) = sender.try_send(cmd) {
         log::err_now!("Failed to send instrument command now: {}", e);
     }
+}
+
+/// Convenience function to send an instrument command and awaiting it.
+///
+/// If an error occurs, the error is logged and passed on!
+pub async fn send_instr_cmd_w_err(cmd: InstrumentCommands) -> Result<()> {
+    let sender = get_instr_cmd_sender();
+    if let Err(e) = sender.send(cmd).await {
+        log::err!("Failed to send instrument command now: {}", e).await;
+        return Err(e.into());
+    }
+    Ok(())
 }
