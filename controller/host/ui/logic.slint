@@ -1,7 +1,6 @@
 import { Const } from "consts.slint";
 import { Palette } from "palette.slint";
 
-
 // Structs
 export struct BakingTime {
     hours: int,
@@ -60,16 +59,16 @@ export global Logic {
     pure callback pump_stand_set_on(bool);
 
     // Samples
-    pure callback edit_sample_name(string, string);
-    in-out property <[{pos: string, name: string}]> sample_model: [
-        { pos: "A1", name: "" },
-        { pos: "A2", name: "" },
-        { pos: "B1", name: "" },
-        { pos: "B2", name: "" },
-        { pos: "C1", name: "" },
-        { pos: "C2", name: "" },
-        { pos: "D1", name: "" },
-        { pos: "D2", name: "" },
+    pure callback edit_sample_name(string, string, string);
+    in-out property <[{pos: string, name: string, date_str: string }]> sample_model: [
+        { pos: "A1", name: "", date_str: "" },
+        { pos: "A2", name: "", date_str: "" },
+        { pos: "B1", name: "", date_str: "" },
+        { pos: "B2", name: "", date_str: "" },
+        { pos: "C1", name: "", date_str: "" },
+        { pos: "C2", name: "", date_str: "" },
+        { pos: "D1", name: "", date_str: "" },
+        { pos: "D2", name: "", date_str: "" },
     ];
 
     out property <length> total_height: 400px;

@@ -17,7 +17,7 @@ use crate::{
         lakeshore_temp::LakeshoreTempConfig, omnicontrol::OmniControlConfig,
     },
     log,
-    samples::Samples,
+    samples::{Sample, Samples},
 };
 
 pub const CONFIG_FNAME: &str = "cryostorage_config.ron";
@@ -166,7 +166,7 @@ impl PrgConfig {
     }
 
     /// Update the samples, save to file, and return index of updated entry.
-    pub fn update_sample(&mut self, pos: &str, value: &str) -> Result<usize> {
+    pub fn update_sample(&mut self, pos: &str, value: &str) -> Result<(usize, Sample)> {
         let res = self.samples.update_sample(pos, value);
         self.save_to_file()?;
         res

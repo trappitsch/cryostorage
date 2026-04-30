@@ -185,8 +185,10 @@ impl GuiCommandHandler {
         // set the sample names from config
         let model = self.ui.global::<Logic>().get_sample_model();
         let curr_samples = { self.conf.lock().expect("Poisoned").get_samples() };
-        for (idx, (pos, name)) in curr_samples.into_iter().enumerate() {
-            model.set_row_data(idx, (name.into(), pos.into()));
+        for (idx, (pos, smp)) in curr_samples.into_iter().enumerate() {
+            let name = smp.get_name();
+            let date_str = smp.get_date();
+            model.set_row_data(idx, (date_str.into(), name.into(), pos.into()));
         }
 
         // buttons
@@ -265,7 +267,8 @@ impl GuiCommandHandler {
         self.ui.global::<Logic>().on_edit_sample_name({
             let ui = self.ui.as_weak();
             let cfg = Arc::clone(&self.conf);
-            move |pos, name| {
+
+            move |pos, name, _date_str| {
                 let message = format!("Edit name of sample at position {}", pos.clone());
                 let (tx, mut rx) = mpsc::channel(1);
                 let kb = KeyboardInput::new(tx);
@@ -276,9 +279,14 @@ impl GuiCommandHandler {
                 let fut = async move {
                     let answer = rx.recv().await;
                     if let Some(ans) = answer {
-                        if let Ok(idx) = cfg.lock().expect("Poisoned").update_sample(&pos, &ans) {
+                        if let Ok((idx, smp)) =
+                            cfg.lock().expect("Poisoned").update_sample(&pos, &ans)
+                        {
                             let model = ui.unwrap().global::<Logic>().get_sample_model();
-                            model.set_row_data(idx, (ans, pos));
+                            model.set_row_data(
+                                idx,
+                                (smp.get_date().into(), smp.get_name().into(), pos),
+                            );
                         } else {
                             eprintln!("Failed to update sample name: no position {pos}");
                         }

@@ -8,6 +8,7 @@ import { StandardButton, Button } from "std-widgets.slint";
 component SampleButton inherits Rectangle {
     in-out property <string> position;
     in-out property <string> sample_name;
+    in-out property <string> sample_date;
 
     property <bool> is_empty: (sample_name == "") ? true : false;
 
@@ -21,7 +22,7 @@ component SampleButton inherits Rectangle {
 
     TouchArea {
         clicked => {
-            Logic.edit_sample_name(position, sample_name);
+            Logic.edit_sample_name(position, sample_name, sample_date);
         }
     }
 
@@ -70,10 +71,19 @@ component SampleButton inherits Rectangle {
                 height: 20px;
             }
 
-            NormalText {
+            name_txt := NormalText {
                 max-width: 0.9 * smp_button_width;
                 text: is_empty ? "empty" : sample_name;
                 font-italic: is_empty;
+                horizontal-alignment: center;
+                wrap: no-wrap;
+            }
+
+            NormalText {
+                max-width: 0.9 * smp_button_width;
+                text: is_empty ? "" : sample_date;
+                font-italic: true;
+                font-size: name_txt.font-size - 2pt;
                 horizontal-alignment: center;
                 wrap: no-wrap;
             }
@@ -96,6 +106,7 @@ export component Samples inherits Rectangle {
     for smp[it] in Logic.sample_model: SampleButton {
         position: smp.pos;
         sample_name: smp.name;
+        sample_date: smp.date_str;
 
         x: (it - mod(it, 2)) / 2 * (Logic.total_width / 4);
         y: mod(it, 2) * (Logic.total_height / 2);
