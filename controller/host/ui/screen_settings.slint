@@ -191,11 +191,23 @@ export component SettingsScreen inherits MyWindow {
                     }
                 }
 
-                LongButton {
-                    text: "Exit program";
-                    enabled: true;
-                    clicked => {
-                        Logic.close_program();
+                HorizontalLayout {
+                    alignment: space-between;
+                    PictogramButton {
+                        enabled: true;
+                        icon: Logic.wifi_on ? @image-url("imgs/wifi-on.svg") : @image-url("imgs/wifi-off.svg");
+                        clicked => {
+                            Logic.wifi_on = !Logic.wifi_on;
+                            Logic.wifi(Logic.wifi_on);
+                        }
+                    }
+
+                    PictogramButton {
+                        icon: @image-url("imgs/door.svg");
+                        enabled: true;
+                        clicked => {
+                            Logic.close_program();
+                        }
                     }
                 }
             }

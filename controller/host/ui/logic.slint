@@ -53,6 +53,8 @@ export global Logic {
     in-out property <bool> admin_mode: false;
     pure callback enter_admin_mode();
     pure callback test_alarm_pressed();
+    in-out property <bool> wifi_on;
+    pure callback wifi(bool);
 
     // Pumps
     in-out property <bool> ion_pump_is_on;

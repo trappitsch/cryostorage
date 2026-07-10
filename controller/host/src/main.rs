@@ -19,6 +19,7 @@ mod rotation;
 mod safety;
 mod samples;
 mod status;
+mod wifi;
 mod workflows;
 
 use crate::{

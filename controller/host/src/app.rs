@@ -22,10 +22,12 @@ use crate::{
         omnicontrol::Gauge,
         send_instr_cmd_now,
     },
+    log,
     prg_config::PrgConfig,
     safety::test_alarm,
     samples::{get_sample_idx, swipe_swap_samples},
     status::PumpState,
+    wifi,
     workflows::{WorkflowCommands, send_workflow_command_now},
 };
 
@@ -47,6 +49,12 @@ pub fn app_main() -> Result<(), Box<dyn Error>> {
     // Debug builds
     #[cfg(debug_assertions)]
     ui.global::<Logic>().set_admin_mode(true);
+
+    // Set current wifi status.
+    match wifi::get_wifi_status() {
+        Ok(st) => ui.global::<Logic>().set_wifi_on(st.into()),
+        Err(e) => log::err_now!(&format!("{e}")),
+    }
 
     ui.show()?;
 
@@ -174,6 +182,7 @@ impl GuiCommandHandler {
         self.close_button();
         self.edit_sample_name();
         self.sample_swiped();
+        self.wifi();
     }
 
     fn ready_vct_attach(&self) {
@@ -286,6 +295,16 @@ impl GuiCommandHandler {
                 slint::spawn_local(async_compat::Compat::new(fut)).unwrap();
             }
         });
+    }
+
+    fn wifi(&self) {
+        self.ui.global::<Logic>().on_wifi({
+            move |val| {
+                if let Err(e) = wifi::set_wifi_status(val.into()) {
+                    log::err_now!(&format!("{e}"));
+                }
+            }
+        })
     }
 }
 

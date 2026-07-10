@@ -408,10 +408,10 @@ export component PictogramButton inherits Rectangle {
     in property <bool> enabled: Logic.admin_mode;
     callback clicked();
 
-    width: Const.button_pictogram;
-    height: Const.button_pictogram;
+    width: Const.button_pict_width;
+    height: Const.button_pict_height;
 
-    border-radius: Const.border_radius_large;
+    border-radius: Const.border_radius_small;
 
     ta := TouchArea {
         clicked => {
@@ -426,7 +426,7 @@ export component PictogramButton inherits Rectangle {
     Image {
         source: root.icon;
         colorize: root.enabled ? Palette.text : Palette.button_inactive_text;
-        width: 50%;
+        height: 75%;
         horizontal-alignment: center;
         vertical-alignment: center;
     }
