@@ -6,7 +6,7 @@
 	(paper "A4")
 	(title_block
 		(title "Cryostorage chamber")
-		(rev "2026-02-25")
+		(rev "2026-07-10")
 		(company "EPFL, Reto Trappitsch")
 		(comment 1 "Note 1: Flowmeter interlocks cryocooler directly via I/O pin 5.")
 		(comment 2 "Note 2: Transfer arm and valve open position directly interlock 24V for closing valves")
@@ -10406,6 +10406,30 @@
 			)
 		)
 	)
+	(global_label "rpi_cooler_at_temp"
+		(shape input)
+		(at 45.72 80.01 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "352032ee-f9e7-484c-9a89-b0ffbdf501a9")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 24.8341 80.01 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+	)
 	(global_label "sfty_vlv1"
 		(shape input)
 		(at 35.56 156.21 180)
@@ -10443,6 +10467,30 @@
 		(uuid "74404613-966f-440e-8b0b-eb1da0caa4a2")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 29.9141 57.15 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+	)
+	(global_label "rpi_flow_err"
+		(shape input)
+		(at 45.72 77.47 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "76524899-9265-4b0c-b56b-b722f3e659d7")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 31.7282 77.47 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -10526,30 +10574,6 @@
 			)
 		)
 	)
-	(global_label "rpi_flow_err"
-		(shape input)
-		(at 45.72 80.01 180)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right)
-		)
-		(uuid "9f93e4b2-638c-48ee-a83c-ae99a419f936")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 31.7282 80.01 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-	)
 	(global_label "rpi_vlv2_pls_cl"
 		(shape input)
 		(at 45.72 54.61 180)
@@ -10587,30 +10611,6 @@
 		(uuid "a902731a-3937-45b8-81d3-9e5bdea3c3b6")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 28.2812 59.69 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-	)
-	(global_label "rpi_cooler_at_temp"
-		(shape input)
-		(at 45.72 77.47 180)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right)
-		)
-		(uuid "b2d633fa-c2c2-4361-a775-f8cafc07386b")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 24.8341 77.47 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)

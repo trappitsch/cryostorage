@@ -50,7 +50,23 @@
         "silk_text_thickness": 0.1,
         "silk_text_upright": false,
         "zones": {
-          "min_clearance": 0.25
+          "border_display_style": 2,
+          "border_hatch_pitch": 0.5,
+          "corner_radius": 0.0,
+          "corner_smoothing": 0,
+          "fill_mode": 0,
+          "hatch_gap": 1.5,
+          "hatch_orientation": 0.0,
+          "hatch_smoothing_level": 0,
+          "hatch_smoothing_value": 0.1,
+          "hatch_thickness": 1.0,
+          "min_clearance": 0.25,
+          "min_island_area": 10.0,
+          "min_thickness": 0.25,
+          "pad_connection": 1,
+          "remove_islands": 0,
+          "thermal_relief_gap": 0.5,
+          "thermal_relief_spoke_width": 0.5
         }
       },
       "diff_pair_dimensions": [
@@ -244,7 +260,7 @@
       "internal_id": "",
       "mfg": "",
       "mpn": "",
-      "sch_revision": "2026-02-25"
+      "sch_revision": "2026-07-10"
     },
     "layer_pairs": [],
     "layer_presets": [],
@@ -265,6 +281,10 @@
   },
   "erc": {
     "erc_exclusions": [
+      [
+        "pin_not_driven|1905000|1041400|8cac7a53-7fc9-45b8-89f7-90d932b24df9|00000000-0000-0000-0000-000000000000|/65dfcb21-5bed-4c8b-b45c-eae336c9e929/1a88630b-1692-44c1-bfd4-1763ccc9c6a0|/65dfcb21-5bed-4c8b-b45c-eae336c9e929/1a88630b-1692-44c1-bfd4-1763ccc9c6a0|",
+        ""
+      ],
       [
         "pin_not_driven|457200|266700|d72b17cc-b0d6-4c0e-9d55-eab2bb3b6d09|00000000-0000-0000-0000-000000000000|/65dfcb21-5bed-4c8b-b45c-eae336c9e929|/65dfcb21-5bed-4c8b-b45c-eae336c9e929|",
         "connected to H5"
@@ -844,7 +864,7 @@
         "uuid": "65dfcb21-5bed-4c8b-b45c-eae336c9e929"
       }
     ],
-    "used_designators": "",
+    "used_designators": "Q9-10,R32-41,D16-17,C24-25,#PWR55-59,#PWR61-63",
     "variants": []
   },
   "sheets": [

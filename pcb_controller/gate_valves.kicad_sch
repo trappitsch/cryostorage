@@ -5,8 +5,8 @@
 	(uuid "46f1f8b3-c27d-4ccb-85e1-083fb324042d")
 	(paper "A4")
 	(title_block
-		(title "Cryostorage chamber - Gate valve control")
-		(rev "2026-02-25")
+		(title "Cryostorage chamber")
+		(rev "2026-07-10")
 		(company "EPFL, Reto Trappitsch")
 		(comment 2 "Note 2: Transfer arm and valve open position directly interlock 24V for closing valves")
 	)
@@ -2776,12 +2776,6 @@
 		(uuid "1208dc64-a0e1-4cae-a5f3-84800b1d6396")
 	)
 	(junction
-		(at 73.66 99.06)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "140adf39-d653-453c-898a-f1dce39bbd0d")
-	)
-	(junction
 		(at 234.95 87.63)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -2932,6 +2926,12 @@
 		(uuid "8786656e-d172-4786-ae7c-a5fb859a2d34")
 	)
 	(junction
+		(at 66.04 80.01)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "992dd5d8-3b36-43a4-9a4f-7927d0eb817f")
+	)
+	(junction
 		(at 229.87 132.08)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -3022,10 +3022,10 @@
 		(uuid "f176d1b7-935f-42fd-828a-662b692b2beb")
 	)
 	(junction
-		(at 66.04 80.01)
+		(at 71.12 99.06)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "fa1f5f20-0802-4cbb-8d3c-ebf2e25bb486")
+		(uuid "f7d3ebf5-e4bc-40f3-b23a-595fe75dbc15")
 	)
 	(wire
 		(pts
@@ -3329,7 +3329,7 @@
 	)
 	(wire
 		(pts
-			(xy 46.99 99.06) (xy 73.66 99.06)
+			(xy 46.99 99.06) (xy 71.12 99.06)
 		)
 		(stroke
 			(width 0)
@@ -3356,6 +3356,16 @@
 			(type default)
 		)
 		(uuid "3b505792-aca5-4567-ac48-96c2647db9e6")
+	)
+	(wire
+		(pts
+			(xy 71.12 99.06) (xy 111.76 99.06)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "3c23bc2f-63e9-4cbf-a988-58cb90cf1301")
 	)
 	(wire
 		(pts
@@ -3519,6 +3529,16 @@
 	)
 	(wire
 		(pts
+			(xy 63.5 80.01) (xy 66.04 80.01)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "551455ac-01ca-4dbd-8d9d-8866b9b7793d")
+	)
+	(wire
+		(pts
 			(xy 74.93 69.85) (xy 77.47 69.85)
 		)
 		(stroke
@@ -3539,16 +3559,6 @@
 	)
 	(wire
 		(pts
-			(xy 66.04 69.85) (xy 66.04 80.01)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "5945e20d-f700-40df-9842-c238f1883899")
-	)
-	(wire
-		(pts
 			(xy 176.53 88.9) (xy 180.34 88.9)
 		)
 		(stroke
@@ -3566,16 +3576,6 @@
 			(type default)
 		)
 		(uuid "5d311f48-fbc4-43c2-9799-54605c793381")
-	)
-	(wire
-		(pts
-			(xy 71.12 78.74) (xy 71.12 97.79)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "5dfd4276-662e-490f-97cb-a86f5da6755f")
 	)
 	(wire
 		(pts
@@ -3756,6 +3756,16 @@
 			(type default)
 		)
 		(uuid "7b52c617-832d-4a02-a028-99193bee3f5d")
+	)
+	(wire
+		(pts
+			(xy 71.12 78.74) (xy 71.12 99.06)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "7e58f84a-a635-49a4-8de1-f0470dee7ddb")
 	)
 	(wire
 		(pts
@@ -4069,7 +4079,7 @@
 	)
 	(wire
 		(pts
-			(xy 63.5 78.74) (xy 63.5 88.9)
+			(xy 63.5 80.01) (xy 63.5 88.9)
 		)
 		(stroke
 			(width 0)
@@ -4096,16 +4106,6 @@
 			(type default)
 		)
 		(uuid "bf4a1c25-2cef-4a14-a42e-5da0c8bd79d0")
-	)
-	(wire
-		(pts
-			(xy 63.5 78.74) (xy 66.04 80.01)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "bfe9f4cf-d9b9-4ed8-a81a-566ce0a6c101")
 	)
 	(wire
 		(pts
@@ -4146,16 +4146,6 @@
 			(type default)
 		)
 		(uuid "c3f8a720-7b14-48a0-add7-961a83434b30")
-	)
-	(wire
-		(pts
-			(xy 73.66 99.06) (xy 111.76 99.06)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "c5273161-9704-46d1-986f-f3416fb430e7")
 	)
 	(wire
 		(pts
@@ -4206,16 +4196,6 @@
 			(type default)
 		)
 		(uuid "cfad479e-72f5-444b-81e0-2a4cab5ed500")
-	)
-	(wire
-		(pts
-			(xy 71.12 97.79) (xy 73.66 99.06)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "d072b109-80a7-4d19-81c6-d534f8f972fd")
 	)
 	(wire
 		(pts
@@ -4536,6 +4516,16 @@
 			(type default)
 		)
 		(uuid "fcf46770-0b25-468f-bd79-da8a6092033d")
+	)
+	(wire
+		(pts
+			(xy 66.04 69.85) (xy 66.04 80.01)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "fe1910d3-4019-47ca-84f0-0846b2ac432d")
 	)
 	(global_label "rpi_vlv2_closed"
 		(shape input)
@@ -6941,7 +6931,7 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 73.66 99.06 0)
+		(at 71.12 99.06 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -6952,7 +6942,7 @@
 		(fields_autoplaced yes)
 		(uuid "332c8a24-7138-4616-87c9-09ef33926913")
 		(property "Reference" "#PWR047"
-			(at 73.66 105.41 0)
+			(at 71.12 105.41 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -6963,7 +6953,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 73.66 104.14 0)
+			(at 71.12 104.14 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -6973,7 +6963,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 73.66 99.06 0)
+			(at 71.12 99.06 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -6984,7 +6974,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 73.66 99.06 0)
+			(at 71.12 99.06 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -6995,7 +6985,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 73.66 99.06 0)
+			(at 71.12 99.06 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8342,7 +8332,7 @@
 		(dnp no)
 		(uuid "572630dd-7125-4b90-9f61-ea7432582ce1")
 		(property "Reference" "C17"
-			(at 74.676 46.228 0)
+			(at 75.692 46.228 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -8353,7 +8343,7 @@
 			)
 		)
 		(property "Value" "100nF"
-			(at 74.93 43.942 0)
+			(at 75.946 43.942 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -10096,7 +10086,7 @@
 		(dnp no)
 		(uuid "821a5fd0-ff3b-4ead-9bf2-ee2ac5d9fbeb")
 		(property "Reference" "C16"
-			(at 192.786 44.958 0)
+			(at 194.056 44.958 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -10107,7 +10097,7 @@
 			)
 		)
 		(property "Value" "100nF"
-			(at 193.04 42.672 0)
+			(at 194.31 42.672 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
