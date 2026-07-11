@@ -8,7 +8,7 @@ use anyhow::Result;
 
 use icd::{
     BakingState, LightState, SetLightEndpoint, SetPumpValveEndpoint, SetTransferValveEndpoint,
-    SetVctHandshakeEndpoint, ValveState, VctHandshake,
+    SetVctHandshakeEndpoint, ToggleLightEndpoint, ValveState, VctHandshake,
 };
 use poststation_sdk::PoststationClient;
 
@@ -64,6 +64,17 @@ impl ControllerClient {
         {
             log::err!("Failed to send new light state to controller").await;
         }
+    }
+
+    pub async fn toggle_light(&self) {
+        if self
+            .client
+            .proxy_endpoint::<ToggleLightEndpoint>(self.serial, self.ctr(), &())
+            .await
+            .is_err()
+        {
+            log::err!("Failed to toggle light in controller").await;
+        };
     }
 
     pub async fn pump_valve(&self, valve_state: ValveState) {

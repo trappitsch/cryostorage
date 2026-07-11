@@ -40,6 +40,7 @@ endpoints! {
     | RebootToPicoBoot          | ()            | ()                    | "hw/picoboot/reset"           |
     | GetLightEndpoint          | ()            | LightState            | "hw/light/get"                |
     | SetLightEndpoint          | LightState    | ()                    | "hw/light/set"                |
+    | ToggleLightEndpoint       | ()            | ()                    | "hw/light/toggle"             |
     | SetBakingEndpoint         | BakingState   | ()                    | "hw/baking/set"               |
     | SetPumpValveEndpoint      | ValveState    | ()                    | "hw/valve/pump/set"           |
     | SetTransferValveEndpoint  | ValveState    | ()                    | "hw/valve/transfer/set"       |

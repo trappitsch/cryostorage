@@ -41,9 +41,14 @@ impl InstrumentStatus {
         self.chamber_light = state;
     }
 
+    /// Toggle the state of the light.
+    pub fn toggle_chamber_light(&mut self) {
+        self.chamber_light = !self.chamber_light;
+    }
+
     /// Set the state of the light and update UI.
     pub fn set_chamber_light_and_ui(&mut self, state: LightState) -> Result<()> {
-        self.chamber_light = state.clone();
+        self.chamber_light = state;
 
         let light_is_on = matches!(state, LightState::On);
         let ui = UI

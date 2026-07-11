@@ -45,6 +45,11 @@ pub fn light_set_handler(context: &mut Context, _header: VarHeader, arg: LightSt
     }
 }
 
+/// Toggle the light state.
+pub fn light_toggle_handler(context: &mut Context, _header: VarHeader, _arg: ()) {
+    context.light_output.toggle();
+}
+
 /// Set the pump valve state.
 pub fn pump_valve_set_handler(_context: &mut Context, _header: VarHeader, arg: ValveState) {
     pump_valve_set(arg);

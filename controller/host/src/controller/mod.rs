@@ -25,6 +25,7 @@ pub static CONTROLLER_COMMAND_SENDER: OnceCell<mpsc::Sender<ControllerCommands>>
 pub enum ControllerCommands {
     InitializeLight(),
     Light(LightState),
+    ToggleLight(),
     Baking(BakingState),
     TransferValve(ValveState),
     PumpValve(ValveState),
@@ -127,8 +128,12 @@ pub async fn controller_task(cntrl: ControllerClient, mut rx: mpsc::Receiver<Con
                         };
                     }
                     ControllerCommands::Light(state) => {
-                        inst_status.lock().expect("Poisoned").set_chamber_light(state.clone());
+                        inst_status.lock().expect("Poisoned").set_chamber_light(state);
                         cntrl.set_light(state).await;
+                    }
+                    ControllerCommands::ToggleLight() => {
+                        inst_status.lock().expect("Poisoned").toggle_chamber_light();
+                        cntrl.toggle_light().await;
                     }
                     ControllerCommands::Baking(state) => {
                         cntrl.baking(state).await;
@@ -172,7 +177,7 @@ pub async fn controller_broadcast_listener(client: PoststationClient, serial: u6
     // Wait for UI to be globally available.
     let _ = get_ui_wait().await;
 
-    // Tell the light to initialize itslef :)
+    // Tell the light to initialize itself :)
     send_cntrl_cmd(ControllerCommands::InitializeLight()).await;
 
     // subscription to broadcast

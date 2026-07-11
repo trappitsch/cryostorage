@@ -17,6 +17,7 @@ export global ProgressWindowLogic {
     pure callback cancel_button_pressed();
     pure callback ok_button_pressed();
     pure callback next_button_pressed();
+    pure callback toggle_light();
 
     in-out property <string> title;  // the title of the workflow
     in-out property <string> description;  // general, short description of the workflow
@@ -84,6 +85,14 @@ export component ProgressWindow inherits Window {
                 text: "Cancel";
                 clicked => {
                     ProgressWindowLogic.cancel_button_pressed();
+                }
+            }
+
+            RegularButton {
+                enabled: true;
+                text: "Toggle Light";
+                clicked => {
+                    ProgressWindowLogic.toggle_light()
                 }
             }
 

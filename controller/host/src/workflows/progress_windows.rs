@@ -11,6 +11,7 @@ use tokio::{
 
 use crate::{
     app::{ProgressWindow, ProgressWindowLogic, get_ui_wait},
+    controller::{ControllerCommands, send_cntrl_cmd_now},
     workflows::timer::Timer,
 };
 
@@ -222,6 +223,10 @@ impl WorkflowProgress {
             *cell.lock().unwrap() = None;
         }
 
+        // Update the light state
+        send_cntrl_cmd_now(ControllerCommands::InitializeLight());
+
+        // Hide the progress window
         self.pw
             .upgrade_in_event_loop(move |pw| {
                 pw.hide().expect("PrgWin UI must be alive.");
@@ -418,6 +423,11 @@ fn get_progress_window(
     pw.global::<ProgressWindowLogic>().set_title(title);
     pw.global::<ProgressWindowLogic>().set_description(desc);
 
+    pw.global::<ProgressWindowLogic>().on_toggle_light({
+        move || {
+            send_cntrl_cmd_now(ControllerCommands::ToggleLight());
+        }
+    });
     pw.global::<ProgressWindowLogic>()
         .on_cancel_button_pressed({
             let tx = tx.clone();
