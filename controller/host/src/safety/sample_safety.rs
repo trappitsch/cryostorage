@@ -123,15 +123,13 @@ pub fn check_sample_safe(
     }
 
     // rest of the checks that would raise an alarm
-    // FIXME: put waterflow back into checks
-    // let wf = inst_stat.is_water_flow_ok();
+    let wf = inst_stat.is_water_flow_ok();
     let ip = inst_stat.is_ion_pump_on();
     let ps = inst_stat.is_pumpstand_on();
     let sample_temp_chk =
         (min_safe_temp <= sample_temp_curr) && (sample_temp_curr <= max_safe_temp);
 
-    // FIXME: Add waterflows back in
-    if ip && ps && sample_temp_chk {
+    if ip && ps && sample_temp_chk && wf {
         return Ok(());
     }
 
@@ -145,11 +143,10 @@ pub fn check_sample_safe(
         "The following component(s) have failed, which puts the sample in jeopardy.\n",
     );
     let mut log_msg = String::from("Sample safety alarm errors: ");
-    // FIXME: Add waterflow back in
-    // if !wf {
-    //     err_msg.push_str("- Waterflow for cooler is not maintained.\n");
-    //     log_msg.push_str("Water flow; ");
-    // }
+    if !wf {
+        err_msg.push_str("- Waterflow for cooler is not maintained.\n");
+        log_msg.push_str("Water flow; ");
+    }
     if !ip {
         err_msg.push_str("- Ion pump is not turned on.\n");
         log_msg.push_str("Ion pump; ");

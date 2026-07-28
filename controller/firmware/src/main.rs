@@ -143,7 +143,7 @@ async fn main(spawner: Spawner) {
         Output::new(p.PIN_20, Level::Low),
         residual_baking_time as u64,
     );
-    let flow_meter = FlowMeter::new(Input::new(p.PIN_15, Pull::None));
+    let flow_meter = FlowMeter::new(Input::new(p.PIN_14, Pull::None));
     let pump_valve = Valve::new(
         Output::new(p.PIN_4, Level::Low), // Control option
         Output::new(p.PIN_5, Level::Low), // Control close
