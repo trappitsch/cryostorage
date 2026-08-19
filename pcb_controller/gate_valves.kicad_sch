@@ -2902,6 +2902,12 @@
 		(uuid "5ee1b7bd-025a-4759-b103-ac79b534a276")
 	)
 	(junction
+		(at 73.66 99.06)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "6cc11526-3bcf-48e1-bdf9-4f1b757623f5")
+	)
+	(junction
 		(at 190.5 144.78)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -2924,12 +2930,6 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "8786656e-d172-4786-ae7c-a5fb859a2d34")
-	)
-	(junction
-		(at 66.04 80.01)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "992dd5d8-3b36-43a4-9a4f-7927d0eb817f")
 	)
 	(junction
 		(at 229.87 132.08)
@@ -2978,6 +2978,12 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "ca6fa304-90f7-4e4a-a623-1d4713f586a3")
+	)
+	(junction
+		(at 66.04 80.01)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "cb74dc52-9e66-4b8c-9bf9-ccb15529cbc9")
 	)
 	(junction
 		(at 77.47 69.85)
@@ -3339,6 +3345,16 @@
 	)
 	(wire
 		(pts
+			(xy 73.66 99.06) (xy 111.76 99.06)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "39d58564-3ff3-4ebe-83bb-703a5b6707aa")
+	)
+	(wire
+		(pts
 			(xy 234.95 158.75) (xy 245.11 158.75)
 		)
 		(stroke
@@ -3346,26 +3362,6 @@
 			(type default)
 		)
 		(uuid "3a90da7f-806e-4244-b416-7080dc05e329")
-	)
-	(wire
-		(pts
-			(xy 72.39 78.74) (xy 72.39 80.01)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "3b505792-aca5-4567-ac48-96c2647db9e6")
-	)
-	(wire
-		(pts
-			(xy 71.12 99.06) (xy 111.76 99.06)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "3c23bc2f-63e9-4cbf-a988-58cb90cf1301")
 	)
 	(wire
 		(pts
@@ -3459,6 +3455,16 @@
 	)
 	(wire
 		(pts
+			(xy 71.12 99.06) (xy 73.66 99.06)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "48d2ce5f-afbd-405d-84f5-866c74656716")
+	)
+	(wire
+		(pts
 			(xy 172.72 144.78) (xy 177.8 144.78)
 		)
 		(stroke
@@ -3526,16 +3532,6 @@
 			(type default)
 		)
 		(uuid "5479a09f-6926-41ab-8ecb-fb1aece33612")
-	)
-	(wire
-		(pts
-			(xy 63.5 80.01) (xy 66.04 80.01)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "551455ac-01ca-4dbd-8d9d-8866b9b7793d")
 	)
 	(wire
 		(pts
@@ -3756,16 +3752,6 @@
 			(type default)
 		)
 		(uuid "7b52c617-832d-4a02-a028-99193bee3f5d")
-	)
-	(wire
-		(pts
-			(xy 71.12 78.74) (xy 71.12 99.06)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "7e58f84a-a635-49a4-8de1-f0470dee7ddb")
 	)
 	(wire
 		(pts
@@ -4079,7 +4065,7 @@
 	)
 	(wire
 		(pts
-			(xy 63.5 80.01) (xy 63.5 88.9)
+			(xy 66.04 80.01) (xy 66.04 88.9)
 		)
 		(stroke
 			(width 0)
@@ -4149,16 +4135,6 @@
 	)
 	(wire
 		(pts
-			(xy 71.12 78.74) (xy 72.39 78.74)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "c8fee571-02f3-42bc-95bb-8db294dfb3f0")
-	)
-	(wire
-		(pts
 			(xy 168.91 87.63) (xy 168.91 88.9)
 		)
 		(stroke
@@ -4216,6 +4192,16 @@
 			(type default)
 		)
 		(uuid "d55ee3fa-3f39-485d-b1ac-234d8c3752be")
+	)
+	(wire
+		(pts
+			(xy 73.66 80.01) (xy 73.66 99.06)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "d5b28899-b9de-47b1-a24c-e86eaee0feef")
 	)
 	(wire
 		(pts
@@ -4476,6 +4462,16 @@
 			(type default)
 		)
 		(uuid "f742fcaf-ff0b-4fc5-9924-e00023247b5b")
+	)
+	(wire
+		(pts
+			(xy 73.66 80.01) (xy 72.39 80.01)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f848b97f-a922-424a-b602-3915de724749")
 	)
 	(wire
 		(pts
@@ -4809,11 +4805,13 @@
 		)
 		(property "LCSC" "C191023"
 			(at 71.12 72.898 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(hide yes)
 			)
 		)
 		(pin "2"
@@ -4921,11 +4919,13 @@
 		)
 		(property "LCSC" "C2798032"
 			(at 97.028 129.794 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(hide yes)
 			)
 		)
 		(pin "2"
@@ -6335,11 +6335,13 @@
 		)
 		(property "LCSC" "C12774"
 			(at 243.332 149.86 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(hide yes)
 			)
 		)
 		(pin "1"
@@ -6673,11 +6675,13 @@
 		)
 		(property "LCSC" "C20917"
 			(at 219.456 73.152 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(hide yes)
 			)
 		)
 		(pin "3"
@@ -7213,11 +7217,13 @@
 		)
 		(property "LCSC" "C12774"
 			(at 54.102 151.13 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(hide yes)
 			)
 		)
 		(pin "1"
@@ -7304,11 +7310,13 @@
 		)
 		(property "LCSC" "C191023"
 			(at 195.072 54.61 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(hide yes)
 			)
 		)
 		(pin "2"
@@ -7405,11 +7413,13 @@
 		)
 		(property "LCSC" "C20917"
 			(at 93.726 73.152 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(hide yes)
 			)
 		)
 		(pin "3"
@@ -7844,11 +7854,13 @@
 		)
 		(property "LCSC" "C12774"
 			(at 108.712 149.86 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(hide yes)
 			)
 		)
 		(pin "1"
@@ -8482,11 +8494,13 @@
 		)
 		(property "LCSC" "C2798032"
 			(at 75.692 46.228 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(hide yes)
 			)
 		)
 		(pin "2"
@@ -8570,11 +8584,13 @@
 		)
 		(property "LCSC" "C191023"
 			(at 71.882 55.88 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(hide yes)
 			)
 		)
 		(pin "2"
@@ -8661,11 +8677,13 @@
 		)
 		(property "LCSC" "C12774"
 			(at 188.722 151.13 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(hide yes)
 			)
 		)
 		(pin "1"
@@ -9288,7 +9306,7 @@
 	)
 	(symbol
 		(lib_id "power:+24V")
-		(at 63.5 88.9 180)
+		(at 66.04 88.9 180)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -9298,7 +9316,7 @@
 		(dnp no)
 		(uuid "6a123b09-045f-4b36-ae6b-c1658d79a507")
 		(property "Reference" "#PWR045"
-			(at 63.5 85.09 0)
+			(at 66.04 85.09 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9309,7 +9327,7 @@
 			)
 		)
 		(property "Value" "+24V"
-			(at 63.5 93.98 0)
+			(at 66.04 93.98 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -9319,7 +9337,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 63.5 88.9 0)
+			(at 66.04 88.9 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9330,7 +9348,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 63.5 88.9 0)
+			(at 66.04 88.9 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9341,7 +9359,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"+24V\""
-			(at 63.5 88.9 0)
+			(at 66.04 88.9 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9720,11 +9738,13 @@
 		)
 		(property "LCSC" "C2798032"
 			(at 231.648 129.794 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(hide yes)
 			)
 		)
 		(pin "2"
@@ -10088,11 +10108,13 @@
 		)
 		(property "LCSC" "C20917"
 			(at 184.912 77.4699 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(hide yes)
 			)
 		)
 		(pin "3"
@@ -10281,11 +10303,13 @@
 		)
 		(property "LCSC" "C2798032"
 			(at 194.056 44.958 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(hide yes)
 			)
 		)
 		(pin "2"
@@ -11285,11 +11309,13 @@
 		)
 		(property "LCSC" "C2798032"
 			(at 69.088 127.254 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(hide yes)
 			)
 		)
 		(pin "2"
@@ -11475,11 +11501,13 @@
 		)
 		(property "LCSC" "C2798032"
 			(at 196.85 85.852 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(hide yes)
 			)
 		)
 		(pin "2"
@@ -11677,11 +11705,13 @@
 		)
 		(property "LCSC" "C20917"
 			(at 55.372 77.4699 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(hide yes)
 			)
 		)
 		(pin "3"
@@ -11768,11 +11798,13 @@
 		)
 		(property "LCSC" "C191023"
 			(at 198.12 72.898 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(hide yes)
 			)
 		)
 		(pin "2"
@@ -11880,11 +11912,13 @@
 		)
 		(property "LCSC" "C2798032"
 			(at 69.85 85.852 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(hide yes)
 			)
 		)
 		(pin "2"
@@ -11981,11 +12015,13 @@
 		)
 		(property "LCSC" "C20917"
 			(at 107.696 73.152 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(hide yes)
 			)
 		)
 		(pin "3"
@@ -12363,11 +12399,13 @@
 		)
 		(property "LCSC" "C2798032"
 			(at 203.708 125.73 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(hide yes)
 			)
 		)
 		(pin "2"

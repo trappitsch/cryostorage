@@ -37,6 +37,14 @@ If any of these conditions are not met, an alarm is raised.
 This will inform the user that an issue has occurred that should be checked.
 
 > [!NOTE]
+> If an alarm occurs but fixes itself, i.e., an instrument returns a bad read
+> but the next time around recovers itself,
+> The alarm is cancelled.
+> However, a log entry will be written out.
+> This is especially useful as the Lakeshore temperature controller
+> tends to hang every few months.
+
+> [!TIP]
 > The minimum sample temperature can be set in the UI configuration.
 > See [the GUI section](./gui.md) for more details.
 
@@ -64,51 +72,39 @@ as long as this input line is grounded, i.e., at 0V.
 If the input line is pulled up to 5V,
 the cryocooler enters the soft-stop mode and comes to halt.
 
-![KiCad zoom on the PCB cryocooler safety circuit](./graphics/safety_pcb_cryocooler.svg)
+![KiCad zoom on the PCB cryocooler safety circuit](./graphics/safety_pcb_cooler_flowmeter.svg)
 
 Above figure shows the wiring diagram for the cryocooler safety.
 The following symbols are important in below discussion:
 
 - J9: Connector to the flow meter.
 - J10: Connector to the cryocooler.
-- Q9: Water interlock MOSFET.
-- Q10: Electronics interlock MOSFET.
-- R32, D17: Voltage divider to bring 24V from flow meter down to 3.3V for MOSFET
-  gate and digital read.
-- R33: Resistance between 5V supply from cryocooler and Soft-Stop pin.
+- Q9: MOSFET for flow meter read line.
+- Q10: MOSFET for cooler at temperature read line.
 
-On the cryocooler connector J10, pin 1 supplies the 5V that is used
-to turn off the cryocooler via the soft-stop (pin 2 on J10).
-In normal operation (all okay), the soft stop pin is connected to ground
-such that the voltage on this pin is 0V.
-This connection to ground passes through two MOSFETS, Q9 and Q10.
+> [!NOTE]
+> The "Cooler at temperature" read line
+> is currently unused.
 
-#### Water interlock
+Here we use the 5V supplied by the cooler itself to activate the soft-stop.
+This +5V cooler (J10, pin 1)
+is connected to the soft-stop (J10, pin 2)
+via the flow meter N.C. contacts (J9, pin 3 and 4).
+If there is no flow or no power,
+J9 pins 3 and 4 are connected to each other.
+This will apply 5V to the soft-stop and thus stop the cooler.
 
-If the waterflow is high enough for running the cryocooler,
-24V are supplied from pin 3 to pin 4 on the flow meter connector J9.
-These 24V pass through the voltage divider R32 & D17 and turn this voltage
-into 3.3V that closes the gate on MOSFET Q9. Thus, this MOSFET connect
-drain and source when the water flow is fine.
+> [!IMPORTANT]
+> The 24 V power supply of the flow meter
+> must be (and currently is) connected to the same power supply
+> that powers the electronics.
+> This will ensure that the cryocooler turns off if power is lost to the electronics.
 
-If the waterflow fails or is too low,
-pin 3 and 4 on J9 are not connected, the gate voltage on Q9
-drops to 0V and opens the connection to ground between R33 and the soft-stop pin.
-This results in 5V being applied to the soft-stop
-and thus the cryocooler will stop.
-
-#### Electronics interlock
-
-The electronics interlock shuts down the cryocooler
-if power to the control board is lost.
-
-If power to the control board is present and good,
-the 5V power supply is connected to the gate on MOSFET Q10,
-thus connecting the safe-stop pin 2 on J10 to ground.
-
-If for some reason the power to the electronics is lost,
-the gate will be at 0V, open the connection to ground,
-and thus put the safe-stop pin at 5V and shut down the cryocooler.
+Read out lines are connected via MOSFETS.
+The lines trigger the MOSFET gates, which will then show high/low
+on the input pins of the MCU.
+Thus, the readout lines are isolated from the safety mechanism
+via the MOSFET.
 
 #### Caveat
 

@@ -319,6 +319,8 @@ pub async fn instruments_task(mut rx_instr: mpsc::Receiver<InstrumentCommands>) 
                                 // deal with the heater
                                 match state {
                                     CoolerState::Disabled => {
+                                        // BUG: This needs to also kill the task, otherwise we will
+                                        // span it many times over time!
                                         if lakeshore_temp_inst.set_heater_off().is_err() {
                                             log::err!("Failed to turn the Lakeshore heater off.").await;
                                         }

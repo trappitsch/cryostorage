@@ -10712,11 +10712,13 @@
 		)
 		(property "LCSC" "C2798032"
 			(at 159.004 61.468 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(hide yes)
 			)
 		)
 		(pin "2"
@@ -10903,11 +10905,13 @@
 		)
 		(property "LCSC" "C2798032"
 			(at 124.968 110.744 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(hide yes)
 			)
 		)
 		(pin "2"
@@ -11249,11 +11253,13 @@
 		)
 		(property "LCSC" "C2798032"
 			(at 180.34 123.952 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(hide yes)
 			)
 		)
 		(pin "2"
@@ -11705,11 +11711,13 @@
 		)
 		(property "LCSC" "C2798032"
 			(at 227.584 61.468 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(hide yes)
 			)
 		)
 		(pin "2"
@@ -12536,11 +12544,13 @@
 		)
 		(property "LCSC" "C12774"
 			(at 104.902 134.62 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(hide yes)
 			)
 		)
 		(pin "1"
@@ -13252,11 +13262,13 @@
 		)
 		(property "LCSC" "C2798032"
 			(at 190.754 61.468 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(hide yes)
 			)
 		)
 		(pin "2"
@@ -13421,11 +13433,13 @@
 		)
 		(property "LCSC" "C41407547"
 			(at 70.7233 91.44 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(hide yes)
 			)
 		)
 		(pin "32"
@@ -14118,11 +14132,13 @@
 		)
 		(property "LCSC" "C191023"
 			(at 196.85 127.508 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(hide yes)
 			)
 		)
 		(pin "2"
@@ -14968,11 +14984,13 @@
 		)
 		(property "LCSC" "C727114"
 			(at 39.37 14.478 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(hide yes)
 			)
 		)
 		(pin "2"
@@ -15217,11 +15235,13 @@
 		)
 		(property "LCSC" "C153222"
 			(at 266.7 144.7799 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(hide yes)
 			)
 		)
 		(pin "2"
@@ -15625,11 +15645,13 @@
 		)
 		(property "LCSC" "C12774"
 			(at 104.902 175.26 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(hide yes)
 			)
 		)
 		(pin "1"
@@ -17042,11 +17064,13 @@
 		)
 		(property "LCSC" "C2798032"
 			(at 149.352 36.322 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(hide yes)
 			)
 		)
 		(pin "2"
@@ -17392,11 +17416,13 @@
 		)
 		(property "LCSC" "C52895"
 			(at 207.01 133.3499 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(hide yes)
 			)
 		)
 		(pin "1"
@@ -17739,11 +17765,13 @@
 		)
 		(property "LCSC" "C2902119"
 			(at 238.76 31.496 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(hide yes)
 			)
 		)
 		(pin "2"
@@ -17932,11 +17960,13 @@
 		)
 		(property "LCSC" "C2798032"
 			(at 258.318 40.386 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(hide yes)
 			)
 		)
 		(pin "2"
@@ -18748,11 +18778,13 @@
 		)
 		(property "LCSC" "C2798032"
 			(at 217.424 40.132 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(hide yes)
 			)
 		)
 		(pin "2"
@@ -19301,11 +19333,13 @@
 		)
 		(property "LCSC" "C2798032"
 			(at 240.538 129.794 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(hide yes)
 			)
 		)
 		(pin "2"
@@ -19694,11 +19728,13 @@
 		)
 		(property "LCSC" "C2798032"
 			(at 261.874 61.468 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(hide yes)
 			)
 		)
 		(pin "2"
@@ -20041,11 +20077,13 @@
 		)
 		(property "LCSC" "C89596"
 			(at 226.314 40.132 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(hide yes)
 			)
 		)
 		(pin "2"
@@ -20153,11 +20191,13 @@
 		)
 		(property "LCSC" "C2798032"
 			(at 169.418 39.37 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(hide yes)
 			)
 		)
 		(pin "2"
@@ -20546,11 +20586,13 @@
 		)
 		(property "LCSC" "C2798032"
 			(at 124.968 151.384 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(hide yes)
 			)
 		)
 		(pin "2"
@@ -20849,11 +20891,13 @@
 		)
 		(property "LCSC" "C7827"
 			(at 37.084 128.016 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(hide yes)
 			)
 		)
 		(pin "5"
@@ -21314,11 +21358,13 @@
 		)
 		(property "LCSC" "C2798032"
 			(at 50.8 136.144 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(hide yes)
 			)
 		)
 		(pin "2"
@@ -21658,11 +21704,13 @@
 		)
 		(property "LCSC" "C52895"
 			(at 155.956 165.1 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(hide yes)
 			)
 		)
 		(pin "1"
@@ -21773,11 +21821,13 @@
 		)
 		(property "LCSC" "C89596"
 			(at 248.92 40.132 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(hide yes)
 			)
 		)
 		(pin "2"
@@ -21873,11 +21923,13 @@
 		)
 		(property "LCSC" "C5155080"
 			(at 121.92 20.32 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(hide yes)
 			)
 		)
 		(pin "8"

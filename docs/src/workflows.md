@@ -60,15 +60,17 @@ this workflow as well.
 > [!NOTE]
 > The pump valve can be closed without any checks.
 
-## Start cryocooler
+## Cryocooler
 
-> [!WARNING]
-> Due to an electronics design error, the water safety
-> can currently not be read by the firmware.
-> However, the cryocooler is still properly interlocked with the water cooling;
-> only the software check is currently disabled.
->
-> *2026-06-24*
+Starting the cryocooler will start the cooler itself
+as well as the "heater task".
+This task will check the temperature every few seconds and,
+if it is within the safe temperature band,,
+start the heater of the Lakeshore temperature controller.
+Since the cooler has too much power,
+the heater will heat the sample to the set temperature.
+
+### Start cryocooler
 
 ```mermaid
   flowchart TD
@@ -84,16 +86,16 @@ this workflow as well.
     PumpValve{{Is pump valve closed?}} -->|No| Err 
     PumpValve -->|Yes| Ok
     Err[/Abort/]
-    Ok[/Start cryocooler/]
+    Ok[/Start cryocooler and heater/]
 ```
 
-## Stop cryocooler
+### Stop cryocooler
 
 ```mermaid
   flowchart TD
     T[Stop cryocooler] --> Smp{{Are any samples loaded?}}
     Smp -->|Yes| Err[/Abort/]
-    Smp -->|No| Ok[/Stop cryocooler/]
+    Smp -->|No| Ok[/Stop cryocooler and heater/]
 ```
 
 > [!NOTE]
