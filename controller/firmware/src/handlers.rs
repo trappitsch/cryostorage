@@ -1,10 +1,10 @@
 use core::sync::atomic::{Ordering, compiler_fence};
 
 use icd::{BakingState, LightState, ValveState, VctHandshake};
-use postcard_rpc::header::VarHeader;
+use postcard_rpc::{header::VarHeader, server::Sender};
 
 use crate::{
-    app::Context,
+    app::{AppTx, Context, TaskContext},
     baking::baking_set,
     valve::{pump_valve_set, transfer_valve_set},
     vct::vct_set_handshake,
@@ -25,8 +25,14 @@ pub fn picoboot_reset(_context: &mut Context, _header: VarHeader, _arg: ()) {
 }
 
 /// Set the baking state.
-pub fn baking_set_handler(_context: &mut Context, _header: VarHeader, arg: BakingState) {
-    baking_set(arg);
+#[embassy_executor::task(pool_size = 4)]
+pub async fn baking_set_handler(
+    _context: TaskContext,
+    _header: VarHeader,
+    arg: BakingState,
+    _sender: Sender<AppTx>,
+) {
+    baking_set(arg).await;
 }
 
 /// Set the light state.
@@ -51,16 +57,34 @@ pub fn light_toggle_handler(context: &mut Context, _header: VarHeader, _arg: ())
 }
 
 /// Set the pump valve state.
-pub fn pump_valve_set_handler(_context: &mut Context, _header: VarHeader, arg: ValveState) {
-    pump_valve_set(arg);
+#[embassy_executor::task(pool_size = 4)]
+pub async fn pump_valve_set_handler(
+    _context: TaskContext,
+    _header: VarHeader,
+    arg: ValveState,
+    _sender: Sender<AppTx>,
+) {
+    pump_valve_set(arg).await;
 }
 
 /// Set the transfer valve state.
-pub fn transfer_valve_set_handler(_context: &mut Context, _header: VarHeader, arg: ValveState) {
-    transfer_valve_set(arg);
+#[embassy_executor::task(pool_size = 4)]
+pub async fn transfer_valve_set_handler(
+    _context: TaskContext,
+    _header: VarHeader,
+    arg: ValveState,
+    _sender: Sender<AppTx>,
+) {
+    transfer_valve_set(arg).await;
 }
 
 /// Set the VCT handshake state.
-pub fn vct_handshake_set_handler(_context: &mut Context, _header: VarHeader, arg: VctHandshake) {
-    vct_set_handshake(arg);
+#[embassy_executor::task(pool_size = 4)]
+pub async fn vct_handshake_set_handler(
+    _context: TaskContext,
+    _header: VarHeader,
+    arg: VctHandshake,
+    _sender: Sender<AppTx>,
+) {
+    vct_set_handshake(arg).await;
 }

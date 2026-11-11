@@ -1,11 +1,11 @@
 //! Deals with baking the instrument.
 
 use embassy_rp::gpio::Output;
-use embassy_sync::{blocking_mutex::raw::ThreadModeRawMutex, signal::Signal};
+use embassy_sync::{blocking_mutex::raw::ThreadModeRawMutex, channel::Channel, signal::Signal};
 use embassy_time::{Duration, Instant};
 use icd::BakingState;
 
-static BAKING_SIGNAL: Signal<ThreadModeRawMutex, BakingCommand> = Signal::new();
+static BAKING_CHANNEL: Channel<ThreadModeRawMutex, BakingCommand, 32> = Channel::new();
 static BAKING_STATE_SIGNAL: Signal<ThreadModeRawMutex, BakingState> = Signal::new();
 
 /// Controller for baking the instrument
@@ -122,7 +122,7 @@ pub enum BakingCommand {
 #[embassy_executor::task(pool_size = 1)]
 pub async fn baking_task(mut baking: Baking) {
     loop {
-        let command = BAKING_SIGNAL.wait().await;
+        let command = BAKING_CHANNEL.receive().await;
         match command {
             BakingCommand::SetState(state) => {
                 baking.set_state(state);
@@ -136,11 +136,14 @@ pub async fn baking_task(mut baking: Baking) {
 
 /// Query the current baking state.
 pub async fn baking_get() -> BakingState {
-    BAKING_SIGNAL.signal(BakingCommand::GetState);
+    BAKING_CHANNEL.sender().send(BakingCommand::GetState).await;
     BAKING_STATE_SIGNAL.wait().await
 }
 
 /// Set the baking state.
-pub fn baking_set(state: BakingState) {
-    BAKING_SIGNAL.signal(BakingCommand::SetState(state));
+pub async fn baking_set(state: BakingState) {
+    BAKING_CHANNEL
+        .sender()
+        .send(BakingCommand::SetState(state))
+        .await;
 }

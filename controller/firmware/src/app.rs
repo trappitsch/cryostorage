@@ -16,7 +16,7 @@ use icd::{
 
 use postcard_rpc::server::impls::embassy_usb_v0_4::{
     PacketBuffers,
-    dispatch_impl::{WireRxBuf, WireRxImpl, WireSpawnImpl, WireStorage, WireTxImpl},
+    dispatch_impl::{WireRxBuf, WireRxImpl, WireSpawnImpl, WireStorage, WireTxImpl, spawn_fn},
 };
 use postcard_rpc::{
     define_dispatch,
@@ -92,13 +92,13 @@ define_dispatch! {
         | ----------                | ----      | -------                       |
         | GetUniqueIdEndpoint       | blocking  | unique_id                     |
         | RebootToPicoBoot          | blocking  | picoboot_reset                |
-        | SetBakingEndpoint         | blocking  | baking_set_handler            |
+        | SetBakingEndpoint         | spawn     | baking_set_handler            |
         | GetLightEndpoint          | blocking  | light_get_handler             |
         | SetLightEndpoint          | blocking  | light_set_handler             |
         | ToggleLightEndpoint       | blocking  | light_toggle_handler          |
-        | SetPumpValveEndpoint      | blocking  | pump_valve_set_handler        |
-        | SetTransferValveEndpoint  | blocking  | transfer_valve_set_handler    |
-        | SetVctHandshakeEndpoint   | blocking  | vct_handshake_set_handler     |
+        | SetPumpValveEndpoint      | spawn     | pump_valve_set_handler        |
+        | SetTransferValveEndpoint  | spawn     | transfer_valve_set_handler    |
+        | SetVctHandshakeEndpoint   | spawn     | vct_handshake_set_handler     |
     };
 
     // Topics IN are messages we receive from the client, but that we do not reply

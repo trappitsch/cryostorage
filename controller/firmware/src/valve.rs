@@ -1,13 +1,13 @@
 //! Deals with solenoid valves.
 
 use embassy_rp::gpio::{Input, Output};
-use embassy_sync::{blocking_mutex::raw::ThreadModeRawMutex, signal::Signal};
+use embassy_sync::{blocking_mutex::raw::ThreadModeRawMutex, channel::Channel, signal::Signal};
 use embassy_time::{Duration, Timer};
 use icd::ValveState;
 
-static PUMP_VALVE_SIGNAL: Signal<ThreadModeRawMutex, ValveCommand> = Signal::new();
+static PUMP_VALVE_CHANNEL: Channel<ThreadModeRawMutex, ValveCommand, 32> = Channel::new();
 static PUMP_VALVE_STATE_SIGNAL: Signal<ThreadModeRawMutex, ValveState> = Signal::new();
-static TRANSFER_VALVE_SIGNAL: Signal<ThreadModeRawMutex, ValveCommand> = Signal::new();
+static TRANSFER_VALVE_CHANNEL: Channel<ThreadModeRawMutex, ValveCommand, 32> = Channel::new();
 static TRANSFER_VALVE_STATE_SIGNAL: Signal<ThreadModeRawMutex, ValveState> = Signal::new();
 
 static VALVE_PULSE_TIME: Duration = Duration::from_millis(500);
@@ -91,8 +91,8 @@ pub enum ValveCommand {
 #[embassy_executor::task(pool_size = 2)]
 pub async fn valve_task(mut valve: Valve, which: ValveSelector) {
     let ctrl_signal = match which {
-        ValveSelector::Pump => &PUMP_VALVE_SIGNAL,
-        ValveSelector::Transfer => &TRANSFER_VALVE_SIGNAL,
+        ValveSelector::Pump => &PUMP_VALVE_CHANNEL,
+        ValveSelector::Transfer => &TRANSFER_VALVE_CHANNEL,
     };
 
     let state_signal = match which {
@@ -101,7 +101,7 @@ pub async fn valve_task(mut valve: Valve, which: ValveSelector) {
     };
 
     loop {
-        let command = ctrl_signal.wait().await;
+        let command = ctrl_signal.receive().await;
         match command {
             ValveCommand::Open => {
                 valve.open().await;
@@ -119,18 +119,21 @@ pub async fn valve_task(mut valve: Valve, which: ValveSelector) {
 
 /// Wait for a pump valve state update and return the new state.
 pub async fn pump_valve_get() -> ValveState {
-    PUMP_VALVE_SIGNAL.signal(ValveCommand::GetState);
+    PUMP_VALVE_CHANNEL
+        .sender()
+        .send(ValveCommand::GetState)
+        .await;
     PUMP_VALVE_STATE_SIGNAL.wait().await
 }
 
 /// Set the pump valve to a given state.
-pub fn pump_valve_set(state: ValveState) {
+pub async fn pump_valve_set(state: ValveState) {
     match state {
         ValveState::Open => {
-            PUMP_VALVE_SIGNAL.signal(ValveCommand::Open);
+            PUMP_VALVE_CHANNEL.sender().send(ValveCommand::Open).await;
         }
         ValveState::Closed => {
-            PUMP_VALVE_SIGNAL.signal(ValveCommand::Close);
+            PUMP_VALVE_CHANNEL.send(ValveCommand::Close).await;
         }
         ValveState::Undefined => {
             defmt::warn!("Cannot set pump valve to undefined state");
@@ -140,18 +143,27 @@ pub fn pump_valve_set(state: ValveState) {
 
 /// Wait for a transfer valve state update and return the new state.
 pub async fn transfer_valve_get() -> ValveState {
-    TRANSFER_VALVE_SIGNAL.signal(ValveCommand::GetState);
+    TRANSFER_VALVE_CHANNEL
+        .sender()
+        .send(ValveCommand::GetState)
+        .await;
     TRANSFER_VALVE_STATE_SIGNAL.wait().await
 }
 
 /// Set the transfer valve to a given state.
-pub fn transfer_valve_set(state: ValveState) {
+pub async fn transfer_valve_set(state: ValveState) {
     match state {
         ValveState::Open => {
-            TRANSFER_VALVE_SIGNAL.signal(ValveCommand::Open);
+            TRANSFER_VALVE_CHANNEL
+                .sender()
+                .send(ValveCommand::Open)
+                .await;
         }
         ValveState::Closed => {
-            TRANSFER_VALVE_SIGNAL.signal(ValveCommand::Close);
+            TRANSFER_VALVE_CHANNEL
+                .sender()
+                .send(ValveCommand::Close)
+                .await;
         }
         ValveState::Undefined => {
             defmt::warn!("Cannot set pump valve to undefined state");

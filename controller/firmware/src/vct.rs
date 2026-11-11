@@ -1,10 +1,10 @@
 //! Deal with the VCT.
 
 use embassy_rp::gpio::{Input, Output};
-use embassy_sync::{blocking_mutex::raw::ThreadModeRawMutex, signal::Signal};
+use embassy_sync::{blocking_mutex::raw::ThreadModeRawMutex, channel::Channel, signal::Signal};
 use icd::{VctConnectedState, VctHandshake, VctState};
 
-static VCT_SIGNAL: Signal<ThreadModeRawMutex, VctCommand> = Signal::new();
+static VCT_CHANNEL: Channel<ThreadModeRawMutex, VctCommand, 32> = Channel::new();
 static VCT_STATE_SIGNAL: Signal<ThreadModeRawMutex, VctState> = Signal::new();
 
 /// VCT command enum.
@@ -65,7 +65,7 @@ impl Vct {
 #[embassy_executor::task(pool_size = 1)]
 pub async fn vct_task(mut vct: Vct) {
     loop {
-        let command = VCT_SIGNAL.wait().await;
+        let command = VCT_CHANNEL.receive().await;
         match command {
             VctCommand::SetHandshake(value) => {
                 vct.set_handshake(value);
@@ -78,12 +78,15 @@ pub async fn vct_task(mut vct: Vct) {
 }
 
 /// Set the VCT handshake state.
-pub fn vct_set_handshake(value: VctHandshake) {
-    VCT_SIGNAL.signal(VctCommand::SetHandshake(value));
+pub async fn vct_set_handshake(value: VctHandshake) {
+    VCT_CHANNEL
+        .sender()
+        .send(VctCommand::SetHandshake(value))
+        .await;
 }
 
 /// Get the current VCT state.
 pub async fn vct_get_state() -> VctState {
-    VCT_SIGNAL.signal(VctCommand::GetState);
+    VCT_CHANNEL.sender().send(VctCommand::GetState).await;
     VCT_STATE_SIGNAL.wait().await
 }
