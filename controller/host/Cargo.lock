@@ -3068,20 +3068,31 @@ dependencies = [
 [[package]]
 name = "instrumentrs"
 version = "0.2.0"
-source = "git+https://github.com/trappitsch/instrumentRs2?rev=117e3f71#117e3f716cb7f6a516dc1285caa88d94caa3a494"
+source = "git+https://github.com/trappitsch/instrumentRs2?rev=15ac637d#15ac637d4c9e8ab8180907ed7f77f464286a2913"
 dependencies = [
+ "instrumentrs-core",
  "instrumentrs-macros",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "instrumentrs-core"
+version = "0.2.0"
+source = "git+https://github.com/trappitsch/instrumentRs2?rev=15ac637d#15ac637d4c9e8ab8180907ed7f77f464286a2913"
+dependencies = [
  "thiserror 2.0.18",
 ]
 
 [[package]]
 name = "instrumentrs-macros"
 version = "0.2.0"
-source = "git+https://github.com/trappitsch/instrumentRs2?rev=117e3f71#117e3f716cb7f6a516dc1285caa88d94caa3a494"
+source = "git+https://github.com/trappitsch/instrumentRs2?rev=15ac637d#15ac637d4c9e8ab8180907ed7f77f464286a2913"
 dependencies = [
+ "instrumentrs-core",
  "proc-macro2",
  "quote",
  "syn 3.0.3",
+ "thiserror 2.0.18",
 ]
 
 [[package]]

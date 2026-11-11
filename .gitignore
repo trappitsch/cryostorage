@@ -64,6 +64,7 @@ target/*
 
 # Rust
 **/target/
+**/target-cross/
 
 ## KiCad
 **/*-backups
