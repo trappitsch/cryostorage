@@ -5,6 +5,7 @@ use std::{
     time::Duration,
 };
 
+use anyhow::{Context, Result, bail};
 use tokio::sync::{OnceCell, broadcast, mpsc};
 
 mod app;
@@ -43,7 +44,13 @@ pub static INST_STATUS: OnceCell<Arc<Mutex<InstrumentStatus>>> = OnceCell::const
 pub static PRG_CONF: OnceCell<Arc<Mutex<PrgConfig>>> = OnceCell::const_new();
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<()> {
+    // Spawn a postsation child process.
+    let mut ps_child = tokio::process::Command::new("poststation")
+        .arg("--headless")
+        .spawn()
+        .with_context(|| "Error occured while starting poststation. Poststation must be available in the standard system path.")?;
+
     // first let's create the config and archive folders if they don't exist already.
     init_config_folders();
 
@@ -124,7 +131,8 @@ async fn main() {
     // start the app
     match app::app_main() {
         Ok(_) => {
-            tx_halt.send(()).unwrap();
+            ps_child.kill().await?;
+            tx_halt.send(())?;
             let _ = tokio::join!(
                 cntrl_tsk,
                 cntrl_bc_listen,
@@ -134,9 +142,9 @@ async fn main() {
                 p_plot_task,
                 t_plot_task
             );
-            println!("App exited normally")
+            Ok(())
         }
-        Err(e) => eprintln!("App exited with error: {}", e),
+        Err(e) => bail!("App exited with error: {}", e),
     }
 }
 
