@@ -1,7 +1,5 @@
 //! Plot the temperature figure and accepts signals that send temperature data points.
 
-use std::f64;
-
 use anyhow::{Result, anyhow, bail};
 use plotters::prelude::*;
 use slint::ComponentHandle;
