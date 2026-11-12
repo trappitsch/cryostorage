@@ -183,6 +183,9 @@ pub async fn instruments_task(mut rx_instr: mpsc::Receiver<InstrumentCommands>) 
     })
     .expect("UI is alive");
 
+    // Start the heater task: it will do nothing if the cooler is off.
+    tokio::spawn(async { lakeshore_heater_on_task().await });
+
     // set later to a reasonable value
     let mut polling_interval = Duration::from_millis(1);
 
@@ -317,18 +320,9 @@ pub async fn instruments_task(mut rx_instr: mpsc::Receiver<InstrumentCommands>) 
                         match cryocooler_inst.set_state(state.clone()) {
                             Ok(_) => {
                                 // deal with the heater
-                                match state {
-                                    CoolerState::Disabled => {
-                                        // BUG: This needs to also kill the task, otherwise we will
-                                        // span it many times over time!
-                                        if lakeshore_temp_inst.set_heater_off().is_err() {
-                                            log::err!("Failed to turn the Lakeshore heater off.").await;
-                                        }
-                                    }
-                                    CoolerState::Enabled => {
-                                        tokio::spawn(async {
-                                            lakeshore_heater_on_task().await
-                                        });
+                                if state == CoolerState::Disabled {
+                                    if lakeshore_temp_inst.set_heater_off().is_err() {
+                                        log::err!("Failed to turn the Lakeshore heater off.").await;
                                     }
                                 }
                                 // set the cooler
