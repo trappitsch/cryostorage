@@ -1,10 +1,10 @@
 use core::sync::atomic::{Ordering, compiler_fence};
 
 use icd::{BakingState, LightState, ValveState, VctHandshake};
-use postcard_rpc::{header::VarHeader, server::Sender};
+use postcard_rpc::header::VarHeader;
 
 use crate::{
-    app::{AppTx, Context, TaskContext},
+    app::Context,
     baking::baking_set,
     valve::{pump_valve_set, transfer_valve_set},
     vct::vct_set_handshake,
@@ -25,13 +25,7 @@ pub fn picoboot_reset(_context: &mut Context, _header: VarHeader, _arg: ()) {
 }
 
 /// Set the baking state.
-#[embassy_executor::task(pool_size = 4)]
-pub async fn baking_set_handler(
-    _context: TaskContext,
-    _header: VarHeader,
-    arg: BakingState,
-    _sender: Sender<AppTx>,
-) {
+pub async fn baking_set_handler(_context: &mut Context, _header: VarHeader, arg: BakingState) {
     baking_set(arg).await;
 }
 
@@ -57,34 +51,24 @@ pub fn light_toggle_handler(context: &mut Context, _header: VarHeader, _arg: ())
 }
 
 /// Set the pump valve state.
-#[embassy_executor::task(pool_size = 4)]
-pub async fn pump_valve_set_handler(
-    _context: TaskContext,
-    _header: VarHeader,
-    arg: ValveState,
-    _sender: Sender<AppTx>,
-) {
+pub async fn pump_valve_set_handler(_context: &mut Context, _header: VarHeader, arg: ValveState) {
     pump_valve_set(arg).await;
 }
 
 /// Set the transfer valve state.
-#[embassy_executor::task(pool_size = 4)]
 pub async fn transfer_valve_set_handler(
-    _context: TaskContext,
+    _context: &mut Context,
     _header: VarHeader,
     arg: ValveState,
-    _sender: Sender<AppTx>,
 ) {
     transfer_valve_set(arg).await;
 }
 
 /// Set the VCT handshake state.
-#[embassy_executor::task(pool_size = 4)]
 pub async fn vct_handshake_set_handler(
-    _context: TaskContext,
+    _context: &mut Context,
     _header: VarHeader,
     arg: VctHandshake,
-    _sender: Sender<AppTx>,
 ) {
     vct_set_handshake(arg).await;
 }
