@@ -393,7 +393,7 @@ pub async fn lakeshore_heater_on_task() {
                 };
 
                 if cooler_is_off {
-                    break;
+                    continue;
                 }
 
                 if current_sample_temperature < temperature_setpoint + temperature_safety_half_band {
@@ -403,7 +403,7 @@ pub async fn lakeshore_heater_on_task() {
                     {
                         log::err!("Could not turn Lakeshore heater on.").await;
                     } else {
-                        break;
+                        continue;
                     }
                 }
             }

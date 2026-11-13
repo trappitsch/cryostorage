@@ -282,15 +282,15 @@
   "erc": {
     "erc_exclusions": [
       [
-        "pin_not_driven|1905000|1041400|8cac7a53-7fc9-45b8-89f7-90d932b24df9|00000000-0000-0000-0000-000000000000|/65dfcb21-5bed-4c8b-b45c-eae336c9e929/1a88630b-1692-44c1-bfd4-1763ccc9c6a0|/65dfcb21-5bed-4c8b-b45c-eae336c9e929/1a88630b-1692-44c1-bfd4-1763ccc9c6a0|",
+        "pin_not_driven|1905000|1041400|8cac7a53-7fc9-45b8-89f7-90d932b24df9|00000000-0000-0000-0000-000000000000|||",
         ""
       ],
       [
-        "pin_not_driven|457200|266700|d72b17cc-b0d6-4c0e-9d55-eab2bb3b6d09|00000000-0000-0000-0000-000000000000|/65dfcb21-5bed-4c8b-b45c-eae336c9e929|/65dfcb21-5bed-4c8b-b45c-eae336c9e929|",
+        "pin_not_driven|457200|266700|d72b17cc-b0d6-4c0e-9d55-eab2bb3b6d09|00000000-0000-0000-0000-000000000000|||",
         "connected to H5"
       ],
       [
-        "power_pin_not_driven|635000|190500|6dca7252-4216-483b-adc3-ee3416ab0bfb|00000000-0000-0000-0000-000000000000|/65dfcb21-5bed-4c8b-b45c-eae336c9e929|/65dfcb21-5bed-4c8b-b45c-eae336c9e929|",
+        "power_pin_not_driven|635000|190500|6dca7252-4216-483b-adc3-ee3416ab0bfb|00000000-0000-0000-0000-000000000000|||",
         "correctly connected"
       ]
     ],
@@ -503,6 +503,7 @@
       "pin_to_pin": "error",
       "power_pin_not_driven": "error",
       "same_local_global_label": "warning",
+      "same_local_global_power": "warning",
       "similar_label_and_power": "warning",
       "similar_labels": "warning",
       "similar_power": "warning",
@@ -550,8 +551,8 @@
     "meta": {
       "version": 5
     },
-    "net_colors": null,
-    "netclass_assignments": null,
+    "net_colors": {},
+    "netclass_assignments": {},
     "netclass_patterns": []
   },
   "pcbnew": {
@@ -864,7 +865,7 @@
         "uuid": "65dfcb21-5bed-4c8b-b45c-eae336c9e929"
       }
     ],
-    "used_designators": "Q9-10,R32-41,D16-17,C24-25,#PWR55-59,#PWR61-63",
+    "used_designators": "#PWR55-59,#PWR61-63,C24-25,D16-17,Q9-10,R32-41",
     "variants": []
   },
   "sheets": [
